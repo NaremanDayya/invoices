@@ -66,32 +66,31 @@
 
                 <!-- Features -->
                 <div class="grid grid-cols-1 gap-6 mt-12">
-                    <div class="flex items-center space-x-3 text-white/95">
+                    <div class="flex items-center space-x-3 text-white/95 rtl:space-x-reverse">
                         <div class="w-8 h-8 bg-white/25 rounded-full flex items-center justify-center backdrop-blur-sm">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                         </div>
-                        <span class="text-sm font-medium">إنشاء فواتير احترافية في ثواني</span>
+                        <span class="text-sm font-medium text-right">إنشاء فواتير احترافية في ثواني</span>
                     </div>
-                    <div class="flex items-center space-x-3 text-white/95">
+                    <div class="flex items-center space-x-3 text-white/95 rtl:space-x-reverse">
                         <div class="w-8 h-8 bg-white/25 rounded-full flex items-center justify-center backdrop-blur-sm">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                         </div>
-                        <span class="text-sm font-medium">متابعة أوامر السداد والعملاء</span>
+                        <span class="text-sm font-medium text-right">متابعة أوامر السداد والعملاء</span>
                     </div>
-                    <div class="flex items-center space-x-3 text-white/95">
+                    <div class="flex items-center space-x-3 text-white/95 rtl:space-x-reverse">
                         <div class="w-8 h-8 bg-white/25 rounded-full flex items-center justify-center backdrop-blur-sm">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                         </div>
-                        <span class="text-sm font-medium">تصدير تقارير إحصائية</span>
+                        <span class="text-sm font-medium text-right">تصدير تقارير إحصائية</span>
                     </div>
                 </div>
-
                 <!-- Testimonial -->
                 <div class="mt-12 bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
                     <p class="text-white/90 italic font-medium">"الإدارة السليمة للفواتير هي أساس الاستقرار المالي ووضوح المعاملات.!"</p>

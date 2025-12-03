@@ -325,8 +325,8 @@
         <div class="nav-container">
             <ul class="nav-list">
                 <li class="nav-item">
-                    <a href="{{ route('welcome') }}"
-                       class="nav-link {{ request()->routeIs('welcome') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard') }}"
+                       class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                         <i class="fas fa-tachometer-alt"></i>
                         لوحة التحكم
                     </a>
@@ -339,15 +339,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('welcome') }}"
+                    <a href="{{ route('payments.index') }}"
                        class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}">
                         <i class="fas fa-credit-card"></i>
                         أوامر السداد
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('welcome') }}"
-                       class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
+                    <a href="{{ route('employees.index') }}"
+                       class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
                         <i class="fas fa-users"></i>
                         إدارة العمالة
                     </a>
@@ -360,8 +360,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('welcome') }}"
-                       class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
+                    <a href="{{ route('chat.index') }}"
+                       class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}">
                         <i class="fas fa-boxes"></i>
                         المحادثات
                     </a>

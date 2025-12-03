@@ -359,7 +359,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('clientChat') }}"
+                    <a href="{{ route('chat.index') }}"
                        class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}">
                         <i class="fas fa-boxes"></i>
                         المحادثات

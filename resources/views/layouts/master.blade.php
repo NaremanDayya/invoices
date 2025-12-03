@@ -351,13 +351,13 @@
                         إدارة العمالة
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('welcome') }}"
-                       class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                        <i class="fas fa-chart-bar"></i>
-                        التقارير المالية
-                    </a>
-                </li>
+{{--                <li class="nav-item">--}}
+{{--                    <a href="{{ route('welcome') }}"--}}
+{{--                       class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">--}}
+{{--                        <i class="fas fa-chart-bar"></i>--}}
+{{--                        التقارير المالية--}}
+{{--                    </a>--}}
+{{--                </li>--}}
                 <li class="nav-item">
                     <a href="{{ route('chat.index') }}"
                        class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}">

@@ -359,8 +359,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('welcome') }}"
-                       class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
+                    <a href="{{ route('clientChat') }}"
+                       class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}">
                         <i class="fas fa-boxes"></i>
                         المحادثات
                     </a>

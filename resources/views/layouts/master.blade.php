@@ -273,9 +273,9 @@
         <div class="header-content">
             <!-- Brand Info -->
             <div class="brand-info">
-                <div class="logo-container">
-                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="h-10 w-auto">
-                </div>
+{{--                <div class="logo-container">--}}
+{{--                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="h-10 w-auto">--}}
+{{--                </div>--}}
                 <div>
                     <h1 class="system-name">نظام إدارة الفواتير</h1>
                     <p class="system-subtitle">الحل المتكامل لإدارة الفواتير والمستحقات</p>

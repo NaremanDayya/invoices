@@ -17,7 +17,7 @@ class EmployeeController extends Controller
         $invoices = Invoice::pluck('number', 'id'); // تغيير الترتيب
 
 //         dd($clients);
-        return view('employees.index', compact('employees', 'clients', 'invoices'));
+        return view('Employees.index', compact('employees', 'clients', 'invoices'));
     }
 
     public function store(Request $request)

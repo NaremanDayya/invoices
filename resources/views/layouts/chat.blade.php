@@ -291,11 +291,11 @@
                     <span class="notification-badge">3</span>
                 </button>
 
-                <!-- Messages -->
-                <button class="icon-btn">
-                    <i class="fas fa-envelope"></i>
-                    <span class="notification-badge">5</span>
-                </button>
+{{--                <!-- Messages -->--}}
+{{--                <button class="icon-btn">--}}
+{{--                    <i class="fas fa-envelope"></i>--}}
+{{--                    <span class="notification-badge">5</span>--}}
+{{--                </button>--}}
 
                 <!-- User Profile -->
                 <div class="user-details">

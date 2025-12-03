@@ -79,17 +79,17 @@
                             </div>
                         </div>
 
-                        <div class="stat-card">
-                            <div class="stat-icon bg-info-light">
-                                <i class="bi bi-clock-history text-info"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">
-                                    {{ $conversations->where('is_last_message_read', false)->count() }}
-                                </h6>
-                                <small class="text-muted">Pending Replies</small>
-                            </div>
-                        </div>
+{{--                        <div class="stat-card">--}}
+{{--                            <div class="stat-icon bg-info-light">--}}
+{{--                                <i class="bi bi-clock-history text-info"></i>--}}
+{{--                            </div>--}}
+{{--                            <div>--}}
+{{--                                <h6 class="mb-0">--}}
+{{--                                    {{ $conversations->where('is_last_message_read', false)->count() }}--}}
+{{--                                </h6>--}}
+{{--                                <small class="text-muted">Pending Replies</small>--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
                     </div>
                 </div>
             </div>

@@ -1106,13 +1106,143 @@
     </script>
 
     <script>
-        // Update client info when client is selected
-        document.getElementById('clientSelect').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            document.getElementById('clientEmail').value = selectedOption.getAttribute('data-email') || '';
-            document.getElementById('clientPhone').value = selectedOption.getAttribute('data-phone') || '';
-            document.getElementById('clientAddress').value = selectedOption.getAttribute('data-address') || '';
+        // Autocomplete Logic
+        const clients = @json($clients);
+        const services = @json($services);
+
+        // Client Autocomplete
+        const clientInput = document.getElementById('clientSearchInput');
+        const clientDropdown = document.getElementById('clientDropdown');
+        const selectedClientId = document.getElementById('selectedClientId');
+
+        // Initialize client input if editing (optional, but good practice)
+        // For create modal, it starts empty.
+
+        clientInput.addEventListener('input', function() {
+            const search = this.value.toLowerCase();
+            clientDropdown.innerHTML = '';
+            
+            if (search.length < 1) {
+                clientDropdown.style.display = 'none';
+                return;
+            }
+
+            const filtered = clients.filter(c => c.name.toLowerCase().includes(search));
+            
+            if (filtered.length > 0) {
+                filtered.forEach(c => {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.textContent = c.name;
+                    item.onclick = (e) => {
+                        e.preventDefault();
+                        selectClient(c);
+                    };
+                    clientDropdown.appendChild(item);
+                });
+            }
+
+            // Add "Add New" option
+            const addNewItem = document.createElement('a');
+            addNewItem.href = '#';
+            addNewItem.className = 'list-group-item list-group-item-action text-success fw-bold';
+            addNewItem.innerHTML = `<i class="fas fa-plus-circle me-1"></i> إضافة عميل جديد: "${this.value}"`;
+            addNewItem.onclick = (e) => {
+                e.preventDefault();
+                openAddClientModal(this.value);
+            };
+            clientDropdown.appendChild(addNewItem);
+
+            clientDropdown.style.display = 'block';
         });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (clientInput && !clientInput.contains(e.target) && !clientDropdown.contains(e.target)) {
+                clientDropdown.style.display = 'none';
+            }
+            if (serviceInput && !serviceInput.contains(e.target) && !serviceDropdown.contains(e.target)) {
+                serviceDropdown.style.display = 'none';
+            }
+        });
+
+        function selectClient(client) {
+            clientInput.value = client.name;
+            selectedClientId.value = client.id;
+            clientDropdown.style.display = 'none';
+            
+            // Update info fields
+            document.getElementById('clientEmail').value = client.email || '';
+            document.getElementById('clientPhone').value = client.phone || '';
+            document.getElementById('clientAddress').value = client.address || '';
+        }
+
+        function openAddClientModal(name) {
+            const modalEl = document.getElementById('addClientModal');
+            const modal = new bootstrap.Modal(modalEl);
+            modalEl.querySelector('[name="name"]').value = name;
+            modal.show();
+            clientDropdown.style.display = 'none';
+        }
+
+        // Service Autocomplete
+        const serviceInput = document.getElementById('serviceSearchInput');
+        const serviceDropdown = document.getElementById('serviceDropdown');
+        const selectedServiceId = document.getElementById('selectedServiceId');
+
+        serviceInput.addEventListener('input', function() {
+            const search = this.value.toLowerCase();
+            serviceDropdown.innerHTML = '';
+            
+            if (search.length < 1) {
+                serviceDropdown.style.display = 'none';
+                return;
+            }
+
+            const filtered = services.filter(s => s.name.toLowerCase().includes(search));
+            
+            if (filtered.length > 0) {
+                filtered.forEach(s => {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.textContent = s.name;
+                    item.onclick = (e) => {
+                        e.preventDefault();
+                        selectService(s);
+                    };
+                    serviceDropdown.appendChild(item);
+                });
+            }
+
+            // Add "Add New" option
+            const addNewItem = document.createElement('a');
+            addNewItem.href = '#';
+            addNewItem.className = 'list-group-item list-group-item-action text-success fw-bold';
+            addNewItem.innerHTML = `<i class="fas fa-plus-circle me-1"></i> إضافة خدمة جديدة: "${this.value}"`;
+            addNewItem.onclick = (e) => {
+                e.preventDefault();
+                openAddServiceModal(this.value);
+            };
+            serviceDropdown.appendChild(addNewItem);
+
+            serviceDropdown.style.display = 'block';
+        });
+
+        function selectService(service) {
+            serviceInput.value = service.name;
+            selectedServiceId.value = service.id;
+            serviceDropdown.style.display = 'none';
+        }
+
+        function openAddServiceModal(name) {
+            const modalEl = document.getElementById('addServiceModal');
+            const modal = new bootstrap.Modal(modalEl);
+            modalEl.querySelector('[name="name"]').value = name;
+            modal.show();
+            serviceDropdown.style.display = 'none';
+        }
 
         // Workforce calculation
         const workersInput = document.getElementById('total_workers');
@@ -1149,7 +1279,7 @@
             const workDays = parseInt(workDaysInput.value) || 0;
             const dailyRate = parseFloat(dailyRateInput.value) || 0;
             const taxRate = parseFloat(taxRateInput.value) || 0;
-            const amountDiff = parseFloat(amountDiffInput.value) || 0;
+            const amountDiff = parseFloat(amountDiffInput ? amountDiffInput.value : 0) || 0;
 
             const subtotal = totalWorkforce * workDays * dailyRate;
             const taxAmount = (subtotal * taxRate) / 100;
@@ -1161,105 +1291,102 @@
         }
 
         // Event listeners for workforce inputs
-        [workersInput, supervisorsInput, managersInput, usersInput].forEach(input => {
-            input.addEventListener('input', calculateTotalWorkforce);
-        });
+        if(workersInput) {
+            [workersInput, supervisorsInput, managersInput, usersInput].forEach(input => {
+                input.addEventListener('input', calculateTotalWorkforce);
+            });
+        }
 
         // Event listeners for financial inputs
-        [workDaysInput, dailyRateInput, taxRateInput, amountDiffInput].forEach(input => {
-            input.addEventListener('input', calculateFinancials);
-        });
+        if(workDaysInput) {
+            [workDaysInput, dailyRateInput, taxRateInput].forEach(input => {
+                input.addEventListener('input', calculateFinancials);
+            });
+            if(amountDiffInput) amountDiffInput.addEventListener('input', calculateFinancials);
+        }
 
         // Initialize calculations
-        calculateTotalWorkforce();
-        calculateFinancials();
+        if(workersInput) calculateTotalWorkforce();
+        if(workDaysInput) calculateFinancials();
 
         // Inline create: Clients
         const addClientForm = document.getElementById('addClientForm');
-        addClientForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const formData = new FormData(addClientForm);
-            try {
-                const resp = await fetch("{{ route('invoices.add-client') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: formData
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    // append to select and select it
-                    const clientSelect = document.getElementById('clientSelect');
-                    const opt = document.createElement('option');
-                    opt.value = data.client.id;
-                    opt.textContent = data.client.name;
-                    opt.setAttribute('data-email', data.client.email || '');
-                    opt.setAttribute('data-phone', data.client.phone || '');
-                    opt.setAttribute('data-address', data.client.address || '');
-                    clientSelect.appendChild(opt);
-                    clientSelect.value = data.client.id;
-                    clientSelect.dispatchEvent(new Event('change'));
+        if(addClientForm) {
+            addClientForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const formData = new FormData(addClientForm);
+                try {
+                    const resp = await fetch("{{ route('invoices.add-client') }}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: formData
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        // Add to local list and select it
+                        clients.push(data.client); // Update local array
+                        selectClient(data.client); // Select it
 
-                    // reset form
-                    addClientForm.reset();
+                        // reset form
+                        addClientForm.reset();
 
-                    // close modal
-                    const modalEl = document.getElementById('addClientModal');
-                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    modal.hide();
+                        // close modal
+                        const modalEl = document.getElementById('addClientModal');
+                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.hide();
 
-                    // notify
-                    if (window.toastr) toastr.success(data.message || 'تم إضافة العميل بنجاح');
-                } else {
-                    if (window.toastr) toastr.error(data.message || 'تعذر إضافة العميل');
+                        // notify
+                        if (window.toastr) toastr.success(data.message || 'تم إضافة العميل بنجاح');
+                    } else {
+                        if (window.toastr) toastr.error(data.message || 'تعذر إضافة العميل');
+                    }
+                } catch (err) {
+                    if (window.toastr) toastr.error('حدث خطأ أثناء إضافة العميل');
+                    console.error(err);
                 }
-            } catch (err) {
-                if (window.toastr) toastr.error('حدث خطأ أثناء إضافة العميل');
-                console.error(err);
-            }
-        });
+            });
+        }
 
         // Inline create: Services
         const addServiceForm = document.getElementById('addServiceForm');
-        addServiceForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const formData = new FormData(addServiceForm);
-            try {
-                const resp = await fetch("{{ route('invoices.add-service') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: formData
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    // append to select and select it
-                    const serviceSelect = document.getElementById('serviceSelect');
-                    const opt = document.createElement('option');
-                    opt.value = data.service.id;
-                    opt.textContent = data.service.name;
-                    serviceSelect.appendChild(opt);
-                    serviceSelect.value = data.service.id;
+        if(addServiceForm) {
+            addServiceForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const formData = new FormData(addServiceForm);
+                try {
+                    const resp = await fetch("{{ route('invoices.add-service') }}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: formData
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        // Add to local list and select it
+                        services.push(data.service); // Update local array
+                        selectService(data.service); // Select it
 
-                    // reset form
-                    addServiceForm.reset();
+                        // reset form
+                        addServiceForm.reset();
 
-                    // close modal
-                    const modalEl = document.getElementById('addServiceModal');
-                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    modal.hide();
+                        // close modal
+                        const modalEl = document.getElementById('addServiceModal');
+                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.hide();
 
-                    // notify
-                    if (window.toastr) toastr.success(data.message || 'تم إضافة الخدمة بنجاح');
-                } else {
-                    if (window.toastr) toastr.error(data.message || 'تعذر إضافة الخدمة');
+                        // notify
+                        if (window.toastr) toastr.success(data.message || 'تم إضافة الخدمة بنجاح');
+                    } else {
+                        if (window.toastr) toastr.error(data.message || 'تعذر إضافة الخدمة');
+                    }
+                } catch (err) {
+                    if (window.toastr) toastr.error('حدث خطأ أثناء إضافة الخدمة');
+                    console.error(err);
                 }
-            } catch (err) {
-                if (window.toastr) toastr.error('حدث خطأ أثناء إضافة الخدمة');
-                console.error(err);
-            }
-        });
+            });
+        }
     </script>
 @endpush

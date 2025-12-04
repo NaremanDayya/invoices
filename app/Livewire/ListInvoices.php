@@ -143,6 +143,12 @@ class ListInvoices extends Component
         }
     }
 
+    public function createClientFromSearch($name)
+    {
+        $this->newClientName = $name;
+        $this->addNewClient();
+    }
+
     public function filterClients()
     {
         if (empty($this->clientSearch)) {
@@ -206,6 +212,12 @@ class ListInvoices extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'حدث خطأ أثناء إضافة الخدمة: ' . $e->getMessage());
         }
+    }
+
+    public function createServiceFromSearch($name)
+    {
+        $this->newService = $name;
+        $this->addNewService();
     }
 
     public function filterServices()

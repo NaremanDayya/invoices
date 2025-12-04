@@ -436,8 +436,11 @@
                                                     {{ $name }}
                                                 </div>
                                             @empty
-                                                <div style="padding: 10px 16px; color: #6b7280; text-align: center;">
-                                                    لا توجد نتائج
+                                                <div style="padding: 10px 16px; color: #059669; text-align: center; cursor: pointer; font-weight: 500;"
+                                                     wire:click="createClientFromSearch('{{ $clientSearch }}')"
+                                                     class="hover:bg-gray-50 transition-colors duration-150">
+                                                    <i class="fas fa-plus-circle me-1"></i>
+                                                    إضافة "{{ $clientSearch }}"
                                                 </div>
                                             @endforelse
                                         </div>
@@ -570,8 +573,11 @@
                                                     {{ $name }}
                                                 </div>
                                             @empty
-                                                <div style="padding: 10px 16px; color: #6b7280; text-align: center;">
-                                                    لا توجد نتائج
+                                                <div style="padding: 10px 16px; color: #059669; text-align: center; cursor: pointer; font-weight: 500;"
+                                                     wire:click="createServiceFromSearch('{{ $serviceSearch }}')"
+                                                     class="hover:bg-gray-50 transition-colors duration-150">
+                                                    <i class="fas fa-plus-circle me-1"></i>
+                                                    إضافة "{{ $serviceSearch }}"
                                                 </div>
                                             @endforelse
                                         </div>

@@ -392,26 +392,18 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="row mb-3">
-                                        <div class="col-md-8">
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
                                             <label class="form-label">اختر العميل <span class="text-danger">*</span></label>
-                                            <select name="client_id" class="form-select" required id="clientSelect">
-                                                <option value="">-- اختر العميل --</option>
-                                                @foreach($clients as $client)
-                                                    <option value="{{ $client->id }}"
-                                                            data-email="{{ $client->email }}"
-                                                            data-phone="{{ $client->phone }}"
-                                                            data-address="{{ $client->address }}">
-                                                        {{ $client->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                            <div class="position-relative">
+                                                <input type="text" class="form-control" id="clientSearchInput" placeholder="ابحث عن عميل..." autocomplete="off">
+                                                <input type="hidden" name="client_id" id="selectedClientId" required>
+                                                <div id="clientDropdown" class="list-group position-absolute w-100 shadow" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                                    <!-- Options will be populated by JS -->
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">&nbsp;</label>
-                                            <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#addClientModal">
-                                                <i class="fas fa-plus me-1"></i>إضافة عميل جديد
-                                            </button>
-                                        </div>
+                                    </div>
                                     </div>
 
                                     <div class="row">
@@ -453,15 +445,13 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">نوع الخدمة <span class="text-danger">*</span></label>
-                                            <select name="service_id" class="form-select" required id="serviceSelect">
-                                                <option value="">-- اختر الخدمة --</option>
-                                                @foreach($services as $service)
-                                                    <option value="{{ $service->id }}">{{ $service->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <button type="button" class="btn btn-outline-primary mt-2 w-100" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                                                <i class="fas fa-plus me-1"></i>إضافة خدمة جديدة
-                                            </button>
+                                            <div class="position-relative">
+                                                <input type="text" class="form-control" id="serviceSearchInput" placeholder="ابحث عن خدمة..." autocomplete="off">
+                                                <input type="hidden" name="service_id" id="selectedServiceId" required>
+                                                <div id="serviceDropdown" class="list-group position-absolute w-100 shadow" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                                    <!-- Options will be populated by JS -->
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

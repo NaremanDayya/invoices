@@ -298,8 +298,7 @@
 
                 <!-- User Profile -->
                 <div class="user-details">
-                    <img src="{{ Auth::user()->personal_image ?? asset('assets/img/default-avatar.png') }}"
-                         alt="User Avatar" class="user-avatar">
+                    <livewire:user-profile-image />
                     <div class="user-text">
                         <div class="user-name">{{ Auth::user()->name ?? 'المستخدم' }}</div>
                         <div class="user-role">مدير النظام</div>

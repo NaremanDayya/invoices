@@ -123,11 +123,13 @@
 @push('styles')
     <style>
         .invoice-chat-container {
-            height: calc(100vh - 120px);
+            height: calc(100vh - 180px); /* Adjusted to account for header and padding */
             background: #f8f9fa;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
         }
 
         .chat-header {

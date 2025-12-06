@@ -17,24 +17,24 @@ class UserProfileImage extends Component
     public function mount()
     {
         $this->user = Auth::user();
+        dd($this->user , $this->user->personal_image);
     }
 
     public function updatedImage()
     {
         $this->validate([
-            'image' => 'image|max:1024', // 1MB Max
+            'image' => 'image|max:1024',
         ]);
 
         if ($this->image) {
-            // Delete old image if exists and is not default
             if ($this->user->personal_image && Storage::disk('public')->exists($this->user->personal_image)) {
                 Storage::disk('public')->delete($this->user->personal_image);
             }
 
             $path = $this->image->store('profile-photos', 'public');
-            
-            $this->user->personal_image = 'storage/' . $path; 
-      
+
+            $this->user->personal_image = 'storage/' . $path;
+
             $this->user->personal_image = 'storage/' . $path;
             $this->user->save();
 

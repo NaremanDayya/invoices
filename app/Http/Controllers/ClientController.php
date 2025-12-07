@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-//    test
     public function chatClients()
     {
         return Client::with('invoices')

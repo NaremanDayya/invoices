@@ -32,7 +32,7 @@ class DashboardController extends Controller
 
         $path = $request->file('personal_image')->store('employees/images', 'public');
 
-        $user->personal_image = $path;
+        $user->personal_image ='storage/' . $path;;
 //        dd($user->personal_image);
         $user->save();
 

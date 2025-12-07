@@ -299,7 +299,7 @@ r
                 <!-- User Profile -->
                 <div class="user-details">
                     <div class="relative group">
-                        <img src="{{ Auth::user()->personal_image }}" alt="User Avatar" id="profileImage"
+                        <img src="{{ asset(Auth::user()->personal_image) }}" alt="User Avatar" id="profileImage"
                              class="h-12 w-12 rounded-full object-cover border-2 border-grey-400 group-hover:border-[rgba(140,4,4,0.9)] transition-all duration-300">
 
                         <button type="button"

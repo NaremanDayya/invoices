@@ -93,14 +93,15 @@ class ChatList extends Component
 
     public function getSuggestedClientsProperty()
     {
-        if (empty($this->clientSearch)) {
-            return collect();
-        }
-
         return Client::query()
-            ->where('name', 'like', '%' . $this->clientSearch . '%')
-            ->orWhere('email', 'like', '%' . $this->clientSearch . '%')
-            ->take(10)
+            ->when($this->clientSearch, function($query) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->clientSearch . '%')
+                      ->orWhere('email', 'like', '%' . $this->clientSearch . '%');
+                });
+            })
+            ->latest()
+            ->take(20)
             ->get();
     }
 

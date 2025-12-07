@@ -20,6 +20,7 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::post('/update-photo', [DashboardController::class, 'updatePhoto'])->name('admin.updatePhoto');
 Route::get('/dashboard/reports/issued-invoices', [DashboardController::class, 'issuedInvoicesReport'])->name('dashboard.reports.issued-invoices');
 Route::get('/dashboard/reports/cancelled-invoices', [DashboardController::class, 'cancelledInvoicesReport'])->name('dashboard.reports.cancelled-invoices');
 Route::get('/dashboard/reports/late-invoices', [DashboardController::class, 'lateInvoicesReport'])->name('dashboard.reports.late-invoices');

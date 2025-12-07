@@ -298,7 +298,24 @@ r
 
                 <!-- User Profile -->
                 <div class="user-details">
-                    <livewire:user-profile-image />
+                    <div class="relative group">
+                        <img src="{{ Auth::user()->personal_image }}" alt="User Avatar" id="profileImage"
+                             class="h-12 w-12 rounded-full object-cover border-2 border-grey-400 group-hover:border-[rgba(140,4,4,0.9)] transition-all duration-300">
+
+                        <button type="button"
+                                class="absolute -top-2 -right-2 bg-white text-gray-800 rounded-full p-1 hover:bg-gray-200 transition-all duration-200 shadow-md"
+                                onclick="document.getElementById('profilePhotoInput').click()">
+                            <i class="bi bi-pencil-fill text-xs"></i>
+                        </button>
+
+                        <form id="avatarUploadForm" action="{{ route('admin.updatePhoto') }}" method="POST"
+                              enctype="multipart/form-data">
+                            @csrf
+                            <input type="file" id="profilePhotoInput" name="personal_image"
+                                   accept="image/jpeg,image/png,image/gif" style="display: none;">
+                        </form>
+                    </div>
+
                     <div class="user-text">
                         <div class="user-name">{{ Auth::user()->name ?? 'المستخدم' }}</div>
                         <div class="user-role">مدير النظام</div>
@@ -431,6 +448,51 @@ r
     // Initialize Flatpickr
     flatpickr.localize(flatpickr.l10ns.ar);
 </script>
+<script>
+    document.getElementById('profilePhotoInput').addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            const maxSize = 2048 * 1024; // 2MB
+            const editBtn = document.querySelector(
+                '[onclick="document.getElementById(\'profilePhotoInput\').click()"]');
+
+            // Validation
+            if (!validTypes.includes(file.type)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'الرجاء اختيار صورة بصيغة JPEG أو PNG أو GIF',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            if (file.size > maxSize) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'حجم الملف يجب أن لا يتجاوز 2MB',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profileImage').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+
+            const originalContent = editBtn.innerHTML;
+            editBtn.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i>';
+            editBtn.disabled = true;
+
+            document.getElementById('avatarUploadForm').submit();
+        }
+    });
+</script>
+
 
 @livewireScripts
 @stack('scripts')

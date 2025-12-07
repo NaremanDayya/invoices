@@ -7,6 +7,8 @@ use App\Models\Employee;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class DashboardController extends Controller
 {
@@ -16,7 +18,26 @@ class DashboardController extends Controller
 
         return view('dashboard', compact('statistics'));
     }
+    public function updatePhoto(Request $request)
+    {
+        $request->validate([
+            'personal_image' => 'required|image|mimes:jpeg,png,gif|max:2048',
+        ]);
 
+        $user = Auth::user();
+
+        if ($user->personal_image && Storage::exists('public/' . $user->personal_image)) {
+            Storage::delete('public/' . $user->personal_image);
+        }
+
+        $path = $request->file('personal_image')->store('employees/images', 'public');
+
+        $user->personal_image = $path;
+//        dd($user->personal_image);
+        $user->save();
+
+        return back()->with('success', 'تم تغيير الصورة الشخصية بنجاح.');
+    }
     private function getDashboardStatistics()
     {
         $today = Carbon::today();

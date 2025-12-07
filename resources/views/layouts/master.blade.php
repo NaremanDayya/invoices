@@ -300,7 +300,7 @@ r
                 <div class="user-details">
                     <div class="relative group">
                         <img src="{{ asset(Auth::user()->personal_image) }}" alt="User Avatar" id="profileImage"
-                             class="h-12 w-12 rounded-full object-cover border-2 border-grey-400 group-hover:border-[rgba(140,4,4,0.9)] transition-all duration-300">
+                             class="h-6 w-6 rounded-full object-cover border-2 border-grey-400 group-hover:border-[rgba(140,4,4,0.9)] transition-all duration-300">
 
                         <button type="button"
                                 class="absolute -top-2 -right-2 bg-white text-gray-800 rounded-full p-1 hover:bg-gray-200 transition-all duration-200 shadow-md"

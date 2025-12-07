@@ -141,7 +141,6 @@
                         <div class="online-status {{ rand(0, 1) ? 'online' : 'offline' }}"></div>
                     </div>
 
-                    <!-- Conversation Details -->
                     <div class="conversation-details">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>

@@ -1,52 +1,67 @@
 <!-- Client Selection Modal -->
-<div id="clientSelectionModal" class="fixed inset-0 z-50 hidden overflow-y-auto min-h-screen">
-    <div class="flex items-center justify-center relative w-full h-[500px] px-4 mt-20 pb-20 text-center sm:block sm:p-0">
-        <!-- Background overlay -->
-        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+<div class="modal fade" id="clientSelectionModal" tabindex="-1" aria-labelledby="clientSelectionModalLabel" aria-hidden="true" wire:ignore.self>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="clientSelectionModalLabel">
+                    <i class="bi bi-people-fill text-success me-2"></i>
+                    Start New Conversation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Search Input -->
+                <div class="input-group mb-4">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text"
+                           class="form-control border-start-0"
+                           placeholder="Search clients by name, company, or email..."
+                           wire:model.live.debounce.300ms="clientSearch">
+                </div>
 
-        <!-- Modal panel -->
-        <div
-            class="inline-block w-full max-w-4xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle">
-            <div class="px-4 pt-5 pb-4 flex flex-col h-full bg-white sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full p-4 border-b">
-                        <div class="flex items-center justify-between mb-4">
-                            <h1 class="text-xl font-semibold text-gray-900">
-                                اختر عميلاً
-                            </h1>
-                            <button type="button" class="text-gray-400 hover:text-gray-500" id="closeClientModal">
-                                <span class="sr-only">Close</span>
-                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- Search input -->
-                        <div class="relative mb-4">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd"
-                                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                        clip-rule="evenodd" />
-                                </svg>
+                <!-- Results List -->
+                <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                    @forelse($this->suggestedClients as $client)
+                        <button type="button"
+                                class="list-group-item list-group-item-action d-flex align-items-center p-3 border-bottom"
+                                wire:click="startChat({{ $client->id }})"
+                                data-bs-dismiss="modal">
+                            <div class="me-3">
+                                @if($client->company_logo)
+                                    <img src="{{ asset('storage/' . $client->company_logo) }}"
+                                         class="rounded-circle border"
+                                         width="50" height="50"
+                                         style="object-fit: cover;">
+                                @else
+                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold"
+                                         style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                        {{ substr($client->company_name ?? $client->name, 0, 2) }}
+                                    </div>
+                                @endif
                             </div>
-<input type="text" id="modalSearchInput"
-    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-[#a855f7]  sm:text-sm"
-    placeholder="ابحث عن العملاء...">
+                            <div>
+                                <h6 class="mb-1 fw-bold text-dark">{{ $client->company_name ?? $client->name }}</h6>
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-envelope me-1"></i> {{ $client->email }}
+                                </small>
+                            </div>
+                            <div class="ms-auto text-success">
+                                <i class="bi bi-chat-dots-fill fs-5"></i>
+                            </div>
+                        </button>
+                    @empty
+                        <div class="text-center py-5">
+                            @if(strlen($clientSearch) > 0)
+                                <i class="bi bi-search display-6 text-muted mb-3"></i>
+                                <p class="text-muted">No clients found matching "{{ $clientSearch }}"</p>
+                            @else
+                                <i class="bi bi-people display-6 text-muted mb-3"></i>
+                                <p class="text-muted">Type to search for clients</p>
+                            @endif
                         </div>
-
-                        <!-- Client list -->
-                        <div class="mt-2 max-h-60 overflow-y-auto">
-                            <ul class="divide-y divide-gray-200" id="clientList">
-                                <!-- Client items will be populated here -->
-                            </ul>
-                        </div>
-
-                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>

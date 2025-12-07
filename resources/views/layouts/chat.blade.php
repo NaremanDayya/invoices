@@ -428,6 +428,50 @@
     // Initialize Flatpickr
     flatpickr.localize(flatpickr.l10ns.ar);
 </script>
+<script>
+    document.getElementById('profilePhotoInput').addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            const maxSize = 2048 * 1024; // 2MB
+            const editBtn = document.querySelector(
+                '[onclick="document.getElementById(\'profilePhotoInput\').click()"]');
+
+            // Validation
+            if (!validTypes.includes(file.type)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'الرجاء اختيار صورة بصيغة JPEG أو PNG أو GIF',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            if (file.size > maxSize) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'حجم الملف يجب أن لا يتجاوز 2MB',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profileImage').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+
+            const originalContent = editBtn.innerHTML;
+            editBtn.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i>';
+            editBtn.disabled = true;
+
+            document.getElementById('avatarUploadForm').submit();
+        }
+    });
+</script>
 
 @livewireScripts
 @stack('scripts')

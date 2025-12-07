@@ -12,7 +12,9 @@
 
             <div class="d-flex align-items-center gap-2">
                 <!-- New Chat Button -->
-                <button class="btn btn-success btn-sm d-flex align-items-center">
+                <button class="btn btn-success btn-sm d-flex align-items-center"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#clientSelectionModal">
                     <i class="bi bi-plus-lg me-1"></i>
                     New Chat
                 </button>
@@ -103,7 +105,9 @@
                 <i class="bi bi-chat-square-text display-4 text-muted mb-3"></i>
                 <h5 class="text-muted">No conversations found</h5>
                 <p class="text-muted">Start a new chat with your client</p>
-                <button class="btn btn-success mt-2">
+                <button class="btn btn-success mt-2"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#clientSelectionModal">
                     <i class="bi bi-plus-lg me-1"></i>
                     Start New Chat
                 </button>

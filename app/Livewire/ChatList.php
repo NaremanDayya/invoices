@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Client;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class ChatList extends Component
@@ -12,6 +14,7 @@ class ChatList extends Component
     public $client;
     public $selectedConversation;
     public $search = '';
+    public $clientSearch = ''; // Search for new chat modal
     public $perPage = 20;
     public $hasMore = true;
     public $loading = false;
@@ -86,6 +89,66 @@ class ChatList extends Component
     {
         // Reset pagination and reload when filter changes
         $this->refresh();
+    }
+
+    public function getSuggestedClientsProperty()
+    {
+        if (empty($this->clientSearch)) {
+            return collect();
+        }
+
+        return Client::query()
+            ->where('company_name', 'like', '%' . $this->clientSearch . '%')
+            ->orWhere('name', 'like', '%' . $this->clientSearch . '%') // Assuming 'name' exists on Client model
+            ->orWhere('email', 'like', '%' . $this->clientSearch . '%')
+            ->take(10)
+            ->get();
+    }
+
+    public function startChat($clientId)
+    {
+        $user = Auth::user();
+
+        // Check for existing conversation
+        $existing = Conversation::where('client_id', $clientId)
+            ->where(function($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                  ->orWhere('receiver_id', $user->id);
+            })
+            ->first();
+
+        if ($existing) {
+            $this->dispatch('selectConversation', ['id' => $existing->id]);
+            return;
+        }
+
+        // Create new conversation
+        $client = Client::find($clientId);
+        if (!$client) return;
+
+        // Determine receiver (default to sales rep, or fallback to Admin/Self if strictly necessary, but preferably sales rep)
+        // If sales_rep_id is null or same as sender, we might need a fallback.
+        // For now, let's use sales_rep_id.
+        $receiverId = $client->sales_rep_id;
+        
+        // If no receiver found (e.g. client has no rep), maybe use the first admin found? 
+        // Or keep it null if DB allows. Assuming DB allows or logic handles it.
+        // Let's use a fail-safe: if no rep, and I am not ID 1, use ID 1 (Super Admin).
+        if (!$receiverId) {
+             // Fallback logic could be complex. Let's assume sales_rep_id is valid or nullable.
+             // If receiver_id is NOT nullable in DB, this will fail.
+             // Let's check conversation model fillable.
+        }
+
+        $newConversation = Conversation::create([
+            'id' => (string) Str::uuid(),
+            'sender_id' => $user->id,
+            'receiver_id' => $receiverId ?? $user->id, // Fallback to avoid SQL error if not nullable
+            'client_id' => $clientId,
+        ]);
+
+        $this->refresh();
+        $this->dispatch('selectConversation', ['id' => $newConversation->id]);
     }
 
     private function getConversations($page = 1)

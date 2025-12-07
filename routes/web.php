@@ -57,4 +57,6 @@ Route::middleware('auth')->group(function () {
     Route::get('client/{client}/message', [ChatController::class, 'message'])->name('client.message');
     Route::get('/chat/unread-count', [ChatController::class, 'unreadConversationsCount']);
 });
+Route::get('/clients', [\App\Http\Controllers\ClientController::class, 'chatClients']);
+Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'getNotifications']);
 require __DIR__.'/auth.php';

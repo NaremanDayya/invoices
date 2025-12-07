@@ -121,19 +121,22 @@
                         ? \Carbon\Carbon::parse($conversation->latest_message_time)->diffForHumans()
                         : 'No messages';
                     $client = $conversation->client ?? null;
+                    $invoiceCount = $client?->invoices?->count() ?? 0;
+                    $totalAmount = $client?->invoices?->sum('amount') ?? 0;
+                    $paidAmount = $client?->invoices?->where('status', 'paid')->sum('amount') ?? 0;
+                    $pendingAmount = $client?->invoices?->where('status', 'pending')->sum('amount') ?? 0;
+                    $hasPending = $pendingAmount > 0;
                 @endphp
 
-                <div class="conversation-item {{ $isUnread ? 'unread' : '' }}"
-                     wire:click="$dispatch('selectConversation', { id: {{ $conversation->id }} })"
-                     style="cursor: pointer;">
+                <a href="{{ route('client.chat', ['client' => $client->id ?? '', 'conversation' => $conversation->id]) }}"
+                   class="conversation-item {{ $isUnread ? 'unread' : '' }} text-decoration-none"
+                   style="cursor: pointer; display: block; text-decoration: none; color: inherit;">
 
                     <!-- Client Avatar -->
                     <div class="conversation-avatar">
-
-                            <div class="avatar-placeholder-sm bg-success">
-                                {{ substr($client?->name ?? 'CC', 0, 2) }}
-                            </div>
-
+                        <div class="avatar-placeholder-sm bg-success">
+                            {{ substr($client?->name ?? 'CC', 0, 2) }}
+                        </div>
                         <!-- Online Status -->
                         <div class="online-status {{ rand(0, 1) ? 'online' : 'offline' }}"></div>
                     </div>
@@ -143,7 +146,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h6 class="mb-1">{{ $client?->name ?? 'Unknown Client' }}</h6>
-                                <p class="conversation-preview mb-0">
+                                <p class="conversation-preview mb-0 text-muted">
                                     {{ $conversation->latest_message_text ?? 'Start a conversation...' }}
                                 </p>
                             </div>
@@ -152,29 +155,34 @@
                                 <small class="text-muted d-block">{{ $latestMessageTime }}</small>
                                 @if($isUnread)
                                     <span class="badge bg-success rounded-pill px-2">
-                                        {{ $unreadCount }}
-                                    </span>
+                            {{ $unreadCount }}
+                        </span>
                                 @endif
                             </div>
                         </div>
 
-                        <!-- Invoice Info -->
+                        <!-- Invoice Info - Updated to show counts and real data -->
                         <div class="invoice-info mt-2">
+                            <!-- Invoice Count Badge -->
                             <span class="badge bg-light text-dark border">
-                                <i class="bi bi-receipt me-1"></i>
-                                INV-{{ $conversation->id ?? '000' }}
-                            </span>
-                            <span class="badge bg-success-light text-success">
-                                <i class="bi bi-cash-coin me-1"></i>
-                                ${{ rand(100, 5000) }}
-                            </span>
-                            <span class="badge {{ rand(0, 1) ? 'bg-warning-light text-warning' : 'bg-success-light text-success' }}">
-                                <i class="bi bi-circle-fill me-1"></i>
-                                {{ rand(0, 1) ? 'Pending' : 'Paid' }}
-                            </span>
+                    <i class="bi bi-receipt me-1"></i>
+                    {{ $invoiceCount }} {{ Str::plural('Invoice', $invoiceCount) }}
+                </span>
+
+                            <!-- Total Amount Badge -->
+                            <span class="badge bg-info-light text-info">
+                    <i class="bi bi-cash-coin me-1"></i>
+                    ${{ number_format($totalAmount, 2) }}
+                </span>
+
+                            <!-- Payment Status Badge -->
+                            <span class="badge {{ $hasPending ? 'bg-warning-light text-warning' : 'bg-success-light text-success' }}">
+                    <i class="bi bi-circle-fill me-1"></i>
+                    {{ $hasPending ? '$' . number_format($pendingAmount, 2) . ' Pending' : 'All Paid' }}
+                </span>
                         </div>
                     </div>
-                </div>
+                </a>
 
                 @if(!$loop->last)
                     <hr class="my-2">

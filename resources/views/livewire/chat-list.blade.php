@@ -13,7 +13,7 @@
             <div class="d-flex align-items-center gap-2">
                 <!-- New Chat Button -->
                 <button class="btn btn-success btn-sm d-flex align-items-center"
-                        data-bs-toggle="modal" 
+                        data-bs-toggle="modal"
                         data-bs-target="#clientSelectionModal">
                     <i class="bi bi-plus-lg me-1"></i>
                     New Chat
@@ -106,7 +106,7 @@
                 <h5 class="text-muted">No conversations found</h5>
                 <p class="text-muted">Start a new chat with your client</p>
                 <button class="btn btn-success mt-2"
-                        data-bs-toggle="modal" 
+                        data-bs-toggle="modal"
                         data-bs-target="#clientSelectionModal">
                     <i class="bi bi-plus-lg me-1"></i>
                     Start New Chat
@@ -129,15 +129,10 @@
 
                     <!-- Client Avatar -->
                     <div class="conversation-avatar">
-                        @if($client?->company_logo)
-                            <img src="{{ asset('storage/' . $client->company_logo) }}"
-                                 alt="{{ $client->company_name }}"
-                                 class="company-logo-sm">
-                        @else
+
                             <div class="avatar-placeholder-sm bg-success">
-                                {{ substr($client?->company_name ?? 'CC', 0, 2) }}
+                                {{ substr($client?->name ?? 'CC', 0, 2) }}
                             </div>
-                        @endif
 
                         <!-- Online Status -->
                         <div class="online-status {{ rand(0, 1) ? 'online' : 'offline' }}"></div>
@@ -147,7 +142,7 @@
                     <div class="conversation-details">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h6 class="mb-1">{{ $client?->company_name ?? 'Unknown Client' }}</h6>
+                                <h6 class="mb-1">{{ $client?->name ?? 'Unknown Client' }}</h6>
                                 <p class="conversation-preview mb-0">
                                     {{ $conversation->latest_message_text ?? 'Start a conversation...' }}
                                 </p>

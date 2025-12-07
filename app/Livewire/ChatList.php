@@ -98,8 +98,7 @@ class ChatList extends Component
         }
 
         return Client::query()
-            ->where('company_name', 'like', '%' . $this->clientSearch . '%')
-            ->orWhere('name', 'like', '%' . $this->clientSearch . '%') // Assuming 'name' exists on Client model
+            ->where('name', 'like', '%' . $this->clientSearch . '%')
             ->orWhere('email', 'like', '%' . $this->clientSearch . '%')
             ->take(10)
             ->get();
@@ -130,8 +129,8 @@ class ChatList extends Component
         // If sales_rep_id is null or same as sender, we might need a fallback.
         // For now, let's use sales_rep_id.
         $receiverId = $client->sales_rep_id;
-        
-        // If no receiver found (e.g. client has no rep), maybe use the first admin found? 
+
+        // If no receiver found (e.g. client has no rep), maybe use the first admin found?
         // Or keep it null if DB allows. Assuming DB allows or logic handles it.
         // Let's use a fail-safe: if no rep, and I am not ID 1, use ID 1 (Super Admin).
         if (!$receiverId) {
@@ -157,8 +156,8 @@ class ChatList extends Component
         $offset = ($page - 1) * $this->perPage;
 
         $query = Conversation::with([
-            'client:id,sales_rep_id,company_name,company_logo',
-            'client.salesRep:id,name',
+            'client:id,name',
+            'client.invoices',
         ])
             ->where(function ($query) use ($user) {
                 $query->where('sender_id', $user->id)
@@ -166,13 +165,8 @@ class ChatList extends Component
             })
             ->when($this->search, function ($query) {
                 $query->whereHas('client', function ($q) {
-                    $q->where('company_name', 'like', '%' . $this->search . '%')
-                        ->orWhereHas('salesRep', function ($q2) {
-                            $q2->where('name', 'like', '%' . $this->search . '%');
-                        });
-                });
+                    $q->where('name', 'like', '%' . $this->search . '%');
             })
-            // compute latest message created_at for ordering
             ->addSelect([
                 'latest_message_created_at' => Message::selectRaw('MAX(created_at)')
                     ->whereColumn('conversation_id', 'conversations.id')

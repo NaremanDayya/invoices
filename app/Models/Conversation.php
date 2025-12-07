@@ -52,7 +52,7 @@ class Conversation extends Model
 
         return $this->unreadMessagesCount();
     }
-//test
+
     public function getReceiver()
     {
         if ($this->sender_id === Auth::id()) {

@@ -35,20 +35,23 @@
 
         <!-- Main Chat Area -->
         <div class="chat-main">
-            <!-- Default State (When no chat selected) -->
-            <div class="chat-default-state">
-                <div class="text-center py-5">
-                    <div class="default-state-icon mb-4">
-                        <i class="bi bi-chat-square-text display-1 text-success"></i>
+            @if($selectedConversation)
+                <livewire:chat :conversation="$selectedConversation" :client="$selectedConversation->client" :key="$selectedConversation->id" />
+            @else
+                <!-- Default State (When no chat selected) -->
+                <div class="chat-default-state">
+                    <div class="text-center py-5">
+                        <div class="default-state-icon mb-4">
+                            <i class="bi bi-chat-square-text display-1 text-success"></i>
+                        </div>
+                        <h3 class="mb-3 text-dark">Select a Conversation</h3>
+                        <p class="text-muted mb-4">
+                            Choose a client from the sidebar to start discussing invoices,
+                            payments, and billing queries.
+                        </p>
                     </div>
-                    <h3 class="mb-3 text-dark">Select a Conversation</h3>
-                    <p class="text-muted mb-4">
-                        Choose a client from the sidebar to start discussing invoices,
-                        payments, and billing queries.
-                    </p>
-
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 

@@ -128,7 +128,7 @@
                     $hasPending = $pendingAmount > 0;
                 @endphp
 
-                <a href="{{ route('client.chat', ['client' => $client->id ?? '', 'conversation' => $conversation->id]) }}"
+                <a href="javascript:void(0)" wire:click="selectConversation({{ $conversation->id }})"
                    class="conversation-item {{ $isUnread ? 'unread' : '' }} text-decoration-none"
                    style="cursor: pointer; display: block; text-decoration: none; color: inherit;">
 

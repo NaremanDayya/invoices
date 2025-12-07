@@ -148,7 +148,13 @@ class ChatList extends Component
         ]);
 
         $this->refresh();
-        $this->dispatch('selectConversation', ['id' => $newConversation->id]);
+        $this->dispatch('conversationSelected', id: $newConversation->id);
+    }
+
+    public function selectConversation($conversationId)
+    {
+        $this->selectedConversation = $conversationId; // Optional: mark as selected in list
+        $this->dispatch('conversationSelected', id: $conversationId);
     }
 
     private function getConversations($page = 1)

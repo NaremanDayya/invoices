@@ -51,6 +51,9 @@
 
     <!-- Chat Body -->
     <div class="chat-body">
+        <div class="relative w-full md:w-[320px] xl:w-[400px] overflow-y-auto shrink-0 h-full border">
+            <livewire:chat-list :selectedConversation="$selectedConversation" :conversation="$conversation">
+        </div>
         <!-- Messages Area -->
         <div class="messages-container" id="messages-container">
             <livewire:chat-box :client_id="$client->id" :selectedConversation="$selectedConversation" />

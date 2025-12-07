@@ -238,31 +238,24 @@ class ChatList extends Component
             ->get()
             ->keyBy('conversation_id');
 
-        // Map the collection to add data AND convert to plain objects
-        $enhanced = $conversations->map(function ($conversation) use ($latestMessages) {
+        // Map the collection to add data
+        $conversations->each(function ($conversation) use ($latestMessages) {
             $latestMessage = $latestMessages->get($conversation->id);
 
             // Calculate attributes
             $conversation->latest_message_text = $latestMessage ? $latestMessage->message : '';
             $conversation->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
             $conversation->latest_message_sender_id = $latestMessage ? $latestMessage->sender_id : null;
-
-            // Ensure receiver_name is accessed safely
             $conversation->receiver_name = $conversation->getReceiver()->name ?? 'Unknown';
-
             $conversation->is_last_message_read = $conversation->isLastMessageReadByUser();
 
             if (!isset($conversation->unread_count)) {
                 $conversation->unread_count = $conversation->unreadMessagesCount();
             }
-
-            // Convert to Array, then back to Object for Livewire serialization
-            return (object)$conversation->toArray();
         });
 
-        return $enhanced;
+        return $conversations;
     }
-
     public function updatedSearch()
     {
         $this->resetPage();

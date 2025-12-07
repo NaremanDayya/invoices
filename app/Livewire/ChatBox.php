@@ -55,7 +55,7 @@ class ChatBox extends Component
         $this->loadedMessages = Message::with([
             'sender',
             'receiver',
-            'conversation.client.salesRep' // Eager load nested relationships
+            'conversation.client.invoices' // Eager load nested relationships
         ])
             ->where('conversation_id', $this->selectedConversation->id)
             ->skip(max(0, $count - $this->paginate_var))

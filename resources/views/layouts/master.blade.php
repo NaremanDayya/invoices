@@ -289,12 +289,6 @@
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">3</span>
                 </button>
-r
-{{--                <!-- Messages -->--}}
-{{--                <button class="icon-btn">--}}
-{{--                    <i class="fas fa-env"></i>--}}
-{{--                    <span class="notification-badge">5</span>--}}
-{{--                </button>--}}
 
                 <!-- User Profile -->
                 <div class="user-details">

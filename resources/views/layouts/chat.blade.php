@@ -298,14 +298,32 @@
 {{--                </button>--}}
 
                 <!-- User Profile -->
+                <!-- User Profile -->
                 <div class="user-details">
-                    <img src="{{ Auth::user()->personal_image ?? asset('assets/img/default-avatar.png') }}"
-                         alt="User Avatar" class="user-avatar">
+                    <div class="relative group">
+                        <img src="{{ asset(Auth::user()->personal_image) }}" alt="User Avatar" id="profileImage"
+                             class="user-avatar">
+
+                        <button type="button"
+                                class="absolute -top-2 -right-2 bg-white text-gray-800 rounded-full p-1 hover:bg-gray-200 transition-all duration-200 shadow-md"
+                                onclick="document.getElementById('profilePhotoInput').click()">
+                            <i class="bi bi-pencil-fill text-xs"></i>
+                        </button>
+
+                        <form id="avatarUploadForm" action="{{ route('admin.updatePhoto') }}" method="POST"
+                              enctype="multipart/form-data">
+                            @csrf
+                            <input type="file" id="profilePhotoInput" name="personal_image"
+                                   accept="image/jpeg,image/png,image/gif" style="display: none;">
+                        </form>
+                    </div>
+
                     <div class="user-text">
                         <div class="user-name">{{ Auth::user()->name ?? 'المستخدم' }}</div>
                         <div class="user-role">مدير النظام</div>
                     </div>
                 </div>
+
 
                 <!-- Logout -->
                 <form method="POST" action="{{ route('logout') }}">

@@ -40,6 +40,10 @@ class Conversation extends Model
     {
         return $this->belongsTo(User::class ,'sender_id');
     }
+    public function receiver()
+    {
+        return $this->belongsTo(User::class ,'receiver_id');
+    }
     public function getUnreadMessagesCountAttribute()
     {
         if (array_key_exists('unread_count', $this->attributes)) {

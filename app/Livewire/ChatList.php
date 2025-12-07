@@ -110,9 +110,9 @@ class ChatList extends Component
 
         // Check for existing conversation
         $existing = Conversation::where('client_id', $clientId)
-            ->where(function($q) use ($user) {
+            ->where(function ($q) use ($user) {
                 $q->where('sender_id', $user->id)
-                  ->orWhere('receiver_id', $user->id);
+                    ->orWhere('receiver_id', $user->id);
             })
             ->first();
 
@@ -134,13 +134,13 @@ class ChatList extends Component
         // Or keep it null if DB allows. Assuming DB allows or logic handles it.
         // Let's use a fail-safe: if no rep, and I am not ID 1, use ID 1 (Super Admin).
         if (!$receiverId) {
-             // Fallback logic could be complex. Let's assume sales_rep_id is valid or nullable.
-             // If receiver_id is NOT nullable in DB, this will fail.
-             // Let's check conversation model fillable.
+            // Fallback logic could be complex. Let's assume sales_rep_id is valid or nullable.
+            // If receiver_id is NOT nullable in DB, this will fail.
+            // Let's check conversation model fillable.
         }
 
         $newConversation = Conversation::create([
-            'id' => (string) Str::uuid(),
+            'id' => (string)Str::uuid(),
             'sender_id' => $user->id,
             'receiver_id' => $receiverId ?? $user->id, // Fallback to avoid SQL error if not nullable
             'client_id' => $clientId,
@@ -158,6 +158,8 @@ class ChatList extends Component
         $query = Conversation::with([
             'client:id,name',
             'client.invoices',
+            'sender:id,name', // Added: Ensure sender is loaded for getReceiver()
+            'receiver:id,name', // Added: Ensure receiver is loaded for getReceiver()
         ])
             ->where(function ($query) use ($user) {
                 $query->where('sender_id', $user->id)
@@ -166,6 +168,7 @@ class ChatList extends Component
             ->when($this->search, function ($query) {
                 $query->whereHas('client', function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%');
+                }); // Missing closing parenthesis and semicolon
             })
             ->addSelect([
                 'latest_message_created_at' => Message::selectRaw('MAX(created_at)')
@@ -223,9 +226,9 @@ class ChatList extends Component
 
         $conversationIds = $conversations->pluck('id');
 
-        // Get latest messages (Your existing logic is fine)
+        // Get latest messages
         $latestMessages = Message::whereIn('conversation_id', $conversationIds)
-            ->whereIn('id', function($query) use ($conversationIds) {
+            ->whereIn('id', function ($query) use ($conversationIds) {
                 $query->select(\DB::raw('MAX(id)'))
                     ->from('messages')
                     ->whereIn('conversation_id', $conversationIds)
@@ -239,14 +242,12 @@ class ChatList extends Component
         $enhanced = $conversations->map(function ($conversation) use ($latestMessages) {
             $latestMessage = $latestMessages->get($conversation->id);
 
-            // calculate attributes
+            // Calculate attributes
             $conversation->latest_message_text = $latestMessage ? $latestMessage->message : '';
             $conversation->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
             $conversation->latest_message_sender_id = $latestMessage ? $latestMessage->sender_id : null;
 
-            // Fix: Ensure receiver_name is accessed safely or pre-calculated
-            // Note: Ensure getReceiver() doesn't rely on relationships not loaded,
-            // otherwise eager load 'sender' and 'receiver' in getConversations()
+            // Ensure receiver_name is accessed safely
             $conversation->receiver_name = $conversation->getReceiver()->name ?? 'Unknown';
 
             $conversation->is_last_message_read = $conversation->isLastMessageReadByUser();
@@ -255,24 +256,27 @@ class ChatList extends Component
                 $conversation->unread_count = $conversation->unreadMessagesCount();
             }
 
-            // CRITICAL FIX: Convert to Array, then back to Object.
-            // This creates a "StdClass" object that Livewire will serialize fully,
-            // preventing it from re-fetching from DB and losing your counts.
-            return (object) $conversation->toArray();
+            // Convert to Array, then back to Object for Livewire serialization
+            return (object)$conversation->toArray();
         });
 
         return $enhanced;
     }
+
     public function updatedSearch()
     {
-        $this->refresh();
+        $this->resetPage();
+        $this->allConversations = $this->getConversations(1);
     }
 
     public function render()
     {
+        if (!$this->allConversations) {
+            $this->allConversations = $this->getConversations($this->page);
+        }
+
         return view('livewire.chat-list', [
             'conversations' => $this->allConversations ?? collect(),
         ]);
     }
 }
-

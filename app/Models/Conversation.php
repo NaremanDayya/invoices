@@ -52,7 +52,7 @@ class Conversation extends Model
 
         return $this->unreadMessagesCount();
     }
-
+//test
     public function getReceiver()
     {
         if ($this->sender_id === Auth::id()) {
@@ -72,7 +72,6 @@ class Conversation extends Model
 
     public function isLastMessageReadByUser()
     {
-
 
         $user = Auth::user();
         $lastMessage = $this->messages()->latest()->first();

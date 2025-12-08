@@ -8,9 +8,9 @@
                 </button>
                 <div class="avatar-container">
 
-                        <div class="avatar-placeholder bg-success">
-                            {{ substr($client->name, 0, 2) }}
-                        </div>
+                    <div class="avatar-placeholder bg-success">
+                        {{ substr($client->name, 0, 2) }}
+                    </div>
 
                 </div>
                 <div class="ms-3">
@@ -84,33 +84,9 @@
                 @if($clientInvoices->count() > 0)
                     <div class="invoices-list">
                         @foreach($clientInvoices as $clientInvoice)
-                            @php
-                                // Find or check for existing conversation for this invoice
-                                $invoiceConversation = \App\Models\Conversation::where('client_id', $client->id)
-                                    ->where('invoice_id', $clientInvoice->id)
-                                    ->where(function ($q) {
-                                        $q->where('sender_id', Auth::id())
-                                            ->orWhere('receiver_id', Auth::id());
-                                    })
-                                    ->first();
-                                
-                                $isActiveInvoice = $invoice && $invoice->id == $clientInvoice->id;
-                            @endphp
-                            
-                            @if($invoiceConversation)
-                                {{-- Link to existing invoice conversation --}}
-                                <a href="{{ route('client.chat.invoice', [
-                                    'client' => $client->id,
-                                    'conversation' => $invoiceConversation->id,
-                                    'invoice' => $clientInvoice->id
-                                ]) }}"
-                                   class="invoice-item {{ $isActiveInvoice ? 'active' : '' }}">
-                            @else
-                                {{-- Use wire:click to create new conversation --}}
-                                <a href="#"
-                                   wire:click.prevent="startInvoiceChat({{ $clientInvoice->id }})"
-                                   class="invoice-item {{ $isActiveInvoice ? 'active' : '' }}">
-                            @endif
+                            <a href="#"
+                               wire:click.prevent="startInvoiceChat({{ $clientInvoice->id }})"
+                               class="invoice-item {{ $invoice && $invoice->id == $clientInvoice->id ? 'active' : '' }}">
                                 <div class="invoice-item-icon">
                                     <i class="bi bi-file-earmark-text"></i>
                                 </div>
@@ -162,10 +138,10 @@
                                 <span>Invoice sent - {{ $invoice->sent_at->diffForHumans() }}</span>
                             </li>
                         @endif
-{{--                        <li>--}}
-{{--                            <i class="bi bi-calendar-event text-info"></i>--}}
-{{--                            <span>Created - {{ $invoice?->created_at->diffForHumans() }}</span>--}}
-{{--                        </li>--}}
+                        {{--                        <li>--}}
+                        {{--                            <i class="bi bi-calendar-event text-info"></i>--}}
+                        {{--                            <span>Created - {{ $invoice?->created_at->diffForHumans() }}</span>--}}
+                        {{--                        </li>--}}
                     </ul>
                 </div>
 

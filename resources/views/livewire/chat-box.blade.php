@@ -527,13 +527,10 @@
             }
 
             // Clear message input after sending
-            Livewire.on('messageSent', () => {
+            Livewire.on('message-sent', () => {
                 if (messageInput) {
-                    messageInput.value = '';
                     messageInput.focus();
                 }
-                // Ensure scroll to bottom after message sent
-                setTimeout(scrollToBottom, 100);
             });
         });
     </script>

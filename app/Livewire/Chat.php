@@ -14,50 +14,15 @@ class Chat extends Component
 {
     public Client $client;
     public Conversation $conversation;
-    public ?Invoice $invoice = null;
+    public Invoice $invoice;
     public $selectedConversation;
 
-    public function mount(Client $client, Conversation $conversation, Invoice $invoice = null)
+    public function mount(Client $client, Conversation $conversation,Invoice $invoice)
     {
         $this->client = $client;
+        $this->invoice = $invoice;
         $this->conversation = $conversation;
         $this->selectedConversation = $conversation;
-
-        // If invoice is provided, check if this conversation is for this specific invoice
-        if ($invoice) {
-            $this->invoice = $invoice;
-            
-            // Check if we need to find/create an invoice-specific conversation
-            $invoiceConversation = Conversation::where('client_id', $client->id)
-                ->where('invoice_id', $invoice->id)
-                ->where(function ($q) {
-                    $q->where('sender_id', Auth::id())
-                        ->orWhere('receiver_id', Auth::id());
-                })
-                ->first();
-
-            if ($invoiceConversation) {
-                $this->conversation = $invoiceConversation;
-                $this->selectedConversation = $invoiceConversation;
-            } else {
-                // Create new conversation for this invoice
-                $receiverId = $client->sales_rep_id ?? Auth::id();
-                
-                $newConversation = Conversation::create([
-                    'id' => (string)Str::uuid(),
-                    'sender_id' => Auth::id(),
-                    'receiver_id' => $receiverId,
-                    'client_id' => $client->id,
-                    'invoice_id' => $invoice->id,
-                ]);
-                
-                $this->conversation = $newConversation;
-                $this->selectedConversation = $newConversation;
-            }
-        } else {
-            // General client chat (no specific invoice)
-            $this->invoice = $client->invoices()->first(); // Default to first invoice for display
-        }
 
         // Mark unread messages as read for this user
         Message::where('conversation_id', $this->selectedConversation->id)
@@ -90,12 +55,8 @@ class Chat extends Component
             ->first();
 
         if ($existing) {
-            // Redirect to existing invoice chat
-            return redirect()->route('client.chat.invoice', [
-                'client' => $invoice->client_id,
-                'conversation' => $existing->id,
-                'invoice' => $invoiceId
-            ]);
+            $this->dispatch('selectConversation', ['id' => $existing->id]);
+            return;
         }
 
         // Create new conversation for this invoice
@@ -109,11 +70,8 @@ class Chat extends Component
             'invoice_id' => $invoiceId,
         ]);
 
-        // Redirect to new invoice chat
-        return redirect()->route('client.chat.invoice', [
-            'client' => $invoice->client_id,
-            'conversation' => $newConversation->id,
-            'invoice' => $invoiceId
-        ]);
+//        $this->refresh();
+        $this->dispatch('conversationSelected', id: $newConversation->id);
+        $this->dispatch('invoiceSelected', invoiceId: $invoiceId);
     }
 }

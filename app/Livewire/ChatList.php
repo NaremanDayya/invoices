@@ -197,7 +197,6 @@ class ChatList extends Component
             $q->having('unread_count', '=', 0);
         });
 
-        // Apply ordering using latest message timestamp
         if ($this->filter === 'oldest') {
             // Oldest conversations first by latest message time
             $query->orderBy('unread_count', 'desc')

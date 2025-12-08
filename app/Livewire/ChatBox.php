@@ -25,6 +25,7 @@ class ChatBox extends Component
         'loadMore',
         'broadcastedNotificationReceived',
         'scroll-to-bottom',
+        'messageSent' => 'refresh',
     ];
 
     public function getListeners()
@@ -81,7 +82,7 @@ class ChatBox extends Component
             ->orderBy('created_at', 'desc')
             ->take($this->paginate_var)
             ->get()
-            ->reverse(); // Reverse to get chronological order
+            ->reverse();
 
         return $this->loadedMessages;
     }
@@ -163,7 +164,8 @@ class ChatBox extends Component
         // Refresh messages to include the new one
         $this->loadMessages();
 
-        // Dispatch scroll to bottom
+        // Dispatch events for UI updates
+        $this->dispatch('messageSent');
         $this->dispatch('scroll-bottom');
 
         $this->selectedConversation->updated_at = now();

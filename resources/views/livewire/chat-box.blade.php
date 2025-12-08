@@ -1,6 +1,6 @@
 <div class="invoice-chat-messages">
     <!-- Messages List -->
-    <div class="messages-list" id="messages-list" wire:ignore>
+    <div class="messages-list" id="messages-list">
         @php
             $currentDate = null;
         @endphp
@@ -461,6 +461,13 @@
             if (messageInput) {
                 messageInput.focus();
             }
+
+            // Auto-scroll after Livewire updates (when new messages are added)
+            Livewire.hook('morph.updated', ({ el, component }) => {
+                if (el.id === 'messages-list') {
+                    scrollToBottom();
+                }
+            });
 
             // Handle sending message with Enter key
             if (messageInput) {

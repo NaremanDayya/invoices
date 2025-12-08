@@ -26,26 +26,7 @@
                 </div>
             </div>
 
-            <div class="chat-actions">
-                <button class="btn btn-sm btn-outline-success me-2">
-                    <i class="bi bi-paperclip"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-success me-2">
-                    <i class="bi bi-telephone"></i>
-                </button>
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-success dropdown-toggle" type="button"
-                            data-bs-toggle="dropdown">
-                        <i class="bi bi-three-dots-vertical"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-download me-2"></i>Export Chat</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Clear Chat</a></li>
-                    </ul>
-                </div>
-            </div>
+
         </div>
     </div>
 

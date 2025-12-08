@@ -70,7 +70,7 @@ class Chat extends Component
             'invoice_id' => $invoiceId,
         ]);
 
-        $this->refresh();
+//        $this->refresh();
         $this->dispatch('conversationSelected', id: $newConversation->id);
         $this->dispatch('invoiceSelected', invoiceId: $invoiceId);
     }

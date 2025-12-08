@@ -32,7 +32,8 @@ class Chat extends Component
 
     public function render()
     {
-        return view('livewire.chat');
+        $clientInvoices = $this->client->invoices()->get();
+        return view('livewire.chat', compact('clientInvoices'));
     }
     public function startInvoiceChat($invoiceId)
     {

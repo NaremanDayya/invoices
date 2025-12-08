@@ -83,6 +83,11 @@ class Invoice extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function conversation()
+    {
+        return $this->hasOne(Conversation::class);
+    }
+
     public function creditNotes()
     {
         return $this->hasMany(CreditNote::class);

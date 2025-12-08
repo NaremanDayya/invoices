@@ -17,6 +17,7 @@ class Conversation extends Model
         'receiver_id',
         'sender_id',
         'client_id',
+        'invoice_id',
     ];
 
 
@@ -110,6 +111,11 @@ class Conversation extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
     }
     public function getLatestMessageTextAttribute()
     {

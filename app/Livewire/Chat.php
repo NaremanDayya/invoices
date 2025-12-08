@@ -13,16 +13,42 @@ use Livewire\Component;
 class Chat extends Component
 {
     public Client $client;
-    public Conversation $conversation;
+    public ?Conversation $conversation = null;
     public Invoice $invoice;
     public $selectedConversation;
 
-    public function mount(Client $client, Conversation $conversation,Invoice $invoice)
+    public function mount(Client $client, Invoice $invoice, Conversation $conversation = null)
     {
         $this->client = $client;
         $this->invoice = $invoice;
-        $this->conversation = $conversation;
-        $this->selectedConversation = $conversation;
+        
+        // Find or create conversation for this invoice
+        $existingConversation = Conversation::where('client_id', $client->id)
+            ->where('invoice_id', $invoice->id)
+            ->where(function ($q) {
+                $q->where('sender_id', Auth::id())
+                    ->orWhere('receiver_id', Auth::id());
+            })
+            ->first();
+
+        if ($existingConversation) {
+            $this->conversation = $existingConversation;
+            $this->selectedConversation = $existingConversation;
+        } else {
+            // Create new conversation for this invoice
+            $receiverId = $client->sales_rep_id ?? Auth::id();
+            
+            $newConversation = Conversation::create([
+                'id' => (string)Str::uuid(),
+                'sender_id' => Auth::id(),
+                'receiver_id' => $receiverId,
+                'client_id' => $client->id,
+                'invoice_id' => $invoice->id,
+            ]);
+            
+            $this->conversation = $newConversation;
+            $this->selectedConversation = $newConversation;
+        }
 
         // Mark unread messages as read for this user
         Message::where('conversation_id', $this->selectedConversation->id)
@@ -35,42 +61,5 @@ class Chat extends Component
     {
         $clientInvoices = $this->client->invoices()->get();
         return view('livewire.chat', compact('clientInvoices'));
-    }
-    public function startInvoiceChat($invoiceId)
-    {
-        $user = Auth::user();
-        $invoice = Invoice::with('client')->find($invoiceId);
-
-        if (!$invoice) {
-            return;
-        }
-
-        // Check for existing conversation for this invoice
-        $existing = Conversation::where('client_id', $invoice->client_id)
-            ->where('invoice_id', $invoiceId)
-            ->where(function ($q) use ($user) {
-                $q->where('sender_id', $user->id)
-                    ->orWhere('receiver_id', $user->id);
-            })
-            ->first();
-        if ($existing) {
-            $this->dispatch('selectConversation', ['id' => $existing->id]);
-            return;
-        }
-
-        // Create new conversation for this invoice
-        $receiverId = $invoice->client->sales_rep_id ?? $user->id;
-
-        $newConversation = Conversation::create([
-            'id' => (string)Str::uuid(),
-            'sender_id' => $user->id,
-            'receiver_id' => $receiverId,
-            'client_id' => $invoice->client_id,
-            'invoice_id' => $invoiceId,
-        ]);
-
-//        $this->refresh();
-        $this->dispatch('conversationSelected', id: $newConversation->id);
-        $this->dispatch('invoiceSelected', invoiceId: $invoiceId);
     }
 }

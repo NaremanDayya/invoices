@@ -84,8 +84,7 @@
                 @if($clientInvoices->count() > 0)
                     <div class="invoices-list">
                         @foreach($clientInvoices as $clientInvoice)
-                            <a href="{{ route('client.chat.invoice', ['client' => $clientInvoice?->client?->id ?? 'unknown','invoice' => $clientInvoice->id]) }}"
-                               wire:click.prevent="startInvoiceChat({{ $clientInvoice->id }})"
+                            <a href="{{ route('client.chat.invoice', ['client' => $client->id, 'invoice' => $clientInvoice->id]) }}"
                                class="invoice-item {{ $invoice && $invoice->id == $clientInvoice->id ? 'active' : '' }}">
                                 <div class="invoice-item-icon">
                                     <i class="bi bi-file-earmark-text"></i>

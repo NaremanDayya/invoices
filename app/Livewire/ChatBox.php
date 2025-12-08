@@ -148,7 +148,7 @@ class ChatBox extends Component
     public function sendMessage()
     {
         $this->validate(['message' => 'required|string|max:1000']);
-    dd($this->selectedConversation);
+//    dd($this->selectedConversation);
         $createdMessage = Message::create([
             'conversation_id' => $this->selectedConversation->id,
             'sender_id' => Auth::id(),

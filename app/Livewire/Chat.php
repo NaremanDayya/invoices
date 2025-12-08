@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\Invoice;
 use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Chat extends Component

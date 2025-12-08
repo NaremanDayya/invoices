@@ -54,7 +54,12 @@ class Conversation extends Model
         return $this->unreadMessagesCount();
     }
 
+    public function getReceiver()
+    {
 
+            return User::firstWhere('id', $this->receiver_id);
+
+    }
     public function unreadMessagesCount(): int
     {
         return $unreadMessages = Message::where('conversation_id', '=', $this->id)

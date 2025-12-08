@@ -159,7 +159,7 @@
                         @endif
                         <li>
                             <i class="bi bi-calendar-event text-info"></i>
-                            <span>Created - {{ $invoice->created_at->diffForHumans() }}</span>
+                            <span>Created - {{ $invoice?->created_at->diffForHumans() }}</span>
                         </li>
                     </ul>
                 </div>

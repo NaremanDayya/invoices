@@ -20,22 +20,13 @@
                 <div class="ms-3">
                     <h5 class="mb-1 text-dark">{{ $client->company_name }}</h5>
                     <small class="text-muted">
-                        <i class="bi bi-chat-left-text me-1"></i>
-                        @if(isset($selectedConversation) && $selectedConversation->invoice_id)
-                            Invoice #{{ $selectedConversation->invoice->invoice_number ?? 'N/A' }}
-                        @else
-                            General Discussion
-                        @endif
+                        <i class="bi bi-file-earmark-text me-1"></i>
+                        Invoice Discussion
                     </small>
                 </div>
             </div>
 
             <div class="chat-actions">
-                <!-- Top right arrow button to toggle chat list -->
-                <button wire:click="toggleChatList" class="btn btn-sm btn-outline-success me-2">
-                    <i class="bi bi-chat-right-text"></i>
-                </button>
-
                 <button class="btn btn-sm btn-outline-success me-2">
                     <i class="bi bi-paperclip"></i>
                 </button>
@@ -60,237 +51,249 @@
 
     <!-- Chat Body -->
     <div class="chat-body">
-        <!-- Chat List Sidebar (Hidden by default, toggled by button) -->
-        @if($showChatList)
-            <div class="chat-list-sidebar">
-                <div class="sidebar-tabs">
-                    <div class="nav nav-tabs" role="tablist">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#chats-tab">
-                            <i class="bi bi-chat-left-text me-1"></i> Chats
-                        </button>
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#invoices-tab">
-                            <i class="bi bi-receipt me-1"></i> Invoices
-                        </button>
-                    </div>
-
-                    <div class="tab-content">
-                        <!-- Chats Tab -->
-                        <div class="tab-pane fade show active" id="chats-tab">
-                            <livewire:chat-list
-                                :client="$client"
-                                :selectedConversation="$selectedConversation ?? null"
-                            />
-                        </div>
-
-                        <!-- Invoices Tab -->
-                        <div class="tab-pane fade" id="invoices-tab">
-                            <div class="invoices-list">
-                                <div class="list-group">
-                                    @foreach($invoices as $invoice)
-                                        <a href="#"
-                                           wire:click.prevent="openInvoiceChat({{ $invoice->id }})"
-                                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <div class="fw-bold">Invoice #{{ $invoice->invoice_number }}</div>
-                                                <small class="text-muted">{{ $invoice->created_at->format('M d, Y') }}</small>
-                                            </div>
-                                            <div class="text-end">
-                                                <div class="fw-bold text-success">${{ number_format($invoice->total_amount, 2) }}</div>
-                                                <span class="badge bg-{{ $invoice->status === 'paid' ? 'success' : ($invoice->status === 'pending' ? 'warning' : 'danger') }}">
-                                            {{ ucfirst($invoice->status) }}
-                                        </span>
-                                            </div>
-                                        </a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-
+{{--        <div class="relative w-full md:w-[320px] xl:w-[400px] overflow-y-auto shrink-0 h-full border">--}}
+{{--            <livewire:chat-list :selectedConversation="$selectedConversation" :conversation="$conversation">--}}
+{{--        </div>--}}
         <!-- Messages Area -->
         <div class="messages-container" id="messages-container">
-            @if(isset($selectedConversation))
-                <livewire:chat-box
-                    :client_id="$client->id"
-                    :selectedConversation="$selectedConversation"
-                />
-            @else
-                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-                    <i class="bi bi-chat-left-text display-4 mb-3"></i>
-                    <h4>Select a Conversation</h4>
-                    <p>Choose a chat from the list or start a new one</p>
-                </div>
-            @endif
+            <livewire:chat-box :client_id="$client->id" :selectedConversation="$selectedConversation" />
         </div>
 
         <!-- Sidebar - Invoice Details -->
         <div class="chat-sidebar">
             <div class="sidebar-header">
-                <h6>
-                    <i class="bi bi-receipt me-2"></i>
-                    @if(isset($selectedConversation) && $selectedConversation->invoice)
-                        Invoice #{{ $selectedConversation->invoice->invoice_number }}
-                    @else
-                        Client Details
-                    @endif
-                </h6>
+                <h6><i class="bi bi-receipt me-2"></i>Invoice Details</h6>
             </div>
 
-            @if(isset($selectedConversation) && $selectedConversation->invoice)
-                    <?php $invoice = $selectedConversation->invoice; ?>
-                <div class="invoice-summary">
-                    <div class="summary-item">
-                        <span class="label">Invoice #</span>
-                        <span class="value text-success fw-bold">{{ $invoice->invoice_number }}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="label">Amount</span>
-                        <span class="value">${{ number_format($invoice->total_amount, 2) }}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="label">Due Date</span>
-                        <span class="value">{{ $invoice->due_date->format('M d, Y') }}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="label">Status</span>
-                        <span class="badge bg-{{ $invoice->status === 'paid' ? 'success' : ($invoice->status === 'pending' ? 'warning' : 'danger') }}-light text-{{ $invoice->status === 'paid' ? 'success' : ($invoice->status === 'pending' ? 'warning' : 'danger') }}">
-                        {{ ucfirst($invoice->status) }}
-                    </span>
-                    </div>
+            <div class="invoice-summary">
+                <div class="summary-item">
+                    <span class="label">Invoice #</span>
+                    <span class="value text-success fw-bold">INV-{{ $client->id }}001</span>
                 </div>
-            @else
-                <div class="client-summary">
-                    <div class="summary-item">
-                        <span class="label">Company</span>
-                        <span class="value">{{ $client->company_name }}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="label">Contact</span>
-                        <span class="value">{{ $client->contact_name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="label">Email</span>
-                        <span class="value">{{ $client->email }}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="label">Phone</span>
-                        <span class="value">{{ $client->phone ?? 'N/A' }}</span>
-                    </div>
+                <div class="summary-item">
+                    <span class="label">Amount</span>
+                    <span class="value">$4,250.00</span>
                 </div>
-            @endif
+                <div class="summary-item">
+                    <span class="label">Due Date</span>
+                    <span class="value">Nov 30, 2024</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Status</span>
+                    <span class="badge bg-success-light text-success">Paid</span>
+                </div>
+            </div>
 
             <div class="sidebar-section mt-4">
                 <h6><i class="bi bi-clock-history me-2"></i>Recent Activity</h6>
                 <ul class="activity-list">
-                    @if(isset($selectedConversation))
-                        @foreach($selectedConversation->messages()->latest()->limit(3)->get() as $activity)
-                            <li>
-                                <i class="bi bi-chat-left-text-fill text-info"></i>
-                                <span>{{ $activity->sender->name ?? 'User' }}: {{ Str::limit($activity->message, 30) }} - {{ $activity->created_at->diffForHumans() }}</span>
-                            </li>
-                        @endforeach
-                    @else
-                        <li class="text-muted text-center py-3">
-                            No recent activity
-                        </li>
-                    @endif
+                    <li>
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>Payment confirmed - 2 hours ago</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-envelope-fill text-primary"></i>
+                        <span>Invoice sent - Yesterday</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-chat-left-text-fill text-info"></i>
+                        <span>Quotation discussion - 3 days ago</span>
+                    </li>
                 </ul>
             </div>
 
-            @if(isset($selectedConversation) && $selectedConversation->invoice)
-                <div class="sidebar-section mt-4">
-                    <h6><i class="bi bi-paperclip me-2"></i>Attachments</h6>
-                    <div class="attachments">
-                        @if($selectedConversation->invoice->attachments()->count() > 0)
-                            @foreach($selectedConversation->invoice->attachments()->limit(3)->get() as $attachment)
-                                <a href="{{ Storage::url($attachment->path) }}" target="_blank" class="attachment-item">
-                                    <i class="bi bi-file-{{ $attachment->type === 'pdf' ? 'pdf text-danger' : ($attachment->type === 'excel' ? 'excel text-success' : 'image text-info') }}"></i>
-                                    <span>{{ $attachment->name }}</span>
-                                </a>
-                            @endforeach
-                        @else
-                            <div class="text-muted text-center py-2">
-                                No attachments
-                            </div>
-                        @endif
-                    </div>
+            <div class="sidebar-section mt-4">
+                <h6><i class="bi bi-paperclip me-2"></i>Attachments</h6>
+                <div class="attachments">
+                    <a href="#" class="attachment-item">
+                        <i class="bi bi-file-pdf text-danger"></i>
+                        <span>invoice_001.pdf</span>
+                    </a>
+                    <a href="#" class="attachment-item">
+                        <i class="bi bi-file-excel text-success"></i>
+                        <span>items_list.xlsx</span>
+                    </a>
+                    <a href="#" class="attachment-item">
+                        <i class="bi bi-file-image text-info"></i>
+                        <span>receipt.jpg</span>
+                    </a>
                 </div>
-            @endif
+            </div>
         </div>
     </div>
 </div>
 
 @push('styles')
     <style>
-        /* Add these new styles to your existing CSS */
+        .invoice-chat-container {
+            height: calc(100vh - 180px); /* Adjusted to account for header and padding */
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
 
-        .chat-list-sidebar {
-            width: 320px;
+        .chat-header {
             background: white;
-            border-right: 1px solid #e9ecef;
-            overflow-y: auto;
-            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
 
-        .sidebar-tabs {
+        .avatar-container {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #20c997;
+        }
+
+        .company-logo {
+            width: 100%;
             height: 100%;
+            object-fit: cover;
         }
 
-        .sidebar-tabs .nav-tabs {
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 15px;
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            background: linear-gradient(135deg, #20c997, #198754);
         }
 
-        .sidebar-tabs .nav-link {
-            border: none;
-            color: #6c757d;
-            font-weight: 500;
-            padding: 10px 15px;
-            flex: 1;
-            text-align: center;
-        }
-
-        .sidebar-tabs .nav-link.active {
-            color: #198754;
-            border-bottom: 2px solid #198754;
-            background: transparent;
-        }
-
-        .invoices-list {
-            height: calc(100vh - 200px);
-            overflow-y: auto;
-        }
-
-        .invoices-list .list-group-item {
-            border: none;
-            border-bottom: 1px solid #f1f3f4;
-            padding: 12px 0;
-            margin: 0;
-        }
-
-        .invoices-list .list-group-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        /* Adjust chat body for sidebar */
         .chat-body {
             display: flex;
             height: calc(100% - 75px);
         }
 
+        .messages-container {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .chat-sidebar {
+            width: 320px;
+            background: white;
+            border-left: 1px solid #e9ecef;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h6 {
+            color: #198754;
+            font-weight: 600;
+        }
+
+        .invoice-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-item .label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .summary-item .value {
+            font-weight: 500;
+        }
+
+        .bg-success-light {
+            background-color: rgba(25, 135, 84, 0.1) !important;
+        }
+
+        .sidebar-section h6 {
+            color: #495057;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .activity-list li {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .activity-list li i {
+            margin-right: 10px;
+            font-size: 0.8rem;
+        }
+
+        .activity-list li span {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .attachments {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #495057;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .attachment-item:hover {
+            background: #e9ecef;
+            border-color: #20c997;
+            transform: translateX(5px);
+        }
+
+        .attachment-item i {
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
+        .attachment-item span {
+            font-size: 0.85rem;
+            flex: 1;
+        }
+
         /* Responsive */
         @media (max-width: 992px) {
-            .chat-list-sidebar {
-                width: 280px;
-                position: absolute;
-                z-index: 1000;
-                height: 100%;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            }
-
             .chat-sidebar {
                 width: 280px;
             }
@@ -299,12 +302,6 @@
         @media (max-width: 768px) {
             .chat-body {
                 flex-direction: column;
-            }
-
-            .chat-list-sidebar {
-                width: 100%;
-                position: absolute;
-                z-index: 1000;
             }
 
             .chat-sidebar {
@@ -340,12 +337,6 @@
             // Back to invoices
             window.addEventListener('back-to-invoices', function() {
                 window.location.href = '{{ route("invoices.index") }}';
-            });
-
-            // Listen for conversation selection
-            Livewire.on('conversation-selected', (event) => {
-                // Hide chat list after selection (for mobile)
-            @this.set('showChatList', false);
             });
         });
     </script>

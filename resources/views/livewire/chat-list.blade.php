@@ -1,10 +1,3 @@
-<div class="chat-list-container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="mb-0">Conversations</h6>
-        <button wire:click="$dispatch('hide-chat-list')" class="btn btn-sm btn-link d-lg-none">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    </div>
 <div class="invoices-chat-list">
     <!-- Header -->
     <div class="chat-list-header">
@@ -215,7 +208,7 @@
         @endif
     </div>
     @include('partials.client-selection-modal')
-</div>
+
 </div>
 {{--@vite('resources/js/client-chat.js')--}}
 

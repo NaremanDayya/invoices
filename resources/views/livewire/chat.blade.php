@@ -7,18 +7,14 @@
                     <i class="bi bi-arrow-left"></i>
                 </button>
                 <div class="avatar-container">
-                    @if($client->company_logo)
-                        <img src="{{ asset('storage/' . $client->company_logo) }}"
-                             alt="{{ $client->company_name }}"
-                             class="company-logo">
-                    @else
+
                         <div class="avatar-placeholder bg-success">
-                            {{ substr($client->company_name, 0, 2) }}
+                            {{ substr($client->name, 0, 2) }}
                         </div>
-                    @endif
+
                 </div>
                 <div class="ms-3">
-                    <h5 class="mb-1 text-dark">{{ $client->company_name }}</h5>
+                    <h5 class="mb-1 text-dark">{{ $client->name }}</h5>
                     <small class="text-muted">
                         <i class="bi bi-file-earmark-text me-1"></i>
                         @if($invoice)
@@ -81,7 +77,7 @@
                     </div>
                     <div class="summary-item">
                         <span class="label">Due Date</span>
-                        <span class="value">{{ $invoice->due_date->format('M d, Y') }}</span>
+                        <span class="value">{{ $invoice?->due_date->format('M d, Y') }}</span>
                     </div>
                     <div class="summary-item">
                         <span class="label">Status</span>

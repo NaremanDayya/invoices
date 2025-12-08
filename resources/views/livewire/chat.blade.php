@@ -21,7 +21,11 @@
                     <h5 class="mb-1 text-dark">{{ $client->company_name }}</h5>
                     <small class="text-muted">
                         <i class="bi bi-file-earmark-text me-1"></i>
-                        Invoice Discussion
+                        @if($invoice)
+                            Invoice #{{ $invoice->invoice_number }} Discussion
+                        @else
+                            Invoice Discussion
+                        @endif
                     </small>
                 </div>
             </div>
@@ -51,12 +55,11 @@
 
     <!-- Chat Body -->
     <div class="chat-body">
-{{--        <div class="relative w-full md:w-[320px] xl:w-[400px] overflow-y-auto shrink-0 h-full border">--}}
-{{--            <livewire:chat-list :selectedConversation="$selectedConversation" :conversation="$conversation">--}}
-{{--        </div>--}}
         <!-- Messages Area -->
         <div class="messages-container" id="messages-container">
-            <livewire:chat-box :client_id="$client->id" :selectedConversation="$selectedConversation" />
+            <livewire:chat-box :client_id="$client->id"
+                               :invoice_id="$invoice->id ?? null"
+                               :selectedConversation="$selectedConversation" />
         </div>
 
         <!-- Sidebar - Invoice Details -->
@@ -65,60 +68,145 @@
                 <h6><i class="bi bi-receipt me-2"></i>Invoice Details</h6>
             </div>
 
-            <div class="invoice-summary">
-                <div class="summary-item">
-                    <span class="label">Invoice #</span>
-                    <span class="value text-success fw-bold">INV-{{ $client->id }}001</span>
+            <!-- Current Invoice Summary -->
+            @if($invoice)
+                <div class="invoice-summary">
+                    <div class="summary-item">
+                        <span class="label">Invoice #</span>
+                        <span class="value text-success fw-bold">{{ $invoice->invoice_number }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Amount</span>
+                        <span class="value">${{ number_format($invoice->total_amount, 2) }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Due Date</span>
+                        <span class="value">{{ $invoice->due_date->format('M d, Y') }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Status</span>
+                        @php
+                            $statusColors = [
+                                'paid' => 'bg-success-light text-success',
+                                'pending' => 'bg-warning-light text-warning',
+                                'overdue' => 'bg-danger-light text-danger',
+                                'draft' => 'bg-secondary-light text-secondary',
+                            ];
+                            $statusClass = $statusColors[strtolower($invoice->status)] ?? 'bg-secondary-light text-secondary';
+                        @endphp
+                        <span class="badge {{ $statusClass }}">{{ ucfirst($invoice->status) }}</span>
+                    </div>
                 </div>
-                <div class="summary-item">
-                    <span class="label">Amount</span>
-                    <span class="value">$4,250.00</span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">Due Date</span>
-                    <span class="value">Nov 30, 2024</span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">Status</span>
-                    <span class="badge bg-success-light text-success">Paid</span>
-                </div>
+            @endif
+
+            <!-- Client Invoices List -->
+            <div class="sidebar-section mt-4">
+                <h6>
+                    <i class="bi bi-files me-2"></i>
+                    Client Invoices
+                    <span class="badge bg-success ms-1">{{ $clientInvoices->count() }}</span>
+                </h6>
+
+                @if($clientInvoices->count() > 0)
+                    <div class="invoices-list">
+                        @foreach($clientInvoices as $clientInvoice)
+                            <a href="#"
+                               wire:click.prevent="startInvoiceChat({{ $clientInvoice->id }})"
+                               class="invoice-item {{ $invoice && $invoice->id == $clientInvoice->id ? 'active' : '' }}">
+                                <div class="invoice-item-icon">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </div>
+                                <div class="invoice-item-details">
+                                    <div class="invoice-number">{{ $clientInvoice->invoice_number }}</div>
+                                    <div class="invoice-meta">
+                                        <span class="amount">${{ number_format($clientInvoice->total_amount, 2) }}</span>
+                                        <span class="dot">•</span>
+                                        <span class="date">{{ $clientInvoice->created_at->format('M d') }}</span>
+                                    </div>
+                                </div>
+                                <div class="invoice-status">
+                                    @php
+                                        $invoiceStatusColors = [
+                                            'paid' => 'text-success',
+                                            'pending' => 'text-warning',
+                                            'overdue' => 'text-danger',
+                                            'draft' => 'text-secondary',
+                                        ];
+                                        $invoiceStatusClass = $invoiceStatusColors[strtolower($clientInvoice->status)] ?? 'text-secondary';
+                                    @endphp
+                                    <i class="bi bi-circle-fill {{ $invoiceStatusClass }}"></i>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="alert alert-light border text-center py-3">
+                        <i class="bi bi-file-text text-muted mb-2 d-block" style="font-size: 2rem;"></i>
+                        <p class="mb-0 text-muted">No invoices found</p>
+                    </div>
+                @endif
             </div>
 
-            <div class="sidebar-section mt-4">
-                <h6><i class="bi bi-clock-history me-2"></i>Recent Activity</h6>
-                <ul class="activity-list">
-                    <li>
-                        <i class="bi bi-check-circle-fill text-success"></i>
-                        <span>Payment confirmed - 2 hours ago</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-envelope-fill text-primary"></i>
-                        <span>Invoice sent - Yesterday</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-chat-left-text-fill text-info"></i>
-                        <span>Quotation discussion - 3 days ago</span>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="sidebar-section mt-4">
-                <h6><i class="bi bi-paperclip me-2"></i>Attachments</h6>
-                <div class="attachments">
-                    <a href="#" class="attachment-item">
-                        <i class="bi bi-file-pdf text-danger"></i>
-                        <span>invoice_001.pdf</span>
-                    </a>
-                    <a href="#" class="attachment-item">
-                        <i class="bi bi-file-excel text-success"></i>
-                        <span>items_list.xlsx</span>
-                    </a>
-                    <a href="#" class="attachment-item">
-                        <i class="bi bi-file-image text-info"></i>
-                        <span>receipt.jpg</span>
-                    </a>
+            <!-- Recent Activity -->
+            @if($invoice)
+                <div class="sidebar-section mt-4">
+                    <h6><i class="bi bi-clock-history me-2"></i>Recent Activity</h6>
+                    <ul class="activity-list">
+                        @if($invoice->paid_at)
+                            <li>
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                <span>Payment confirmed - {{ $invoice->paid_at->diffForHumans() }}</span>
+                            </li>
+                        @endif
+                        @if($invoice->sent_at)
+                            <li>
+                                <i class="bi bi-envelope-fill text-primary"></i>
+                                <span>Invoice sent - {{ $invoice->sent_at->diffForHumans() }}</span>
+                            </li>
+                        @endif
+                        <li>
+                            <i class="bi bi-calendar-event text-info"></i>
+                            <span>Created - {{ $invoice->created_at->diffForHumans() }}</span>
+                        </li>
+                    </ul>
                 </div>
-            </div>
+
+                <!-- Attachments -->
+                @if($invoice->attachments->count() > 0)
+                    <div class="sidebar-section mt-4">
+                        <h6><i class="bi bi-paperclip me-2"></i>Attachments</h6>
+                        <div class="attachments">
+                            @foreach($invoice->attachments as $attachment)
+                                <a href="{{ Storage::url($attachment->path) }}"
+                                   target="_blank"
+                                   class="attachment-item">
+                                    @php
+                                        $fileType = strtolower(pathinfo($attachment->path, PATHINFO_EXTENSION));
+                                        $iconClass = 'bi-file-text';
+                                        $colorClass = 'text-secondary';
+
+                                        if(in_array($fileType, ['pdf'])) {
+                                            $iconClass = 'bi-file-pdf';
+                                            $colorClass = 'text-danger';
+                                        } elseif(in_array($fileType, ['xls', 'xlsx', 'csv'])) {
+                                            $iconClass = 'bi-file-excel';
+                                            $colorClass = 'text-success';
+                                        } elseif(in_array($fileType, ['jpg', 'jpeg', 'png', 'gif'])) {
+                                            $iconClass = 'bi-file-image';
+                                            $colorClass = 'text-info';
+                                        } elseif(in_array($fileType, ['doc', 'docx'])) {
+                                            $iconClass = 'bi-file-word';
+                                            $colorClass = 'text-primary';
+                                        }
+                                    @endphp
+                                    <i class="bi {{ $iconClass }} {{ $colorClass }}"></i>
+                                    <span>{{ $attachment->name }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            @endif
         </div>
     </div>
 </div>
@@ -126,7 +214,7 @@
 @push('styles')
     <style>
         .invoice-chat-container {
-            height: calc(100vh - 180px); /* Adjusted to account for header and padding */
+            height: calc(100vh - 180px);
             background: #f8f9fa;
             border-radius: 12px;
             overflow: hidden;
@@ -227,12 +315,109 @@
         .bg-success-light {
             background-color: rgba(25, 135, 84, 0.1) !important;
         }
+        .bg-warning-light {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
+        .bg-danger-light {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+        }
+        .bg-secondary-light {
+            background-color: rgba(108, 117, 125, 0.1) !important;
+        }
 
         .sidebar-section h6 {
             color: #495057;
             font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .invoices-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .invoice-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #495057;
+            border-bottom: 1px solid #f1f3f4;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .invoice-item:hover {
+            background: #f8f9fa;
+            color: #198754;
+        }
+
+        .invoice-item.active {
+            background: rgba(25, 135, 84, 0.05);
+            border-left: 3px solid #198754;
+            color: #198754;
+        }
+
+        .invoice-item:last-child {
+            border-bottom: none;
+        }
+
+        .invoice-item-icon {
+            width: 36px;
+            height: 36px;
+            background: #e9ecef;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .invoice-item-icon i {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+
+        .invoice-item.active .invoice-item-icon {
+            background: #198754;
+        }
+
+        .invoice-item.active .invoice-item-icon i {
+            color: white;
+        }
+
+        .invoice-item-details {
+            flex: 1;
+        }
+
+        .invoice-number {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .invoice-meta {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .invoice-meta .amount {
+            font-weight: 500;
+        }
+
+        .invoice-meta .dot {
+            margin: 0 5px;
+        }
+
+        .invoice-status i {
+            font-size: 0.6rem;
         }
 
         .activity-list {
@@ -290,6 +475,23 @@
         .attachment-item span {
             font-size: 0.85rem;
             flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Scrollbar styling */
+        .invoices-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .invoices-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .invoices-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 2px;
         }
 
         /* Responsive */
@@ -309,6 +511,10 @@
                 order: -1;
                 border-left: none;
                 border-bottom: 1px solid #e9ecef;
+            }
+
+            .invoices-list {
+                max-height: 200px;
             }
         }
     </style>

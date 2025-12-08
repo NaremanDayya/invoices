@@ -31,4 +31,42 @@ class Chat extends Component
     {
         return view('livewire.chat');
     }
+    public function startInvoiceChat($invoiceId)
+    {
+        $user = Auth::user();
+        $invoice = Invoice::with('client')->find($invoiceId);
+
+        if (!$invoice) {
+            return;
+        }
+
+        // Check for existing conversation for this invoice
+        $existing = Conversation::where('client_id', $invoice->client_id)
+            ->where('invoice_id', $invoiceId)
+            ->where(function ($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                    ->orWhere('receiver_id', $user->id);
+            })
+            ->first();
+
+        if ($existing) {
+            $this->dispatch('selectConversation', ['id' => $existing->id]);
+            return;
+        }
+
+        // Create new conversation for this invoice
+        $receiverId = $invoice->client->sales_rep_id ?? $user->id;
+
+        $newConversation = Conversation::create([
+            'id' => (string)Str::uuid(),
+            'sender_id' => $user->id,
+            'receiver_id' => $receiverId,
+            'client_id' => $invoice->client_id,
+            'invoice_id' => $invoiceId,
+        ]);
+
+        $this->refresh();
+        $this->dispatch('conversationSelected', id: $newConversation->id);
+        $this->dispatch('invoiceSelected', invoiceId: $invoiceId);
+    }
 }

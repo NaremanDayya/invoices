@@ -151,7 +151,7 @@ class ChatBox extends Component
         $createdMessage = Message::create([
             'conversation_id' => $this->selectedConversation->id,
             'sender_id' => Auth::id(),
-            'receiver_id' => $this->selectedConversation->receiver()->id,
+            'receiver_id' => $this->selectedConversation->receiver->id,
             'message' => trim($this->message)
         ]);
 

@@ -53,7 +53,6 @@ class Chat extends Component
                     ->orWhere('receiver_id', $user->id);
             })
             ->first();
-dd($existing);
         if ($existing) {
             $this->dispatch('selectConversation', ['id' => $existing->id]);
             return;

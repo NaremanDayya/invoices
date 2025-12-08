@@ -128,11 +128,12 @@
                     $hasPending = $pendingAmount > 0;
                 @endphp
 
-                <a href="javascript:void(0)" wire:click="selectConversation({{ $conversation->id }})"
+                <a href="{{ route('client.chat', ['client' => $client?->id ?? 'unknown', 'conversation' => $conversation->id]) }}"
                    class="conversation-item {{ $isUnread ? 'unread' : '' }} text-decoration-none"
                    style="cursor: pointer; display: block; text-decoration: none; color: inherit;">
 
-                    <!-- Client Avatar -->
+
+                <!-- Client Avatar -->
                     <div class="conversation-avatar">
                         <div class="avatar-placeholder-sm bg-success">
                             {{ substr($client?->name ?? 'CC', 0, 2) }}

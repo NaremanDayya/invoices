@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Client;
 use App\Models\Conversation;
+use App\Models\Invoice;
 use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -12,11 +13,13 @@ class Chat extends Component
 {
     public Client $client;
     public Conversation $conversation;
+    public Invoice $invoice;
     public $selectedConversation;
 
-    public function mount(Client $client, Conversation $conversation)
+    public function mount(Client $client, Conversation $conversation,Invoice $invoice)
     {
         $this->client = $client;
+        $this->invoice = $invoice;
         $this->conversation = $conversation;
         $this->selectedConversation = $conversation;
 

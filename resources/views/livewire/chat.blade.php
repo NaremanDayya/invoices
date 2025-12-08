@@ -165,40 +165,7 @@
                 </div>
 
                 <!-- Attachments -->
-                @if($invoice->attachments->count() > 0)
-                    <div class="sidebar-section mt-4">
-                        <h6><i class="bi bi-paperclip me-2"></i>Attachments</h6>
-                        <div class="attachments">
-                            @foreach($invoice->attachments as $attachment)
-                                <a href="{{ Storage::url($attachment->path) }}"
-                                   target="_blank"
-                                   class="attachment-item">
-                                    @php
-                                        $fileType = strtolower(pathinfo($attachment->path, PATHINFO_EXTENSION));
-                                        $iconClass = 'bi-file-text';
-                                        $colorClass = 'text-secondary';
 
-                                        if(in_array($fileType, ['pdf'])) {
-                                            $iconClass = 'bi-file-pdf';
-                                            $colorClass = 'text-danger';
-                                        } elseif(in_array($fileType, ['xls', 'xlsx', 'csv'])) {
-                                            $iconClass = 'bi-file-excel';
-                                            $colorClass = 'text-success';
-                                        } elseif(in_array($fileType, ['jpg', 'jpeg', 'png', 'gif'])) {
-                                            $iconClass = 'bi-file-image';
-                                            $colorClass = 'text-info';
-                                        } elseif(in_array($fileType, ['doc', 'docx'])) {
-                                            $iconClass = 'bi-file-word';
-                                            $colorClass = 'text-primary';
-                                        }
-                                    @endphp
-                                    <i class="bi {{ $iconClass }} {{ $colorClass }}"></i>
-                                    <span>{{ $attachment->name }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
             @endif
         </div>
     </div>

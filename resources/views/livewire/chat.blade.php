@@ -75,10 +75,7 @@
                         <span class="label">Amount</span>
                         <span class="value">${{ number_format($invoice->total_amount, 2) }}</span>
                     </div>
-                    <div class="summary-item">
-                        <span class="label">Due Date</span>
-                        <span class="value">{{ $invoice?->due_date->format('M d, Y') }}</span>
-                    </div>
+
                     <div class="summary-item">
                         <span class="label">Status</span>
                         @php

@@ -129,7 +129,8 @@ class ChatBox extends Component
 
         $this->selectedConversation->updated_at = now();
         $this->selectedConversation->save();
-
+        $this->dispatch('messageSent');
+        $this->dispatch('scroll-bottom');
         $this->dispatch('refresh')->to('chat-list');
 
         $receiver = $this->selectedConversation->getReceiver();
@@ -159,8 +160,7 @@ class ChatBox extends Component
         $createdMessage->load(['sender', 'receiver']);
 
         // Clear message input
-        $this->message = '';
-
+        $this->reset('message');
         // Refresh messages to include the new one
         $this->loadMessages();
 

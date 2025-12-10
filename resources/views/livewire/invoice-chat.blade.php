@@ -3,7 +3,7 @@
     <div class="chat-header">
         <div class="d-flex justify-content-between align-items-center p-3">
             <div class="d-flex align-items-center">
-                <button wire:click="$dispatch('back-to-invoices')" class="btn btn-sm btn-light me-3">
+                <button wire:click="$dispatch('back-to-chat-list')" class="btn btn-sm btn-light me-3">
                     <i class="bi bi-arrow-left"></i>
                 </button>
                 <div class="avatar-container">
@@ -420,8 +420,8 @@
             Livewire.on('newMessage', scrollToBottom);
 
             // Back to invoices
-            window.addEventListener('back-to-invoices', function() {
-                window.location.href = '{{ route("invoices.index") }}';
+            window.addEventListener('back-to-chat-list', function() {
+                window.location.href = '{{ route("chat.index") }}';
             });
         });
     </script>

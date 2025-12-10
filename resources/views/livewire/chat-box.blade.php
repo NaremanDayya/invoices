@@ -29,6 +29,17 @@
                         <div class="like-message">
                             <i class="bi bi-heart-fill text-danger"></i>
                         </div>
+                    @elseif($message->image_path)
+                        <!-- Image Message -->
+                        <div class="image-message">
+                            <img src="{{ Storage::url($message->image_path) }}" 
+                                 alt="Shared image" 
+                                 class="chat-image"
+                                 onclick="window.open('{{ Storage::url($message->image_path) }}', '_blank')">
+                            @if($message->message && $message->message !== '[Image]')
+                                <div class="image-caption">{{ $message->message }}</div>
+                            @endif
+                        </div>
                     @else
                         <div class="message-content">
                             {{ $message->message }}
@@ -113,6 +124,12 @@
     <!-- Message Input -->
     <div class="message-input-container">
         <div class="input-group">
+            <!-- Attachment Button -->
+            <button class="btn btn-outline-success" type="button" id="attach-file-btn">
+                <i class="bi bi-paperclip"></i>
+            </button>
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+
             <!-- Main Input -->
             <input type="text"
                    wire:model="message"
@@ -120,7 +137,8 @@
                    class="form-control border-success"
                    placeholder="Type your message about the invoice..."
                    aria-label="Message"
-                   id="message-input">
+                   id="message-input"
+            >
 
             <!-- Send Button -->
             <button wire:click="sendMessage"
@@ -155,6 +173,35 @@
                     {{ $suggestion }}
                 </button>
             @endforeach
+        </div>
+    </div>
+
+    <!-- Image Preview Modal (WhatsApp Style) -->
+    <div class="image-preview-modal" id="image-preview-modal" style="display: none;">
+        <div class="preview-overlay"></div>
+        <div class="preview-container">
+            <div class="preview-header">
+                <button class="preview-close-btn" id="close-preview">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <h6 class="mb-0">Preview Image</h6>
+            </div>
+
+            <div class="preview-body">
+                <img id="preview-image" src="" alt="Preview">
+            </div>
+
+            <div class="preview-footer">
+                <div class="caption-input-group">
+                    <input type="text"
+                           class="form-control caption-input"
+                           id="image-caption"
+                           placeholder="Add a caption...">
+                </div>
+                <button class="btn btn-success send-image-btn" id="send-image-btn">
+                    <i class="bi bi-send-fill me-2"></i>Send
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -257,6 +304,37 @@
         .message-content {
             word-break: break-word;
             line-height: 1.5;
+        }
+
+        .image-message {
+            max-width: 300px;
+        }
+
+        .chat-image {
+            width: 100%;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+        }
+
+        .chat-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-caption {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .sent-bubble .image-caption {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .received-bubble .image-caption {
+            color: #212529;
         }
 
         .edited-text {
@@ -433,6 +511,176 @@
                 white-space: normal;
             }
         }
+
+        /* Image Preview Modal Styles (WhatsApp Style) */
+        .image-preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(5px);
+        }
+
+        .preview-container {
+            position: relative;
+            z-index: 10000;
+            background: #1e1e1e;
+            border-radius: 12px;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: modalSlideUp 0.3s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: #2a2a2a;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .preview-header h6 {
+            color: #ffffff;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .preview-close-btn {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .preview-close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .preview-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: #1e1e1e;
+            min-height: 300px;
+            max-height: 60vh;
+            overflow: hidden;
+        }
+
+        .preview-body img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .preview-footer {
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 0 0 12px 12px;
+            border-top: 1px solid #3a3a3a;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .caption-input-group {
+            flex: 1;
+        }
+
+        .caption-input {
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            color: #ffffff;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+        }
+
+        .caption-input:focus {
+            background: #3a3a3a;
+            border-color: #20c997;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(32, 201, 151, 0.25);
+        }
+
+        .caption-input::placeholder {
+            color: #888;
+        }
+
+        .send-image-btn {
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+            white-space: nowrap;
+            background: linear-gradient(135deg, #198754, #20c997);
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .send-image-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(32, 201, 151, 0.4);
+        }
+
+        .send-image-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Attachment button styling */
+        #attach-file-btn {
+            border-top-left-radius: 25px;
+            border-bottom-left-radius: 25px;
+        }
+
+        #message-input {
+            border-radius: 0;
+        }
+
+        .message-input-container .btn-success {
+            border-radius: 0;
+        }
+
+        .message-input-container .btn-outline-success:last-child {
+            border-top-right-radius: 25px;
+            border-bottom-right-radius: 25px;
+        }
     </style>
 @endpush
 
@@ -532,6 +780,161 @@
                     messageInput.focus();
                 }
             });
+
+            // ========== Screenshot Paste & File Attachment Functionality ==========
+
+            let currentImageFile = null;
+            const previewModal = document.getElementById('image-preview-modal');
+            const previewImage = document.getElementById('preview-image');
+            const imageCaption = document.getElementById('image-caption');
+            const closePreviewBtn = document.getElementById('close-preview');
+            const sendImageBtn = document.getElementById('send-image-btn');
+            const attachFileBtn = document.getElementById('attach-file-btn');
+            const fileInput = document.getElementById('file-input');
+
+            // Handle paste event for screenshots
+            document.addEventListener('paste', function(e) {
+                const items = e.clipboardData?.items;
+                if (!items) return;
+
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        const blob = items[i].getAsFile();
+                        showImagePreview(blob);
+                        break;
+                    }
+                }
+            });
+
+            // Handle file input change
+            if (attachFileBtn && fileInput) {
+                attachFileBtn.addEventListener('click', function() {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        showImagePreview(file);
+                    }
+                    // Reset file input
+                    fileInput.value = '';
+                });
+            }
+
+            // Show image preview modal
+            function showImagePreview(file) {
+                currentImageFile = file;
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewModal.style.display = 'flex';
+
+                    // Focus on caption input
+                    setTimeout(() => {
+                        if (imageCaption) {
+                            imageCaption.focus();
+                        }
+                    }, 300);
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            // Close preview modal
+            if (closePreviewBtn) {
+                closePreviewBtn.addEventListener('click', function() {
+                    closeImagePreview();
+                });
+            }
+
+            // Close on overlay click
+            if (previewModal) {
+                previewModal.addEventListener('click', function(e) {
+                    if (e.target === previewModal || e.target.classList.contains('preview-overlay')) {
+                        closeImagePreview();
+                    }
+                });
+            }
+
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && previewModal.style.display === 'flex') {
+                    closeImagePreview();
+                }
+            });
+
+            function closeImagePreview() {
+                previewModal.style.display = 'none';
+                previewImage.src = '';
+                imageCaption.value = '';
+                currentImageFile = null;
+            }
+
+            // Send image with caption
+            if (sendImageBtn) {
+                sendImageBtn.addEventListener('click', function() {
+                    if (!currentImageFile) return;
+
+                    const caption = imageCaption.value.trim();
+
+                    // Create FormData to send the image
+                    const formData = new FormData();
+                    formData.append('image', currentImageFile);
+                    formData.append('caption', caption);
+                    formData.append('conversation_id', '{{ $selectedConversation->id ?? "" }}');
+
+                    // Show loading state
+                    sendImageBtn.disabled = true;
+                    sendImageBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+                    // Send via AJAX (you'll need to create a route and controller method for this)
+                    fetch('/chat/send-image', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Close modal
+                            closeImagePreview();
+
+                            // Refresh messages
+                            Livewire.dispatch('refresh');
+
+                            // Show success notification (optional)
+                            console.log('Image sent successfully');
+                        } else {
+                            alert('Failed to send image. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while sending the image.');
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        sendImageBtn.disabled = false;
+                        sendImageBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
+                    });
+                });
+
+                // Send on Enter key in caption input
+                if (imageCaption) {
+                    imageCaption.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            sendImageBtn.click();
+                        }
+                    });
+                }
+            }
         });
     </script>
 @endpush

@@ -58,6 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::get('client/{client}/Chat/{conversation}', Chat::class)->name('client.chat');
     Route::get('client/{client}/message', [ChatController::class, 'message'])->name('client.message');
     Route::get('/chat/unread-count', [ChatController::class, 'unreadConversationsCount']);
+    Route::post('/chat/send-image', [ChatController::class, 'sendImage'])->name('chat.send-image');
 });
 Route::get('/clients', [\App\Http\Controllers\ClientController::class, 'chatClients']);
 Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'getNotifications']);

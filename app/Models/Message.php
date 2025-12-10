@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Message extends Model
 {
 
-    protected $fillable = ['receiver_id', 'edited_at',  'sender_id', 'message', 'is_admin', 'conversation_id', 'read_at', 'receiver_deleted_at', 'sender_deleted_at'];
+    protected $fillable = ['receiver_id', 'edited_at',  'sender_id', 'message', 'is_admin', 'conversation_id', 'read_at', 'receiver_deleted_at', 'sender_deleted_at', 'image_path'];
     protected $dates = [
         'read_at',
         'receiver_deleted_at',

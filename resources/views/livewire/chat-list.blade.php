@@ -81,17 +81,17 @@
                             </div>
                         </div>
 
-{{--                        <div class="stat-card">--}}
-{{--                            <div class="stat-icon bg-info-light">--}}
-{{--                                <i class="bi bi-clock-history text-info"></i>--}}
-{{--                            </div>--}}
-{{--                            <div>--}}
-{{--                                <h6 class="mb-0">--}}
-{{--                                    {{ $conversations->where('is_last_message_read', false)->count() }}--}}
-{{--                                </h6>--}}
-{{--                                <small class="text-muted">Pending Replies</small>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="stat-card">--}}
+                        {{--                            <div class="stat-icon bg-info-light">--}}
+                        {{--                                <i class="bi bi-clock-history text-info"></i>--}}
+                        {{--                            </div>--}}
+                        {{--                            <div>--}}
+                        {{--                                <h6 class="mb-0">--}}
+                        {{--                                    {{ $conversations->where('is_last_message_read', false)->count() }}--}}
+                        {{--                                </h6>--}}
+                        {{--                                <small class="text-muted">Pending Replies</small>--}}
+                        {{--                            </div>--}}
+                        {{--                        </div>--}}
                     </div>
                 </div>
             </div>
@@ -126,7 +126,7 @@
                     $paidAmount = $client?->invoices?->where('status', 'paid')->sum('amount') ?? 0;
                     $pendingAmount = $client?->invoices?->where('status', 'pending')->sum('amount') ?? 0;
                     $hasPending = $pendingAmount > 0;
-                    
+
                     // Determine the correct route based on whether conversation has an invoice
                     if ($conversation->invoice_id && $conversation->invoice) {
                         // Invoice-specific conversation - use invoice route
@@ -148,7 +148,7 @@
                    style="cursor: pointer; display: block; text-decoration: none; color: inherit;">
 
 
-                <!-- Client Avatar -->
+                    <!-- Client Avatar -->
                     <div class="conversation-avatar">
                         <div class="avatar-placeholder-sm bg-success">
                             {{ substr($client?->name ?? 'CC', 0, 2) }}

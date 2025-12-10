@@ -97,7 +97,7 @@ class ChatList extends Component
             ->when($this->clientSearch, function($query) {
                 $query->where(function($q) {
                     $q->where('name', 'like', '%' . $this->clientSearch . '%')
-                      ->orWhere('email', 'like', '%' . $this->clientSearch . '%');
+                        ->orWhere('email', 'like', '%' . $this->clientSearch . '%');
                 });
             })
             ->latest()

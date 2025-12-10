@@ -53,8 +53,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/chat-clients', [InvoiceController::class, 'chatClients']);
     Route::get('/clientChat', Index::class)->name('chat.index');
-    Route::get('invoice/{invoice}/chat', Chat::class)->name('invoice.chat');
-    Route::get('client/{client}/Chat/{conversation}', Chat::class)->name('client.chat');
+    Route::get('client/{client}/invoice-chat/{invoice:uuid}', \App\Livewire\Chat::class)
+        ->name('client.chat.invoice');    Route::get('client/{client}/Chat/{conversation}', Chat::class)->name('client.chat');
     Route::get('client/{client}/message', [ChatController::class, 'message'])->name('client.message');
     Route::get('/chat/unread-count', [ChatController::class, 'unreadConversationsCount']);
 });

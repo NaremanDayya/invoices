@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\Invoice;
 use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -60,6 +61,14 @@ class Chat extends Component
     }
     public function render()
     {
+        if ($this->invoice) {
+            Log::info('Invoice in chat:', [
+                'id' => $this->invoice->id,
+                'invoice_number' => $this->invoice->invoice_number,
+                'client_id' => $this->invoice->client_id,
+                'route_client_id' => $this->client->id,
+            ]);
+        }
         $clientInvoices = $this->client->invoices()->get();
         return view('livewire.chat', compact('clientInvoices'));
     }

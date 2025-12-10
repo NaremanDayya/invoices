@@ -53,7 +53,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/chat-clients', [InvoiceController::class, 'chatClients']);
     Route::get('/clientChat', Index::class)->name('chat.index');
-    Route::get('client/{client}/invoice-chat/{invoice}', Chat::class)->name('client.chat.invoice');
+    Route::get('client/{client}/invoice/{invoice}/chat', Chat::class)->name('client.invoice.chat');
     Route::get('client/{client}/Chat/{conversation}', Chat::class)->name('client.chat');
     Route::get('client/{client}/message', [ChatController::class, 'message'])->name('client.message');
     Route::get('/chat/unread-count', [ChatController::class, 'unreadConversationsCount']);

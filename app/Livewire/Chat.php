@@ -21,10 +21,11 @@ class Chat extends Component
     {
         $this->client = $client;
         $this->invoice = $invoice;
-        
-        // Find or create conversation for this invoice
+
+        // 1. Try to find the conversation specifically for this invoice
         $existingConversation = Conversation::where('client_id', $client->id)
             ->where('invoice_id', $invoice->id)
+            // Ensure we check that the current user is part of the conversation
             ->where(function ($q) {
                 $q->where('sender_id', Auth::id())
                     ->orWhere('receiver_id', Auth::id());
@@ -35,9 +36,8 @@ class Chat extends Component
             $this->conversation = $existingConversation;
             $this->selectedConversation = $existingConversation;
         } else {
-            // Create new conversation for this invoice
             $receiverId = $client->sales_rep_id ?? Auth::id();
-            
+
             $newConversation = Conversation::create([
                 'id' => (string)Str::uuid(),
                 'sender_id' => Auth::id(),
@@ -45,18 +45,19 @@ class Chat extends Component
                 'client_id' => $client->id,
                 'invoice_id' => $invoice->id,
             ]);
-            
+
             $this->conversation = $newConversation;
             $this->selectedConversation = $newConversation;
         }
 
-        // Mark unread messages as read for this user
-        Message::where('conversation_id', $this->selectedConversation->id)
-            ->where('receiver_id', Auth::id())
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+        // Mark messages read
+        if($this->selectedConversation) {
+            Message::where('conversation_id', $this->selectedConversation->id)
+                ->where('receiver_id', Auth::id())
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+        }
     }
-
     public function render()
     {
         $clientInvoices = $this->client->invoices()->get();

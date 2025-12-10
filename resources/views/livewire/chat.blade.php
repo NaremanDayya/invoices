@@ -84,6 +84,9 @@
                 @if($clientInvoices->count() > 0)
                     <div class="invoices-list">
                         @foreach($clientInvoices as $clientInvoice)
+                            @php
+                            dd($clientInvoice);
+                            @endphp
                             <a href="{{ route('client.chat.invoice', ['client' => $client->id, 'invoice' => $clientInvoice->id]) }}"
                                class="invoice-item {{ $invoice && $invoice->id == $clientInvoice->id ? 'active' : '' }}">
                                 <div class="invoice-item-icon">

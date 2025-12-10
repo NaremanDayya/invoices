@@ -165,7 +165,6 @@ class ChatList extends Component
         $query = Conversation::with([
             'client:id,name',
             'client.invoices',
-            'invoice:id,number,total_amount,status', // Added: Load invoice for routing logic
             'sender:id,name', // Added: Ensure sender is loaded for getReceiver()
             'receiver:id,name', // Added: Ensure receiver is loaded for getReceiver()
         ])

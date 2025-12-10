@@ -126,9 +126,24 @@
                     $paidAmount = $client?->invoices?->where('status', 'paid')->sum('amount') ?? 0;
                     $pendingAmount = $client?->invoices?->where('status', 'pending')->sum('amount') ?? 0;
                     $hasPending = $pendingAmount > 0;
+                    
+                    // Determine the correct route based on whether conversation has an invoice
+                    if ($conversation->invoice_id && $conversation->invoice) {
+                        // Invoice-specific conversation - use invoice route
+                        $chatUrl = route('client.chat.invoice', [
+                            'client' => $client?->id ?? 'unknown',
+                            'invoice' => $conversation->invoice_id
+                        ]);
+                    } else {
+                        // General conversation - use conversation route
+                        $chatUrl = route('client.chat', [
+                            'client' => $client?->id ?? 'unknown',
+                            'conversation' => $conversation->id
+                        ]);
+                    }
                 @endphp
 
-                <a href="{{ route('client.chat', ['client' => $client?->id ?? 'unknown', 'conversation' => $conversation->id]) }}"
+                <a href="{{ $chatUrl }}"
                    class="conversation-item {{ $isUnread ? 'unread' : '' }} text-decoration-none"
                    style="cursor: pointer; display: block; text-decoration: none; color: inherit;">
 

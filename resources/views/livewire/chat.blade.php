@@ -91,9 +91,9 @@
                                     <i class="bi bi-file-earmark-text"></i>
                                 </div>
                                 <div class="invoice-item-details">
-                                    <div class="invoice-number">{{ $clientInvoice->invoice_number }}</div>
+                                    <div class="invoice-number">{{ $clientInvoice->number }}</div>
                                     <div class="invoice-meta">
-                                        <span class="amount">${{ number_format($clientInvoice->total_amount, 2) }}</span>
+                                        <span class="amount">${{ number_format($clientInvoice->total_price, 2) }}</span>
                                         <span class="dot">•</span>
                                         <span class="date">{{ $clientInvoice->created_at->format('M d') }}</span>
                                     </div>

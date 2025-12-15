@@ -3,11 +3,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Conversation;
 use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\Client;
+use App\Models\Message;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
@@ -99,7 +103,6 @@ class InvoiceController extends Controller
             $finalInvoiceStatus = $validated['custom_status'];
         }
 
-        // Define allowed statuses for validation
         $allowedStatuses = [
             'رواتب', 'عمولات', 'عمل اضافي', 'رواتب-احتضان قانوني',
             'مصاريف قانونية- احتضان قانوني', 'يوزرات', 'ملغية',
@@ -159,19 +162,40 @@ class InvoiceController extends Controller
             'payment_status' => $validated['payment_status'],
             'payment_date' => $validated['payment_date'],
 
-            'invoice_status' => $finalInvoiceStatus, // Use the final determined status
+            'invoice_status' => $finalInvoiceStatus,
 
             'notes' => $validated['notes'] ?? null,
 
-            // other DB columns default to NULL automatically
         ];
-
+        $authenticatedUserId = Auth::id();
         $invoice = Invoice::create($invoiceData);
+        $conversation = $invoice->conversation()
+            ->where(function ($query) use ($authenticatedUserId) {
+                $query->where('sender_id', $authenticatedUserId)
+                    ->orWhere('receiver_id', $authenticatedUserId);
+            })->first();
 
+        if (!$conversation) {
+            $adminUserId = User::where('role', 'admin')->first()->id;
+            $conversation = Conversation::create([
+                'sender_id' => $authenticatedUserId,
+                'receiver_id' => $adminUserId,
+                'client_id' => $invoice->client->id,
+                'invoice_id' => $invoice->id,
+            ]);
+        }
+        $message = "فاتورة خاصة بالعميل {$invoice->client->name}، بقيمة: {$totalAmount}";
+        Message::create(
+        [
+            'conversation_id' => $conversation->id,
+            'sender_id' => $authenticatedUserId,
+            'receiver_id' => $conversation->sender_id === $authenticatedUserId ? $conversation->receiver_id : $conversation->sender_id,
+            'message' => $message,
+        ]
+    );
         return redirect()->route('invoices.index')
             ->with('success', 'تم إنشاء الفاتورة بنجاح!');
     }
-// In your InvoiceController
     public function addCreditNote(Request $request)
     {
         $request->validate([

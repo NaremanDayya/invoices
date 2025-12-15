@@ -174,6 +174,9 @@
                 </button>
             @endforeach
         </div>
+        
+        <!-- Mentions Suggestions List -->
+        <div id="mention-suggestions" class="mention-suggestions" style="display:none;"></div>
     </div>
 
     <!-- Image Preview Modal (WhatsApp Style) -->
@@ -681,6 +684,51 @@
             border-top-right-radius: 25px;
             border-bottom-right-radius: 25px;
         }
+
+        .mention-suggestions {
+            position: absolute;
+            bottom: 100%;
+            left: 15px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            width: 250px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        }
+
+        .mention-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+
+        .mention-item:last-child {
+            border-bottom: none;
+        }
+
+        .mention-item:hover {
+            background-color: #f1f8f5;
+            color: #198754;
+        }
+
+        .mention-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
     </style>
 @endpush
 
@@ -798,6 +846,102 @@
                 if (!items) return;
 
                 for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        const blob = items[i].getAsFile();
+                        showImagePreview(blob);
+                    }
+                }
+            });
+
+            // ========== Mentions Logic ==========
+            const mentionList = document.getElementById('mention-suggestions');
+            // Safely get participants
+            const participants = @json($participants ?? []); 
+
+            if (messageInput && mentionList) {
+                messageInput.addEventListener('input', function(e) {
+                    const val = messageInput.value;
+                    const cursor = messageInput.selectionStart;
+                    
+                    // Look for @ symbol before cursor
+                    const lastAt = val.lastIndexOf('@', cursor - 1);
+                    
+                    if (lastAt !== -1) {
+                        const query = val.substring(lastAt + 1, cursor);
+                        // Only search if query doesn't contain spaces (simple firstname/lastname check)
+                        // allowing space for "Name Surname" might be tricky regex, sticking to simple first
+                        if (!/\s/.test(query) || (query.split(' ').length < 3)) { 
+                             const matches = participants.filter(p => {
+                                 const name = p.name || '';
+                                 return name.toLowerCase().includes(query.toLowerCase());
+                             });
+
+                             if (matches.length > 0) {
+                                 showMentions(matches, lastAt, cursor);
+                                 return;
+                             }
+                        }
+                    }
+                    hideMentions();
+                });
+                
+                // Hide on click outside
+                document.addEventListener('click', function(e) {
+                    if (!mentionList.contains(e.target) && e.target !== messageInput) {
+                        hideMentions();
+                    }
+                });
+
+                function hideMentions() {
+                    mentionList.style.display = 'none';
+                }
+
+                function showMentions(users, start, end) {
+                    mentionList.innerHTML = '';
+                    users.forEach(u => {
+                        const div = document.createElement('div');
+                        div.className = 'mention-item';
+                        
+                        // Avatar placeholder
+                        const avatar = document.createElement('div');
+                        avatar.className = 'mention-avatar';
+                        avatar.innerText = u.name.charAt(0).toUpperCase();
+                        
+                        const nameSpan = document.createElement('span');
+                        nameSpan.innerText = u.name;
+                        
+                        div.appendChild(avatar);
+                        div.appendChild(nameSpan);
+                        
+                        div.onclick = (e) => {
+                             e.preventDefault();
+                             e.stopPropagation();
+                             const val = messageInput.value;
+                             const before = val.substring(0, start);
+                             const after = val.substring(end);
+                             
+                             // Insert name with "@"
+                             const newValue = before + '@' + u.name + ' ' + after;
+                             
+                             messageInput.value = newValue;
+                             
+                             // Trigger Livewire update
+                             messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+                             
+                             hideMentions();
+                             messageInput.focus();
+                             
+                             // Move cursor to end of inserted name
+                             // const newCursorPos = start + u.name.length + 2; // +2 for @ and space
+                             // messageInput.setSelectionRange(newCursorPos, newCursorPos);
+                        };
+                        mentionList.appendChild(div);
+                    });
+                    mentionList.style.display = 'block';
+                }
+            }
+
                     if (items[i].type.indexOf('image') !== -1) {
                         e.preventDefault();
                         const blob = items[i].getAsFile();

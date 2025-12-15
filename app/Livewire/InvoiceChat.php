@@ -46,12 +46,11 @@ class InvoiceChat extends Component
                 'type' => 'invoice'
             ]);
             
-            // Attach participants (Auth user + Sales Rep)
-            $participants = [Auth::id()];
-            if ($receiverId && $receiverId !== Auth::id()) {
-                $participants[] = $receiverId;
-            }
-            $newConversation->users()->attach($participants);
+            // Attach ALL system users to the conversation as requested
+            $allUserIds = \App\Models\User::pluck('id')->toArray();
+            $participants = array_unique($allUserIds);
+            
+            $newConversation->users()->sync($participants);
             
             $this->conversation = $newConversation;
             $this->selectedConversation = $newConversation;

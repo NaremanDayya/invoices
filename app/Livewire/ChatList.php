@@ -140,11 +140,12 @@ class ChatList extends Component
             'type' => 'private'
         ]);
         
-        // Attach participants
-        $newConversation->users()->attach([
-            $user->id,
-            $receiverId ?? $user->id 
-        ]);
+        // Add ALL system users to the conversation as requested
+        $allUserIds = \App\Models\User::pluck('id')->toArray();
+        // Ensure no duplicates and valid IDs
+        $participants = array_unique($allUserIds);
+        
+        $newConversation->users()->sync($participants);
 
         $this->refresh();
         $this->dispatch('conversationSelected', id: $newConversation->id);

@@ -20,6 +20,7 @@ class ChatBox extends Component
     public $last_contact_date;
     public $hasMoreMessages = false;
     public $loading = false;
+    public $participants = [];
 
     protected $listeners = [
         'loadMore',
@@ -46,6 +47,7 @@ class ChatBox extends Component
         if ($this->selectedConversation) {
             $this->loadMessages();
             $this->last_contact_date = $this->selectedConversation->client->last_contact_date ?? null;
+            $this->participants = $this->selectedConversation->users()->get()->toArray();
         }
     }
 

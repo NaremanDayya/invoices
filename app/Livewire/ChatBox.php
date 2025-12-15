@@ -116,10 +116,19 @@ class ChatBox extends Component
 
     public function sendLike()
     {
+        $recipients = $this->selectedConversation->users()->where('users.id', '!=', Auth::id())->get();
+        // Fallback for legacy 1-on-1
+        if ($recipients->isEmpty() && $this->selectedConversation->receiver_id) {
+             $user = \App\Models\User::find($this->selectedConversation->receiver_id);
+             if ($user && $user->id != Auth::id()) $recipients->push($user);
+        }
+
+        $primaryReceiverId = ($recipients->count() === 1) ? $recipients->first()->id : null;
+
         $createdMessage = Message::create([
             'conversation_id' => $this->selectedConversation->id,
             'sender_id' => Auth::id(),
-            'receiver_id' => $this->selectedConversation->getReceiver()->id,
+            'receiver_id' => $primaryReceiverId,
             'message' => 'like',
         ]);
 
@@ -133,13 +142,14 @@ class ChatBox extends Component
         $this->dispatch('scroll-bottom');
         $this->dispatch('refresh')->to('chat-list');
 
-        $receiver = $this->selectedConversation->getReceiver();
-        $receiver->notify(new MessageSent(
-            Auth::user(),
-            $createdMessage,
-            $this->selectedConversation,
-            $receiver->id,
-        ));
+        foreach ($recipients as $receiver) {
+            $receiver->notify(new MessageSent(
+                Auth::user(),
+                $createdMessage,
+                $this->selectedConversation,
+                $receiver->id,
+            ));
+        }
 
         // Clear input and scroll
         $this->message = '';
@@ -149,13 +159,28 @@ class ChatBox extends Component
     public function sendMessage()
     {
         $this->validate(['message' => 'required|string|max:1000']);
-//    dd($this->selectedConversation);
+        
+        $recipients = $this->selectedConversation->users()->where('users.id', '!=', Auth::id())->get();
+        // Fallback checks (legacy)
+        if ($recipients->isEmpty()) {
+             // Maybe legacy without participants?
+             $legacyReceiver = $this->selectedConversation->getReceiver(); // This might return null now for group
+             if ($legacyReceiver) {
+                 $recipients = collect([$legacyReceiver]);
+             }
+        }
+
+        $primaryReceiverId = ($recipients->count() === 1) ? $recipients->first()->id : null;
+
         $createdMessage = Message::create([
             'conversation_id' => $this->selectedConversation->id,
             'sender_id' => Auth::id(),
-            'receiver_id' => $this->selectedConversation->getReceiver()->id,
+            'receiver_id' => $primaryReceiverId,
             'message' => trim($this->message)
         ]);
+        
+        // Handle Mentions
+        $this->handleMentions($createdMessage);
 
         $createdMessage->load(['sender', 'receiver']);
 
@@ -173,13 +198,41 @@ class ChatBox extends Component
 
         $this->dispatch('refresh')->to('chat-list');
 
-        $receiver = $createdMessage->receiver;
-        $receiver->notify(new MessageSent(
-            Auth::user(),
-            $createdMessage,
-            $this->selectedConversation,
-            $receiver->id,
-        ));
+        foreach ($recipients as $receiver) {
+            $receiver->notify(new MessageSent(
+                Auth::user(),
+                $createdMessage,
+                $this->selectedConversation,
+                $receiver->id,
+            ));
+        }
+    }
+
+    protected function handleMentions($message)
+    {
+        // Simple regex to find @names
+        // Matches @Name or @"Name Surname"
+        // Note: This is a basic implementation. Robust mention systems usually require frontend tokens.
+        
+        preg_match_all('/@"?([\w\s]+)"?/', $message->message, $matches);
+        
+        if (!empty($matches[1])) {
+            $names = array_unique($matches[1]);
+            // Search participants matching these names
+             $conversationUsers = $this->selectedConversation->users;
+             
+             foreach ($names as $name) {
+                 $name = trim($name);
+                 $user = $conversationUsers->first(function($u) use ($name) {
+                     return strcasecmp($u->name, $name) === 0 || str_contains(strtolower($u->name), strtolower($name));
+                 });
+                 
+                 if ($user) {
+                     $message->mentions()->attach($user->id);
+                     // Optional: Could send a specific MentionNotification here
+                 }
+             }
+        }
     }
 
     public function deleteConversation($conversationId)

@@ -109,11 +109,14 @@ class ChatList extends Component
     {
         $user = Auth::user();
 
-        // Check for existing conversation
+        // Check for existing conversation via participants
+        // This is slightly more complex, but for 1-to-1 with client, we ideally check if there is a private conversation between Auth users and target.
+        // For simplicity, let's keep checking legacy sender/receiver or rely on the fact that 1-on-1s are unique per pair + client.
+        
         $existing = Conversation::where('client_id', $clientId)
-            ->where(function ($q) use ($user) {
-                $q->where('sender_id', $user->id)
-                    ->orWhere('receiver_id', $user->id);
+            ->where('type', 'private')
+            ->whereHas('users', function($q) use ($user) {
+                $q->where('users.id', $user->id);
             })
             ->first();
 
@@ -126,25 +129,21 @@ class ChatList extends Component
         $client = Client::find($clientId);
         if (!$client) return;
 
-        // Determine receiver (default to sales rep, or fallback to Admin/Self if strictly necessary, but preferably sales rep)
-        // If sales_rep_id is null or same as sender, we might need a fallback.
-        // For now, let's use sales_rep_id.
         $receiverId = $client->sales_rep_id;
-
-        // If no receiver found (e.g. client has no rep), maybe use the first admin found?
-        // Or keep it null if DB allows. Assuming DB allows or logic handles it.
-        // Let's use a fail-safe: if no rep, and I am not ID 1, use ID 1 (Super Admin).
-        if (!$receiverId) {
-            // Fallback logic could be complex. Let's assume sales_rep_id is valid or nullable.
-            // If receiver_id is NOT nullable in DB, this will fail.
-            // Let's check conversation model fillable.
-        }
+        /* Fail-safe if needed */
 
         $newConversation = Conversation::create([
             'id' => (string)Str::uuid(),
             'sender_id' => $user->id,
-            'receiver_id' => $receiverId ?? $user->id, // Fallback to avoid SQL error if not nullable
+            'receiver_id' => $receiverId ?? $user->id, 
             'client_id' => $clientId,
+            'type' => 'private'
+        ]);
+        
+        // Attach participants
+        $newConversation->users()->attach([
+            $user->id,
+            $receiverId ?? $user->id 
         ]);
 
         $this->refresh();
@@ -165,17 +164,21 @@ class ChatList extends Component
         $query = Conversation::with([
             'client:id,name',
             'client.invoices',
-            'sender:id,name', // Added: Ensure sender is loaded for getReceiver()
-            'receiver:id,name', // Added: Ensure receiver is loaded for getReceiver()
+            // 'sender:id,name', // Less critical now
+            'users' // eager load participants
         ])
-            ->where(function ($query) use ($user) {
-                $query->where('sender_id', $user->id)
-                    ->orWhere('receiver_id', $user->id);
+            ->whereHas('users', function($q) use ($user) {
+                 $q->where('users.id', $user->id);
+            })
+            // Filter out invoice conversations as requested
+            ->where(function($q) {
+                $q->whereNull('invoice_id')
+                  ->orWhere('type', '!=', 'invoice');
             })
             ->when($this->search, function ($query) {
                 $query->whereHas('client', function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%');
-                }); // Missing closing parenthesis and semicolon
+                }); 
             })
             ->addSelect([
                 'latest_message_created_at' => Message::selectRaw('MAX(created_at)')
@@ -253,7 +256,13 @@ class ChatList extends Component
             $conversation->latest_message_text = $latestMessage ? $latestMessage->message : '';
             $conversation->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
             $conversation->latest_message_sender_id = $latestMessage ? $latestMessage->sender_id : null;
-            $conversation->receiver_name = $conversation->getReceiver()->name ?? 'Unknown';
+            
+            if ($conversation->type === 'group') {
+                $conversation->receiver_name = $conversation->label ?? 'Group Chat';
+            } else {
+                 $conversation->receiver_name = $conversation->getReceiver()->name ?? 'Unknown';
+            }
+            
             $conversation->is_last_message_read = $conversation->isLastMessageReadByUser();
 
             if (!isset($conversation->unread_count)) {

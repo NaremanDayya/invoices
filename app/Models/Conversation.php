@@ -18,6 +18,8 @@ class Conversation extends Model
         'sender_id',
         'client_id',
         'invoice_id',
+        'type',
+        'label'
     ];
 
 
@@ -35,6 +37,13 @@ class Conversation extends Model
     public function messages()
     {
         return $this->hasMany(Message::class);
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'conversation_participants')
+                    ->withPivot('joined_at')
+                    ->withTimestamps();
     }
 
     public function sender()
@@ -56,9 +65,19 @@ class Conversation extends Model
 
     public function getReceiver()
     {
+        if ($this->type === 'group') {
+             // For groups, we might not have a single "receiver". 
+             // We return null and handle title elsewhere, or return a mock object.
+             return null;
+        }
 
-            return User::firstWhere('id', $this->receiver_id);
+        // Use the new many-to-many relationship to find the "other" user
+        // This is more robust than relying on sender_id/receiver_id which might be deprecated for groups
+        $other = $this->users->where('id', '!=', Auth::id())->first();
+        if ($other) return $other;
 
+        // Fallback for legacy data if needed
+        return User::firstWhere('id', $this->receiver_id);
     }
     public function unreadMessagesCount(): int
     {

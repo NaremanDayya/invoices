@@ -47,6 +47,12 @@ public function canBeEdited()
     return $this->created_at->diffInHours(now()) <= 1 &&
            $this->sender_id === auth()->id();
 }
+
+    public function mentions()
+    {
+        return $this->belongsToMany(User::class, 'message_mentions', 'message_id', 'user_id');
+    }
+
 public function getIsAdminAttribute()
 {
     return $this->sender->isAdmin();

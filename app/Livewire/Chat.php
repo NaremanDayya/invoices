@@ -24,12 +24,12 @@ class Chat extends Component
         $this->invoice = $invoice;
 
         // 1. Try to find the conversation specifically for this invoice
+        // 1. Try to find the conversation specifically for this invoice
         $existingConversation = Conversation::where('client_id', $client->id)
             ->where('invoice_id', $invoice->id)
             // Ensure we check that the current user is part of the conversation
-            ->where(function ($q) {
-                $q->where('sender_id', Auth::id())
-                    ->orWhere('receiver_id', Auth::id());
+            ->whereHas('users', function($q) {
+                $q->where('users.id', Auth::id());
             })
             ->first();
 
@@ -45,7 +45,15 @@ class Chat extends Component
                 'receiver_id' => $receiverId,
                 'client_id' => $client->id,
                 'invoice_id' => $invoice->id,
+                'type' => 'invoice'
             ]);
+            
+            // Attach participants
+            $participants = [Auth::id()];
+            if ($receiverId && $receiverId !== Auth::id()) {
+                $participants[] = $receiverId;
+            }
+            $newConversation->users()->attach($participants);
 
             $this->conversation = $newConversation;
             $this->selectedConversation = $newConversation;

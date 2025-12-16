@@ -36,7 +36,8 @@
         <div class="messages-container" id="messages-container">
             <livewire:chat-box :client_id="$client->id"
                                :invoice_id="$invoice->id ?? null"
-                               :selectedConversation="$selectedConversation" />
+                               :selectedConversation="$selectedConversation"
+                               :key="$selectedConversation->id ?? 'chat-box'" />
         </div>
 
         <!-- Sidebar - Invoice Details -->

@@ -61,4 +61,8 @@ public function Conversation()
 {
     return $this->belongsTo(Conversation::class);
 }
+    public function reads()
+    {
+        return $this->hasMany(MessageRead::class, 'message_id');
+    }
 }

@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Notifications\MessageRead;
 use App\Notifications\MessageSent;
 use Illuminate\Support\Facades\Auth;
+use App\Models\MessageRead as MessageReadModel;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\WithFileUploads;
@@ -95,26 +96,34 @@ class ChatBox extends Component
 
     public function markMessagesAsRead()
     {
+        // Find unread messages for this conversation where the sender is NOT the current user
+        // and which the current user has NOT read yet.
         $unreadMessages = Message::where('conversation_id', $this->selectedConversation->id)
-            ->where('receiver_id', Auth::id())
-            ->whereNull('read_at')
+            ->where('sender_id', '!=', Auth::id())
+            ->whereDoesntHave('reads', function($q) {
+                $q->where('user_id', Auth::id());
+            })
             ->get();
 
         if ($unreadMessages->isNotEmpty()) {
-            Message::where('conversation_id', $this->selectedConversation->id)
-                ->where('receiver_id', Auth::id())
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
-
             foreach ($unreadMessages as $msg) {
-                // Ensure we don't notify ourselves if we are the sender (unlikely here due to query, but good practice)
-                if ($msg->sender_id !== Auth::id()) {
-                    $msg->sender->notify(new MessageRead(
-                        Auth::user(),
-                        $msg,
-                        $this->selectedConversation
-                    ));
+                // Record read status
+                MessageReadModel::firstOrCreate(
+                    ['message_id' => $msg->id, 'user_id' => Auth::id()],
+                    ['read_at' => now()]
+                );
+                
+                // Update legacy read_at for UI (shows double ticks if at least one person read it)
+                if (is_null($msg->read_at)) {
+                    $msg->update(['read_at' => now()]);
                 }
+
+                // Notify sender
+                $msg->sender->notify(new MessageRead(
+                    Auth::user(),
+                    $msg,
+                    $this->selectedConversation
+                ));
             }
 
             $this->dispatch('refreshUnreadCount');

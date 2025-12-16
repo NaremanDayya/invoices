@@ -9,11 +9,13 @@ use App\Notifications\MessageSent;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Livewire\WithFileUploads;
 
 class ChatBox extends Component
 {
     public $selectedConversation;
     public $message = '';
+    public $attachment;
     public $loadedMessages;
     public $paginate_var = 20; // Increased for better UX
     public $client_id;
@@ -46,6 +48,7 @@ class ChatBox extends Component
 
         if ($this->selectedConversation) {
             $this->loadMessages();
+            $this->markMessagesAsRead();
             $this->last_contact_date = $this->selectedConversation->client->last_contact_date ?? null;
             $this->participants = $this->selectedConversation->users()->get()->toArray();
         }
@@ -89,30 +92,52 @@ class ChatBox extends Component
         return $this->loadedMessages;
     }
 
+    public function markMessagesAsRead()
+    {
+        $unreadMessages = Message::where('conversation_id', $this->selectedConversation->id)
+            ->where('receiver_id', Auth::id())
+            ->whereNull('read_at')
+            ->get();
+
+        if ($unreadMessages->isNotEmpty()) {
+            Message::where('conversation_id', $this->selectedConversation->id)
+                ->where('receiver_id', Auth::id())
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+
+            foreach ($unreadMessages as $msg) {
+                // Ensure we don't notify ourselves if we are the sender (unlikely here due to query, but good practice)
+                if ($msg->sender_id !== Auth::id()) {
+                    $msg->sender->notify(new MessageRead(
+                        Auth::user(),
+                        $msg,
+                        $this->selectedConversation
+                    ));
+                }
+            }
+            
+            $this->dispatch('refreshUnreadCount');
+        }
+    }
+
     public function broadcastedNotificationReceived($event)
     {
         if ($event['type'] == MessageSent::class) {
             if ($event['conversation_id'] == $this->selectedConversation->id) {
                 // Refresh messages
                 $this->loadMessages();
+                
+                // If I am the receiver and I have the chat open, mark as read immediately
+                $this->markMessagesAsRead();
 
                 // Scroll to bottom
                 $this->dispatch('scroll-bottom');
-
-                // Mark message as read
-                $message = Message::find($event['message_id']);
-                if ($message && $message->receiver_id == Auth::id()) {
-                    $message->read_at = now();
-                    $message->save();
-
-                    $message->sender->notify(new MessageRead(
-                        Auth::user(),
-                        $message,
-                        $this->selectedConversation,
-                        $message->sender_id,
-                    ));
-                }
             }
+        } elseif ($event['type'] == MessageRead::class) {
+             if (isset($event['conversation_id']) && $event['conversation_id'] == $this->selectedConversation->id) {
+                 // Refresh to show read status (double ticks)
+                 $this->loadMessages();
+             }
         }
     }
 
@@ -174,11 +199,17 @@ class ChatBox extends Component
 
         $primaryReceiverId = ($recipients->count() === 1) ? $recipients->first()->id : null;
 
+        $imagePath = null;
+        if ($this->attachment) {
+            $imagePath = $this->attachment->store('chat-attachments', 'public');
+        }
+
         $createdMessage = Message::create([
             'conversation_id' => $this->selectedConversation->id,
             'sender_id' => Auth::id(),
             'receiver_id' => $primaryReceiverId,
-            'message' => trim($this->message)
+            'message' => $imagePath ? ($this->message ?: '[Image]') : trim($this->message), // Handle empty message if image exists
+            'image_path' => $imagePath
         ]);
         
         // Handle Mentions
@@ -186,8 +217,8 @@ class ChatBox extends Component
 
         $createdMessage->load(['sender', 'receiver']);
 
-        // Clear message input
-        $this->reset('message');
+        // Clear message input and attachment
+        $this->reset(['message', 'attachment']);
         // Refresh messages to include the new one
         $this->loadMessages();
 

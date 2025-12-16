@@ -9,20 +9,26 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Broadcasting\PrivateChannel;
 
 class MessageRead extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
+    public $reader;
+    public $message;
+    public $conversation;
+    public $originalSenderId;
+
     /**
      * Create a new notification instance.
      */
-    public $conversation_id;
-    public function __construct($conversation_id)
+    public function __construct($reader, $message, $conversation, $originalSenderId = null)
     {
-        //
-        $this->conversation_id=$conversation_id;
-	$this->receiverId = Auth::id();
+        $this->reader = $reader;
+        $this->message = $message;
+        $this->conversation = $conversation;
+        $this->originalSenderId = $originalSenderId ?? $message->sender_id;
     }
 
     /**
@@ -35,29 +41,17 @@ class MessageRead extends Notification implements ShouldBroadcast
         return ['broadcast'];
     }
 
-
-        /**
+    /**
      * Get the broadcastable representation of the notification.
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-
-            'conversation_id' => $this->conversation_id,
-      
+            'conversation_id' => $this->conversation->id,
+            'message_id' => $this->message->id,
+            'reader_id' => $this->reader->id,
+            'read_at' => $this->message->read_at,
         ]);
-    }
-
-
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
     }
 
     /**
@@ -67,6 +61,6 @@ class MessageRead extends Notification implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('chat.' . $this->receiverId);
+        return new PrivateChannel('chat.' . $this->originalSenderId);
     }
 }

@@ -285,10 +285,7 @@
             <!-- User Controls -->
             <div class="user-info">
                 <!-- Notifications -->
-                <button class="icon-btn">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">3</span>
-                </button>
+                <livewire:unread-messages-count />
 
                 <!-- User Profile -->
                 <div class="user-details">

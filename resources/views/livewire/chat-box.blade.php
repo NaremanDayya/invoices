@@ -128,7 +128,7 @@
             <button class="btn btn-outline-success" type="button" id="attach-file-btn">
                 <i class="bi bi-paperclip"></i>
             </button>
-            <input type="file" id="file-input" accept="image/*" style="display: none;">
+            <input type="file" id="file-input" accept="image/*" style="display: none;" wire:model="attachment">
 
             <!-- Main Input -->
             <input type="text"
@@ -799,9 +799,10 @@
                 if (messagesList && scrollPositionBeforeLoad > 0) {
                     const newHeight = messagesList.scrollHeight;
                     messagesList.scrollTop = newHeight - scrollPositionBeforeLoad;
-                    scrollPositionBeforeLoad = 0;
                 }
             });
+
+
 
             // Typing simulation
             let typingTimeout;
@@ -942,14 +943,7 @@
                 }
             }
 
-                    if (items[i].type.indexOf('image') !== -1) {
-                        e.preventDefault();
-                        const blob = items[i].getAsFile();
-                        showImagePreview(blob);
-                        break;
-                    }
-                }
-            });
+
 
             // Handle file input change
             if (attachFileBtn && fileInput) {
@@ -1024,46 +1018,28 @@
 
                     const caption = imageCaption.value.trim();
 
-                    // Create FormData to send the image
-                    const formData = new FormData();
-                    formData.append('image', currentImageFile);
-                    formData.append('caption', caption);
-                    formData.append('conversation_id', '{{ $selectedConversation->id ?? "" }}');
-
                     // Show loading state
                     sendImageBtn.disabled = true;
-                    sendImageBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+                    sendImageBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
 
-                    // Send via AJAX (you'll need to create a route and controller method for this)
-                    fetch('/chat/send-image', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
-                        },
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Close modal
-                            closeImagePreview();
+                    // Update message with caption
+                    if(caption) {
+                        @this.set('message', caption);
+                    }
 
-                            // Refresh messages
-                            Livewire.dispatch('refresh');
-
-                            // Show success notification (optional)
-                            console.log('Image sent successfully');
-                        } else {
-                            alert('Failed to send image. Please try again.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred while sending the image.');
-                    })
-                    .finally(() => {
-                        // Reset button state
+                    // Upload file using Livewire
+                    @this.upload('attachment', currentImageFile, (uploadedFilename) => {
+                        // Success: Send message
+                        sendImageBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+                        @this.sendMessage().then(() => {
+                             closeImagePreview();
+                             // Reset button
+                             sendImageBtn.disabled = false;
+                             sendImageBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
+                        });
+                    }, (error) => {
+                        // Error
+                        alert('Error upload image');
                         sendImageBtn.disabled = false;
                         sendImageBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
                     });

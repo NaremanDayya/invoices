@@ -13,6 +13,7 @@ use Livewire\WithFileUploads;
 
 class ChatBox extends Component
 {
+    use WithFileUploads;
     public $selectedConversation;
     public $message = '';
     public $attachment;
@@ -115,7 +116,7 @@ class ChatBox extends Component
                     ));
                 }
             }
-            
+
             $this->dispatch('refreshUnreadCount');
         }
     }
@@ -126,7 +127,7 @@ class ChatBox extends Component
             if ($event['conversation_id'] == $this->selectedConversation->id) {
                 // Refresh messages
                 $this->loadMessages();
-                
+
                 // If I am the receiver and I have the chat open, mark as read immediately
                 $this->markMessagesAsRead();
 
@@ -186,7 +187,7 @@ class ChatBox extends Component
     public function sendMessage()
     {
         $this->validate(['message' => 'required|string|max:1000']);
-        
+
         $recipients = $this->selectedConversation->users()->where('users.id', '!=', Auth::id())->get();
         // Fallback checks (legacy)
         if ($recipients->isEmpty()) {
@@ -211,7 +212,7 @@ class ChatBox extends Component
             'message' => $imagePath ? ($this->message ?: '[Image]') : trim($this->message), // Handle empty message if image exists
             'image_path' => $imagePath
         ]);
-        
+
         // Handle Mentions
         $this->handleMentions($createdMessage);
 
@@ -246,20 +247,20 @@ class ChatBox extends Component
         // Simple regex to find @names
         // Matches @Name or @"Name Surname"
         // Note: This is a basic implementation. Robust mention systems usually require frontend tokens.
-        
+
         preg_match_all('/@"?([\w\s]+)"?/', $message->message, $matches);
-        
+
         if (!empty($matches[1])) {
             $names = array_unique($matches[1]);
             // Search participants matching these names
              $conversationUsers = $this->selectedConversation->users;
-             
+
              foreach ($names as $name) {
                  $name = trim($name);
                  $user = $conversationUsers->first(function($u) use ($name) {
                      return strcasecmp($u->name, $name) === 0 || str_contains(strtolower($u->name), strtolower($name));
                  });
-                 
+
                  if ($user) {
                      $message->mentions()->attach($user->id);
                      // Optional: Could send a specific MentionNotification here

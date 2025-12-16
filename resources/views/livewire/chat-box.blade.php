@@ -32,8 +32,8 @@
                     @elseif($message->image_path)
                         <!-- Image Message -->
                         <div class="image-message">
-                            <img src="{{ Storage::url($message->image_path) }}" 
-                                 alt="Shared image" 
+                            <img src="{{ Storage::url($message->image_path) }}"
+                                 alt="Shared image"
                                  class="chat-image"
                                  onclick="window.open('{{ Storage::url($message->image_path) }}', '_blank')">
                             @if($message->message && $message->message !== '[Image]')
@@ -128,7 +128,7 @@
             <button class="btn btn-outline-success" type="button" id="attach-file-btn">
                 <i class="bi bi-paperclip"></i>
             </button>
-            <input type="file" id="file-input" accept="image/*" style="display: none;" wire:model="attachment">
+{{--            <input type="file" id="file-input" accept="image/*" style="display: none;" wire:model="attachment">--}}
 
             <!-- Main Input -->
             <input type="text"
@@ -174,7 +174,7 @@
                 </button>
             @endforeach
         </div>
-        
+
         <!-- Mentions Suggestions List -->
         <div id="mention-suggestions" class="mention-suggestions" style="display:none;"></div>
     </div>
@@ -858,21 +858,21 @@
             // ========== Mentions Logic ==========
             const mentionList = document.getElementById('mention-suggestions');
             // Safely get participants
-            const participants = @json($participants ?? []); 
+            const participants = @json($participants ?? []);
 
             if (messageInput && mentionList) {
                 messageInput.addEventListener('input', function(e) {
                     const val = messageInput.value;
                     const cursor = messageInput.selectionStart;
-                    
+
                     // Look for @ symbol before cursor
                     const lastAt = val.lastIndexOf('@', cursor - 1);
-                    
+
                     if (lastAt !== -1) {
                         const query = val.substring(lastAt + 1, cursor);
                         // Only search if query doesn't contain spaces (simple firstname/lastname check)
                         // allowing space for "Name Surname" might be tricky regex, sticking to simple first
-                        if (!/\s/.test(query) || (query.split(' ').length < 3)) { 
+                        if (!/\s/.test(query) || (query.split(' ').length < 3)) {
                              const matches = participants.filter(p => {
                                  const name = p.name || '';
                                  return name.toLowerCase().includes(query.toLowerCase());
@@ -886,7 +886,7 @@
                     }
                     hideMentions();
                 });
-                
+
                 // Hide on click outside
                 document.addEventListener('click', function(e) {
                     if (!mentionList.contains(e.target) && e.target !== messageInput) {
@@ -903,36 +903,36 @@
                     users.forEach(u => {
                         const div = document.createElement('div');
                         div.className = 'mention-item';
-                        
+
                         // Avatar placeholder
                         const avatar = document.createElement('div');
                         avatar.className = 'mention-avatar';
                         avatar.innerText = u.name.charAt(0).toUpperCase();
-                        
+
                         const nameSpan = document.createElement('span');
                         nameSpan.innerText = u.name;
-                        
+
                         div.appendChild(avatar);
                         div.appendChild(nameSpan);
-                        
+
                         div.onclick = (e) => {
                              e.preventDefault();
                              e.stopPropagation();
                              const val = messageInput.value;
                              const before = val.substring(0, start);
                              const after = val.substring(end);
-                             
+
                              // Insert name with "@"
                              const newValue = before + '@' + u.name + ' ' + after;
-                             
+
                              messageInput.value = newValue;
-                             
+
                              // Trigger Livewire update
                              messageInput.dispatchEvent(new Event('input', { bubbles: true }));
-                             
+
                              hideMentions();
                              messageInput.focus();
-                             
+
                              // Move cursor to end of inserted name
                              // const newCursorPos = start + u.name.length + 2; // +2 for @ and space
                              // messageInput.setSelectionRange(newCursorPos, newCursorPos);

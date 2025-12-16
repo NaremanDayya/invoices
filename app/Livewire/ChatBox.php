@@ -125,13 +125,10 @@ class ChatBox extends Component
     {
         if ($event['type'] == MessageSent::class) {
             if ($event['conversation_id'] == $this->selectedConversation->id) {
-                // Refresh messages
                 $this->loadMessages();
 
-                // If I am the receiver and I have the chat open, mark as read immediately
                 $this->markMessagesAsRead();
 
-                // Scroll to bottom
                 $this->dispatch('scroll-bottom');
             }
         } elseif ($event['type'] == MessageRead::class) {

@@ -21,4 +21,17 @@ window.Echo = new Echo({
 });
 
 
+const userIdMeta = document.querySelector('meta[name="user-id"]');
+const userId = userIdMeta ? userIdMeta.getAttribute("content") : null;
+
+if (userId) {
+window.Echo.private(`chat.${userId}`).listen(
+    ".Illuminate\\Notifications\\Events\\BroadcastNotificationCreated",
+    (e) => {
+        Livewire.dispatch("refresh");
+    }
+);
+} else {
+    console.warn("User ID meta tag not found.");
+}
 import "./echo";

@@ -109,10 +109,6 @@ class ChatList extends Component
     {
         $user = Auth::user();
 
-        // Check for existing conversation via participants
-        // This is slightly more complex, but for 1-to-1 with client, we ideally check if there is a private conversation between Auth users and target.
-        // For simplicity, let's keep checking legacy sender/receiver or rely on the fact that 1-on-1s are unique per pair + client.
-        
         $existing = Conversation::where('client_id', $clientId)
             ->where('type', 'private')
             ->whereHas('users', function($q) use ($user) {
@@ -135,25 +131,27 @@ class ChatList extends Component
         $newConversation = Conversation::create([
             'id' => (string)Str::uuid(),
             'sender_id' => $user->id,
-            'receiver_id' => $receiverId ?? $user->id, 
+            'receiver_id' => $receiverId ?? $user->id,
             'client_id' => $clientId,
             'type' => 'private'
         ]);
-        
+
         // Add ALL system users to the conversation as requested
         $allUserIds = \App\Models\User::pluck('id')->toArray();
         // Ensure no duplicates and valid IDs
         $participants = array_unique($allUserIds);
-        
+
         $newConversation->users()->sync($participants);
 
-        $this->refresh();
-        $this->dispatch('conversationSelected', id: $newConversation->id);
+        return redirect()->route('client.chat', [
+            'client' => $clientId,
+            'conversation' => $newConversation->id
+        ]);
     }
 
     public function selectConversation($conversationId)
     {
-        $this->selectedConversation = $conversationId; // Optional: mark as selected in list
+        $this->selectedConversation = $conversationId;
         $this->dispatch('conversationSelected', id: $conversationId);
     }
 
@@ -165,13 +163,11 @@ class ChatList extends Component
         $query = Conversation::with([
             'client:id,name',
             'client.invoices',
-            // 'sender:id,name', // Less critical now
-            'users' // eager load participants
+            'users'
         ])
             ->whereHas('users', function($q) use ($user) {
                  $q->where('users.id', $user->id);
             })
-            // Filter out invoice conversations as requested
             ->where(function($q) {
                 $q->whereNull('invoice_id')
                   ->orWhere('type', '!=', 'invoice');
@@ -179,7 +175,7 @@ class ChatList extends Component
             ->when($this->search, function ($query) {
                 $query->whereHas('client', function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%');
-                }); 
+                });
             })
             ->addSelect([
                 'latest_message_created_at' => Message::selectRaw('MAX(created_at)')
@@ -257,13 +253,13 @@ class ChatList extends Component
             $conversation->latest_message_text = $latestMessage ? $latestMessage->message : '';
             $conversation->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
             $conversation->latest_message_sender_id = $latestMessage ? $latestMessage->sender_id : null;
-            
+
             if ($conversation->type === 'group') {
                 $conversation->receiver_name = $conversation->label ?? 'Group Chat';
             } else {
                  $conversation->receiver_name = $conversation->getReceiver()->name ?? 'Unknown';
             }
-            
+
             $conversation->is_last_message_read = $conversation->isLastMessageReadByUser();
 
             if (!isset($conversation->unread_count)) {

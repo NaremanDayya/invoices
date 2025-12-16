@@ -210,7 +210,6 @@
     @include('partials.client-selection-modal')
 
 </div>
-{{--@vite('resources/js/client-chat.js')--}}
 
 @push('styles')
     <style>

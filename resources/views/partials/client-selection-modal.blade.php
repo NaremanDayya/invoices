@@ -29,20 +29,14 @@
                                 wire:click="startChat({{ $client->id }})"
                                 data-bs-dismiss="modal">
                             <div class="me-3">
-                                @if($client->company_logo)
-                                    <img src="{{ asset('storage/' . $client->company_logo) }}"
-                                         class="rounded-circle border"
-                                         width="50" height="50"
-                                         style="object-fit: cover;">
-                                @else
+
                                     <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold"
                                          style="width: 50px; height: 50px; font-size: 1.2rem;">
-                                        {{ substr($client->company_name ?? $client->name, 0, 2) }}
+                                        {{ substr($client->name ?? $client->name, 0, 2) }}
                                     </div>
-                                @endif
                             </div>
                             <div>
-                                <h6 class="mb-1 fw-bold text-dark">{{ $client->company_name ?? $client->name }}</h6>
+                                <h6 class="mb-1 fw-bold text-dark">{{ $client->name ?? $client->name }}</h6>
                                 <small class="text-muted d-block">
                                     <i class="bi bi-envelope me-1"></i> {{ $client->email }}
                                 </small>

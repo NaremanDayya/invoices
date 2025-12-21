@@ -20,13 +20,70 @@
                 <i class="fas fa-file-invoice me-2"></i>
                 إدارة الفواتير
             </h2>
+            <div class="d-flex gap-2">
+                <!-- Export Dropdown -->
+                <div class="export-dropdown dropdown d-inline-block">
+                    <button class="btn btn-outline-success dropdown-toggle" type="button" id="exportInvoiceBtn">
+                        <i class="fas fa-download me-2"></i>
+                        تصدير البيانات
+                    </button>
+                    <ul class="dropdown-menu" style="min-width: 200px;">
+                        <li>
+                            <a class="dropdown-item export-pdf" href="#">
+                                <i class="fas fa-file-pdf text-danger me-2"></i>
+                                تصدير PDF
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item export-excel" href="#">
+                                <i class="fas fa-file-excel text-success me-2"></i>
+                                تصدير Excel
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             <button type="button" class="btn" style="background: var(--primary); color: white;" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
                 <i class="fas fa-plus me-2"></i>
                 فاتورة جديدة
             </button>
         </div>
+        </div>
+        <!-- Hidden content for PDF export -->
+        <div id="export-invoice-content" class="export-content">
+            <!-- PDF Header -->
+            <div class="pdf-header">
+                <div class="header-content d-flex align-items-center justify-content-between flex-wrap mb-4 p-3 shadow rounded bg-white">
+                    <div class="d-flex flex-column align-items-center text-center mx-auto">
+                        <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="header-logo mb-2" />
+                        <h2 class="header-text">تقرير الفواتير</h2>
+                        <div class="report-info">
+                            <p>تاريخ التقرير: {{ \Carbon\Carbon::now()->format('Y-m-d H:i') }}</p>
+                            <p>إجمالي الفواتير: {{ $invoices->total() ?? 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Statistics Cards & Filters (same as before) -->
+            <!-- Statistics Summary -->
+            <div class="summary-box">
+                <h5>ملخص الإحصائيات:</h5>
+                <div class="row">
+                    <div class="col-3">
+                        <p><strong>إجمالي الفواتير:</strong> {{ $stats['total'] ?? 0 }}</p>
+                    </div>
+                    <div class="col-3">
+                        <p><strong>مدفوعة:</strong> {{ $stats['paid'] ?? 0 }}</p>
+                    </div>
+                    <div class="col-3">
+                        <p><strong>قيد الانتظار:</strong> {{ $stats['pending'] ?? 0 }}</p>
+                    </div>
+                    <div class="col-3">
+                        <p><strong>متأخرة:</strong> {{ $stats['late'] ?? 0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards & Filters (same as before) -->
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid var(--primary);">
@@ -173,7 +230,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="pdf-invoice-table">
                         <thead style="background: var(--light);">
                         <tr>
                             <th class="border-0">رقم الفاتورة</th>
@@ -304,6 +361,10 @@
 
                     </table>
 
+                    <!-- PDF Footer -->
+                    <div class="pdf-footer">
+                        <p>جميع الحقوق محفوظة &copy; شركة آفاق الخليج {{ date('Y') }}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -692,8 +753,12 @@
     </div>
 @endsection
 @push('scripts')
-    <script>
+            @include('components.export-scripts')
+
+            <script>
         document.addEventListener('DOMContentLoaded', function() {
+            setupExportDropdown('exportInvoiceBtn', 'export-invoice-content', 'invoices-table', 'فواتير_التقرير');
+
             // Get modal element
             const creditNoteModalElement = document.getElementById('creditNoteModal');
             if (!creditNoteModalElement) {

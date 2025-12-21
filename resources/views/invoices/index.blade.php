@@ -230,7 +230,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="pdf-invoice-table">
+                    <table class="table table-hover mb-0" id="invoices-table">
                         <thead style="background: var(--light);">
                         <tr>
                             <th class="border-0">رقم الفاتورة</th>
@@ -361,10 +361,47 @@
 
                     </table>
 
-                    <!-- PDF Footer -->
-                    <div class="pdf-footer">
-                        <p>جميع الحقوق محفوظة &copy; شركة آفاق الخليج {{ date('Y') }}</p>
+                    <!-- Hidden content for PDF export -->
+                    <div id="export-invoice-content" class="export-content" style="display: none;">
+                        <!-- PDF Header -->
+                        <div class="pdf-header">
+                            <div class="header-content d-flex align-items-center justify-content-between flex-wrap mb-4 p-3 shadow rounded bg-white">
+                                <div class="d-flex flex-column align-items-center text-center mx-auto">
+                                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="header-logo mb-2" />
+                                    <h2 class="header-text">تقرير الفواتير</h2>
+                                    <div class="report-info">
+                                        <p>تاريخ التقرير: {{ \Carbon\Carbon::now()->format('Y-m-d H:i') }}</p>
+                                        <p>إجمالي الفواتير: {{ $invoices->total() ?? 0 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistics Summary -->
+                        <div class="summary-box">
+                            <h5>ملخص الإحصائيات:</h5>
+                            <div class="row">
+                                <div class="col-3">
+                                    <p><strong>إجمالي الفواتير:</strong> {{ $stats['total'] ?? 0 }}</p>
+                                </div>
+                                <div class="col-3">
+                                    <p><strong>مدفوعة:</strong> {{ $stats['paid'] ?? 0 }}</p>
+                                </div>
+                                <div class="col-3">
+                                    <p><strong>قيد الانتظار:</strong> {{ $stats['pending'] ?? 0 }}</p>
+                                </div>
+                                <div class="col-3">
+                                    <p><strong>متأخرة:</strong> {{ $stats['late'] ?? 0 }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PDF Footer -->
+                        <div class="pdf-footer">
+                            <p>جميع الحقوق محفوظة &copy; شركة آفاق الخليج {{ date('Y') }}</p>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>

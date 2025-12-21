@@ -10,7 +10,8 @@
                 <i class="fas fa-users me-2"></i>
                 إدارة العمالة
             </h2>
-            <div>
+            <div class="d-flex gap-2">
+                @include('components.export-dropdown')
                 <button class="btn btn-primary" id="addEmployee" style="background: var(--primary); color: white;">
                     <i class="fas fa-user-plus me-2"></i>
                     إضافة موظف جديد
@@ -157,7 +158,7 @@
         <!-- Employees Table -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" id="employees-table-container">
                     <table class="table table-hover mb-0" id="employees-table">
                         <thead style="background: var(--light);">
                         <tr>
@@ -429,6 +430,12 @@
 @endpush
 
 @push('scripts')
+    @include('components.export-scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupExportDropdown('exportDropdown', 'employees-table-container', 'employees-table', 'تقرير_الموظفين');
+        });
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {

@@ -21,27 +21,7 @@
                 إدارة الفواتير
             </h2>
             <div class="d-flex gap-2">
-                <!-- Export Dropdown -->
-                <div class="export-dropdown dropdown d-inline-block">
-                    <button class="btn btn-outline-success dropdown-toggle" type="button" id="exportInvoiceBtn">
-                        <i class="fas fa-download me-2"></i>
-                        تصدير البيانات
-                    </button>
-                    <ul class="dropdown-menu" style="min-width: 200px;">
-                        <li>
-                            <a class="dropdown-item export-pdf" href="#">
-                                <i class="fas fa-file-pdf text-danger me-2"></i>
-                                تصدير PDF
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item export-excel" href="#">
-                                <i class="fas fa-file-excel text-success me-2"></i>
-                                تصدير Excel
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                @include('components.export-dropdown')
             <button type="button" class="btn" style="background: var(--primary); color: white;" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
                 <i class="fas fa-plus me-2"></i>
                 فاتورة جديدة
@@ -229,7 +209,7 @@
         <!-- Invoices Table -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" id="invoices-table-container">
                     <table class="table table-hover mb-0" id="invoices-table">
                         <thead style="background: var(--light);">
                         <tr>
@@ -794,7 +774,7 @@
 
             <script>
         document.addEventListener('DOMContentLoaded', function() {
-            setupExportDropdown('exportInvoiceBtn', 'export-invoice-content', 'invoices-table', 'فواتير_التقرير');
+            setupExportDropdown('exportDropdown', 'invoices-table-container', 'invoices-table', 'تقرير_الفواتير');
 
             // Get modal element
             const creditNoteModalElement = document.getElementById('creditNoteModal');

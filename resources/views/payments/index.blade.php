@@ -8,10 +8,13 @@
             <i class="fas fa-credit-card me-2"></i>
             إدارة المدفوعات
         </h2>
-        <a href="{{ route('payments.create') }}" class="btn" style="background: var(--primary); color: white;">
-            <i class="fas fa-plus me-2"></i>
-            إضافة دفعة جديدة
-        </a>
+        <div class="d-flex gap-2">
+            @include('components.export-dropdown')
+            <a href="{{ route('payments.create') }}" class="btn" style="background: var(--primary); color: white;">
+                <i class="fas fa-plus me-2"></i>
+                إضافة دفعة جديدة
+            </a>
+        </div>
     </div>
 
     <!-- Statistics Cards -->
@@ -111,8 +114,8 @@
     <!-- Payments Table -->
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
+            <div class="table-responsive" id="payments-table-container">
+                <table class="table table-hover mb-0" id="payments-table">
                     <thead style="background: var(--light);">
                     <tr>
                         <th class="border-0">رقم الدفعة</th>
@@ -183,3 +186,12 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    @include('components.export-scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupExportDropdown('exportDropdown', 'payments-table-container', 'payments-table', 'تقرير_المدفوعات');
+        });
+    </script>
+@endpush

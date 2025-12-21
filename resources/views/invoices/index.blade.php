@@ -20,27 +20,6 @@
                 <i class="fas fa-file-invoice me-2"></i>
                 إدارة الفواتير
             </h2>
-            <div class="d-flex gap-2">
-                <!-- Export Dropdown -->
-                <div class="dropdown d-inline-block">
-                    <button class="btn btn-outline-success dropdown-toggle" type="button" id="exportInvoiceDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-download me-2"></i>
-                        تصدير البيانات
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="exportInvoiceDropdown">
-                        <li>
-                            <a class="dropdown-item export-pdf" href="#" data-type="pdf" data-title="فواتير">
-                                <i class="fas fa-file-pdf text-danger me-2"></i>
-                                تصدير PDF
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item export-excel" href="#" data-type="excel" data-title="فواتير">
-                                <i class="fas fa-file-excel text-success me-2"></i>
-                                تصدير Excel
-                            </a>
-                        </li>
-                    </ul>
             <button type="button" class="btn" style="background: var(--primary); color: white;" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
                 <i class="fas fa-plus me-2"></i>
                 فاتورة جديدة

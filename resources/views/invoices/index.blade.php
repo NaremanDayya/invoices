@@ -132,7 +132,7 @@
                     >
                         <option value="">كل العملاء</option>
                         @foreach($clients as $client)
-                            <option value="{{ $client }}">{{ $client }}</option>
+                            <option value="{{ $client }}">{{ $client->name }}</option>
                         @endforeach
                     </select>
                 </div>

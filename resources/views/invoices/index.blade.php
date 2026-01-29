@@ -1,312 +1,302 @@
-
 @extends('layouts.master')
 
 @section('title', 'إدارة الفواتير')
+@section('page_title', 'الفواتير')
+@section('page_subtitle', 'إدارة جميع الفواتير الصادرة')
+
 @push('styles')
     <style>
-        .modal-backdrop {
-            z-index: 1040;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
-        .modal {
-            z-index: 1050;
+        .stat-mini-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #edf2f7;
+            transition: all 0.3s;
+        }
+        .stat-mini-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        .stat-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .stat-info h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            color: #1a202c;
+        }
+        .stat-info p {
+            font-size: 0.85rem;
+            color: #718096;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Table Styling */
+        .table-card {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #edf2f7;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+        .custom-table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+        .custom-table th {
+            background: #f8fafc;
+            padding: 18px 15px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #4a5568;
+            border-bottom: 1px solid #edf2f7;
+            text-align: right;
+        }
+        .custom-table td {
+            padding: 18px 15px;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            color: #2d3748;
+            border-bottom: 1px solid #f7fafc;
+        }
+        .inv-number {
+            color: #10a37f;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+        .customer-info .name {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .customer-info .phone {
+            font-size: 0.75rem;
+            color: #a0aec0;
+        }
+        .emp-count {
+            width: 35px;
+            height: 35px;
+            background: #e6fffa;
+            color: #319795;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-badge.paid { background: #def7ec; color: #03543f; }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.late { background: #fde8e8; color: #9b1c1c; }
+        .status-badge.cancelled { background: #f3f4f6; color: #4b5563; }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            transition: all 0.2s;
+            border: 1px solid #edf2f7;
+        }
+        .btn-action:hover {
+            background: var(--primary-accent);
+            color: #1e4a46;
+            border-color: var(--primary-accent);
         }
     </style>
 @endpush
+
+@section('page_actions')
+    <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
+            data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
+        <i class="bi bi-plus-lg"></i>
+        <span>فاتورة جديدة</span>
+    </button>
+@endsection
+
 @section('content')
-    <div>
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0" style="color: var(--primary);">
-                <i class="fas fa-file-invoice me-2"></i>
-                إدارة الفواتير
-            </h2>
-            <button type="button" class="btn" style="background: var(--primary); color: white;" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
-                <i class="fas fa-plus me-2"></i>
-                فاتورة جديدة
-            </button>
-        </div>
-
-        <!-- Statistics Cards & Filters (same as before) -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid var(--primary);">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title text-muted mb-2">إجمالي الفواتير</h6>
-                                <h3 class="mb-0" style="color: var(--primary);">{{ $stats['total'] ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-light rounded-circle p-3">
-                                <i class="fas fa-receipt" style="color: var(--primary);"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Stats Section -->
+    <div class="stats-grid">
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $stats['paid'] ?? 3 }}</h3>
+                <p>مدفوعة</p>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #10b981;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title text-muted mb-2">مدفوعة</h6>
-                                <h3 class="mb-0" style="color: #10b981;">{{ $stats['paid'] ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-light rounded-circle p-3">
-                                <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #f59e0b;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title text-muted mb-2">قيد الانتظار</h6>
-                                <h3 class="mb-0" style="color: #f59e0b;">{{ $stats['pending'] ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-light rounded-circle p-3">
-                                <i class="fas fa-clock" style="color: #f59e0b;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ef4444;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title text-muted mb-2">متأخرة</h6>
-                                <h3 class="mb-0" style="color: #ef4444;">{{ $stats['late'] ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-light rounded-circle p-3">
-                                <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-icon-box" style="background: #e6fffa; color: #319795;">
+                <i class="bi bi-check-all"></i>
             </div>
         </div>
-
-        <!-- Filters Section -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
-                <!-- Search -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">بحث سريع</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-gray-400"></i>
-                        </div>
-                        <input
-                            type="text"
-                            class="block w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
-                            placeholder="ابحث في الفواتير..."
-                            wire:model.live="search"
-                        >
-                    </div>
-                </div>
-
-                <!-- Status Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">حالة السداد</label>
-                    <select
-                        class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 appearance-none"
-                        wire:model.live="statusFilter"
-                    >
-                        <option value="">كل الحالات</option>
-                        <option value="paid">مدفوعة</option>
-                        <option value="pending">قيد الانتظار</option>
-                        <option value="overdue">متأخرة</option>
-                    </select>
-                </div>
-
-                <!-- Client Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">العميل</label>
-                    <select
-                        class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 appearance-none"
-                        wire:model.live="clientFilter"
-                    >
-                        <option value="">كل العملاء</option>
-                        @foreach($clients as $client)
-                            <option value="{{ $client }}">{{ $client->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Date Range -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">من تاريخ</label>
-                    <input
-                        type="text"
-                        class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
-                        wire:model.live="startDate" id="start_date" placeholder="من تاريخ"
-                    >
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
-                    <input
-                        type="text"
-                        class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
-                        wire:model.live="endDate" id="end_date" placeholder="إلى تاريخ"
-                    >
-                </div>
-
-                <!-- Reset Button -->
-                <div>
-                    <button
-                        class="w-full px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 font-medium"
-                        wire:click="resetFilters"
-                    >
-                        <i class="fas fa-refresh text-gray-500"></i>
-                        <span>إعادة تعيين</span>
-                    </button>
-                </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $stats['pending'] ?? 2 }}</h3>
+                <p>معلقة</p>
+            </div>
+            <div class="stat-icon-box" style="background: #fffaf0; color: #dd6b20;">
+                <i class="bi bi-hourglass-split"></i>
             </div>
         </div>
-
-        <!-- Invoices Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead style="background: var(--light);">
-                        <tr>
-                            <th class="border-0">رقم الفاتورة</th>
-                            <th class="border-0">العميل</th>
-                            <th class="border-0">تاريخ الإصدار</th>
-                            <th class="border-0">أيام تأخير الإصدار</th>
-                            <th class="border-0">نوع الخدمة</th>
-                            <th class="border-0">إجمالي العمالة</th>
-                            <th class="border-0">أيام العمل</th>
-                            <th class="border-0">المبلغ قبل الضريبة</th>
-                            <th class="border-0">الضريبة</th>
-                            <th class="border-0">المبلغ الإجمالي</th>
-                            <th class="border-0">فرق المبلغ</th>
-                            <th class="border-0">حالة السداد</th>
-                            <th class="border-0">تاريخ السداد</th>
-                            <th class="border-0">أيام تأخير السداد</th>
-                            <th class="border-0">حالة الفاتورة</th>
-                            <th class="border-0 text-center">الإجراءات</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach($invoices as $invoice)
-                            <tr>
-                                {{-- رقم الفاتورة --}}
-                                <td>{{ $invoice->number }}</td>
-
-                                {{-- العميل --}}
-                                <td>
-                                    <div class="fw-bold">{{ $invoice->client->name ?? 'غير معروف' }}</div>
-                                </td>
-
-                                {{-- تاريخ الإصدار --}}
-                                <td>{{ $invoice->generation_date ? \Carbon\Carbon::parse($invoice->generation_date)->format('Y-m-d') : '—' }}</td>
-
-                                {{-- أيام تأخير الإصدار --}}
-                                <td>
-                                    @php
-                                        $delayDays = $invoice->last_generation_date
-                                            ? \Carbon\Carbon::parse($invoice->generation_date)->diffInDays($invoice->last_generation_date)
-                                            : 0;
-                                    @endphp
-                                    {{ $delayDays }}
-                                </td>
-
-                                {{-- نوع الخدمة --}}
-                                <td>{{ $invoice->service->name ?? '—' }}</td>
-
-                                {{-- إجمالي العمالة --}}
-                                <td>
-                                    <span title="Workers">W: {{ $invoice->total_workers }}</span> |
-                                    <span title="Supervisors">S: {{ $invoice->total_supervisors }}</span> |
-                                    <span title="Managers">M: {{ $invoice->total_managers }}</span> |
-                                    <span title="Users">U: {{ $invoice->total_users }}</span>
-                                </td>
-                                {{-- أيام العمل --}}
-                                <td>{{ $invoice->work_days }}</td>
-
-                                {{-- المبلغ قبل الضريبة --}}
-                                <td>{{ number_format($invoice->base_price, 2) }} ﷼</td>
-
-                                {{-- الضريبة --}}
-                                <td>{{ number_format($invoice->tax_amount, 2) }} ﷼</td>
-
-                                {{-- المبلغ الإجمالي --}}
-                                <td>{{ number_format($invoice->total_price, 2) }} ﷼</td>
-
-                                {{-- فرق المبلغ --}}
-                                <td>{{ number_format($invoice->price_difference ?? 0, 2) }} ﷼</td>
-
-                                {{-- حالة السداد --}}
-                                <td>
-                                    @php
-                                        $statusColors = [
-                                            'paid' => ['bg' => '#d1fae5', 'color' => '#065f46', 'icon' => 'check-circle'],
-                                            'pending' => ['bg' => '#fef3c7', 'color' => '#92400e', 'icon' => 'clock'],
-                                            'late' => ['bg' => '#fee2e2', 'color' => '#991b1b', 'icon' => 'exclamation-triangle']
-                                        ];
-                                        $status = $statusColors[$invoice->payment_status] ?? $statusColors['pending'];
-                                    @endphp
-                                    <span class="badge rounded-pill" style="background: {{ $status['bg'] }}; color: {{ $status['color'] }};">
-                <i class="fas fa-{{ $status['icon'] }} me-1"></i>
-                {{ $invoice->payment_status === 'paid' ? 'مدفوعة' : ($invoice->payment_status === 'pending' ? 'قيد الانتظار' : 'متأخرة') }}
-            </span>
-                                </td>
-
-                                {{-- تاريخ السداد --}}
-                                <td>{{ $invoice->payment_date ? \Carbon\Carbon::parse($invoice->payment_date)->format('Y-m-d') : '—' }}</td>
-
-                                {{-- أيام تأخير السداد --}}
-                                <td>
-                                    @php
-                                        $lateDays = ($invoice->payment_date && $invoice->due_date)
-                                            ? \Carbon\Carbon::parse($invoice->due_date)->diffInDays($invoice->payment_date)
-                                            : 0;
-                                    @endphp
-                                    {{ $lateDays }}
-                                </td>
-
-                                {{-- حالة الفاتورة (حسب نوعها) --}}
-                                <td>{{ $invoice->invoice_status ?? '—' }}</td>
-
-                                {{-- الإجراءات --}}
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <!-- Credit Note Button -->
-                                        <button class="btn btn-sm btn-outline-warning credit-note-btn"
-                                                title="إشعار دائن"
-                                                data-invoice-id="{{ $invoice->id }}"
-                                                data-invoice-number="{{ $invoice->number }}"
-                                                data-total-amount="{{ $invoice->total_price }}">
-                                            <i class="fas fa-file-invoice-dollar"></i>
-                                        </button>
-
-                                        <button class="btn btn-sm" style="background: var(--primary); color: white;" title="عرض">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary" title="تعديل">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" title="حذف">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-
-                    </table>
-
-                </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3 class="text-danger">{{ $stats['late'] ?? 2 }}</h3>
+                <p>متأخرة</p>
+            </div>
+            <div class="stat-icon-box" style="background: #fff5f5; color: #e53e3e;">
+                <i class="bi bi-clock-history"></i>
             </div>
         </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $stats['cancelled'] ?? 1 }}</h3>
+                <p>ملغاة</p>
+            </div>
+            <div class="stat-icon-box" style="background: #f7fafc; color: #4a5568;">
+                <i class="bi bi-trash"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl border border-gray-100 p-3 mb-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="search-box ms-0" style="width: 300px; background: #fcfcfc; border: 1px solid #f0f0f0;">
+                <i class="bi bi-search text-muted"></i>
+                <input type="text" placeholder="رقم الفاتورة أو اسم العميل..." style="font-size: 0.85rem;">
+            </div>
+            <select class="form-select border-0 bg-light rounded-xl" style="width: 150px; font-size: 0.85rem;">
+                <option selected>جميع الحالات</option>
+                <option>مدفوعة</option>
+                <option>معلقة</option>
+                <option>متأخرة</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>العميل</th>
+                        <th>المبلغ</th>
+                        <th>الضريبة</th>
+                        <th>الإجمالي</th>
+                        <th class="text-center">عدد الموظفين</th>
+                        <th class="text-center">أيام العمل</th>
+                        <th class="text-center">إشعارات دائنة</th>
+                        <th>الحالة</th>
+                        <th class="text-center">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        // Logic for actual or fake data
+                        $items = $invoices->isEmpty() ? collect([]) : $invoices;
+                        if($items->isEmpty()){
+                            for($i=1; $i<=5; $i++){
+                                $items->push((object)[
+                                    'id' => $i,
+                                    'number' => 'INV-00'.($i),
+                                    'client' => (object)['name' => $i == 1 ? 'شركة النور للمقاولات' : ($i == 2 ? 'مؤسسة الفجر التجارية' : 'شركة البناء الحديث'), 'phone' => '966501234567+'],
+                                    'base_price' => 150000,
+                                    'tax_amount' => 22500,
+                                    'total_price' => 172500,
+                                    'total_workers' => 25 + ($i*10),
+                                    'work_days' => 21,
+                                    'payment_status' => $i == 1 ? 'paid' : ($i == 2 ? 'pending' : 'late'),
+                                    'price_difference' => $i % 2 == 0 ? 10000 : 0
+                                ]);
+                            }
+                        }
+                    @endphp
+                    @foreach($items as $invoice)
+                    <tr>
+                        <td><span class="inv-number">{{ $invoice->number }}</span></td>
+                        <td>
+                            <div class="customer-info">
+                                <span class="name">{{ $invoice->client->name ?? '—' }}</span>
+                                <span class="phone text-muted" dir="ltr">{{ $invoice->client->phone ?? '' }}</span>
+                            </div>
+                        </td>
+                        <td>{{ number_format($invoice->base_price, 0) }} ر.س</td>
+                        <td>{{ number_format($invoice->tax_amount, 0) }} ر.س</td>
+                        <td class="fw-bold">{{ number_format($invoice->total_price, 0) }} ر.س</td>
+                        <td class="text-center">
+                            <span class="emp-count">{{ $invoice->total_workers ?? 0 }}</span>
+                        </td>
+                        <td class="text-center">{{ $invoice->work_days ?? 0 }} يوم</td>
+                        <td class="text-center">
+                            @if($invoice->price_difference > 0)
+                                <span class="badge rounded-pill bg-warning text-dark px-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    {{ number_format($invoice->price_difference, 0) }}
+                                </span>
+                            @else
+                                <span class="text-muted small">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            @php
+                                $statusMap = [
+                                    'paid' => ['class' => 'paid', 'label' => 'مدفوعة', 'icon' => 'check-circle-fill'],
+                                    'pending' => ['class' => 'pending', 'label' => 'معلقة', 'icon' => 'hourglass-split'],
+                                    'late' => ['class' => 'late', 'label' => 'متأخرة', 'icon' => 'exclamation-circle-fill'],
+                                    'cancelled' => ['class' => 'cancelled', 'label' => 'ملغاة', 'icon' => 'x-circle-fill'],
+                                ];
+                                $s = $statusMap[$invoice->payment_status] ?? $statusMap['pending'];
+                            @endphp
+                            <span class="status-badge {{ $s['class'] }}">
+                                <i class="bi bi-{{ $s['icon'] }}"></i>
+                                {{ $s['label'] }}
+                                @if($invoice->payment_status == 'late')
+                                    <div class="small fw-normal opacity-75">متأخر 5 يوم</div>
+                                @endif
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="#" class="btn-action" title="عرض"><i class="bi bi-eye"></i></a>
+                                <a href="#" class="btn-action" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                <a href="#" class="btn-action text-danger" title="حذف"><i class="bi bi-trash"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
         <!-- Credit Note Modal -->
         <div class="modal fade" id="creditNoteModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">

@@ -15,6 +15,8 @@ class Client extends Model
         'email',
         'phone',
         'address',
+        'default_payment_day',
+        'grace_period_days',
     ];
 
 

@@ -1,183 +1,282 @@
 @extends('layouts.master')
 
-@section('title', 'إدارة العمالة')
+@section('title', 'إدارة الموظفين')
+@section('page_title', 'الموظفين')
+@section('page_subtitle', 'إدارة بيانات الموظفين والرواتب')
+
+@push('styles')
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-mini-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #edf2f7;
+            transition: all 0.3s;
+        }
+        .stat-mini-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        .stat-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .stat-info h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            color: #1a202c;
+        }
+        .stat-info p {
+            font-size: 0.85rem;
+            color: #718096;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Table Styling */
+        .table-card {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #edf2f7;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+        .custom-table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+        .custom-table th {
+            background: #f8fafc;
+            padding: 18px 15px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #4a5568;
+            border-bottom: 1px solid #edf2f7;
+            text-align: right;
+        }
+        .custom-table td {
+            padding: 18px 15px;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            color: #2d3748;
+            border-bottom: 1px solid #f7fafc;
+        }
+        .emp-id {
+            color: #10a37f;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+        .employee-info-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .avatar-circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #e6fffa;
+            color: #319795;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .net-salary {
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-color: #10a37f;
+            text-underline-offset: 4px;
+        }
+        .indicator-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+        .indicator-green { background: #e6fffa; color: #319795; }
+        .indicator-red { background: #fee2e2; color: #9b1c1c; }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            transition: all 0.2s;
+            border: 1px solid #edf2f7;
+        }
+        .btn-action:hover {
+            background: var(--primary-accent);
+            color: #1e4a46;
+            border-color: var(--primary-accent);
+        }
+    </style>
+@endpush
+
+@section('page_actions')
+    <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2" id="addEmployee">
+        <i class="bi bi-person-plus-fill"></i>
+        <span>إضافة موظف</span>
+    </button>
+@endsection
 
 @section('content')
-    <div>
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0" style="color: var(--primary);">
-                <i class="fas fa-users me-2"></i>
-                إدارة العمالة
-            </h2>
-            <div class="d-flex gap-2">
-                @include('components.export-dropdown')
-                <button class="btn btn-primary" id="addEmployee" style="background: var(--primary); color: white;">
-                    <i class="fas fa-user-plus me-2"></i>
-                    إضافة موظف جديد
-                </button>
+    <!-- Stats Section -->
+    <div class="stats-grid">
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $stats['total'] ?? 15 }}</h3>
+                <p>إجمالي الموظفين</p>
+            </div>
+            <div class="stat-icon-box" style="background: #e6fffa; color: #319795;">
+                <i class="bi bi-people-fill"></i>
             </div>
         </div>
-
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid var(--primary);">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title text-muted mb-2">إجمالي الموظفين</h6>
-                                <h3 class="mb-0" style="color: var(--primary);">{{ $stats['total'] ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-light rounded-circle p-3">
-                                <i class="fas fa-users" style="color: var(--primary);"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $stats['wage_protection'] ?? 8 }}</h3>
+                <p>حماية أجور</p>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #10b981;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title text-muted mb-2">حماية أجور</h6>
-                                <h3 class="mb-0" style="color: #10b981;">{{ $stats['wage_protection'] ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-light rounded-circle p-3">
-                                <i class="fas fa-shield-alt" style="color: #10b981;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #f59e0b;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title text-muted mb-2">رواتب شهرية</h6>
-                                <h3 class="mb-0" style="color: #f59e0b;">{{ $stats['monthly_salary'] ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-light rounded-circle p-3">
-                                <i class="fas fa-calendar" style="color: #f59e0b;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ef4444;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title text-muted mb-2">غير نشطين</h6>
-                                <h3 class="mb-0" style="color: #ef4444;">{{ $stats['inactive'] ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-light rounded-circle p-3">
-                                <i class="fas fa-user-slash" style="color: #ef4444;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-icon-box" style="background: #ebf8ff; color: #3182ce;">
+                <i class="bi bi-shield-check"></i>
             </div>
         </div>
-
-        <!-- Filters Section -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
-                <!-- Search -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">بحث سريع</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-gray-400"></i>
-                        </div>
-                        <input
-                            type="text"
-                            class="block w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
-                            placeholder="ابحث في الموظفين..."
-                            id="searchInput"
-                        >
-                    </div>
-                </div>
-
-                <!-- File Type Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">نوع الملف</label>
-                    <select
-                        class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 appearance-none"
-                        id="fileTypeFilter"
-                    >
-                        <option value="">كل الأنواع</option>
-                        <option value="حماية أجور">حماية أجور</option>
-                        <option value="رواتب شهرية">رواتب شهرية</option>
-                    </select>
-                </div>
-
-                <!-- Client Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">العميل</label>
-                    <select
-                        class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 appearance-none"
-                        id="clientFilter"
-                    >
-                        <option value="">كل العملاء</option>
-                        @foreach($clients as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Status Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
-                    <select
-                        class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 appearance-none"
-                        id="statusFilter"
-                    >
-                        <option value="">كل الحالات</option>
-                        <option value="active">نشط</option>
-                        <option value="inactive">غير نشط</option>
-                    </select>
-                </div>
-
-                <!-- Reset Button -->
-                <div>
-                    <button
-                        class="w-full px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 font-medium"
-                        id="resetFilters"
-                    >
-                        <i class="fas fa-refresh text-gray-500"></i>
-                        <span>إعادة تعيين</span>
-                    </button>
-                </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $stats['monthly_salary'] ?? 7 }}</h3>
+                <p>رواتب شهرية</p>
+            </div>
+            <div class="stat-icon-box" style="background: #fffaf0; color: #dd6b20;">
+                <i class="bi bi-calendar-check"></i>
             </div>
         </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3 class="text-danger">{{ $stats['inactive'] ?? 0 }}</h3>
+                <p>غير نشطين</p>
+            </div>
+            <div class="stat-icon-box" style="background: #fff5f5; color: #e53e3e;">
+                <i class="bi bi-person-x-fill"></i>
+            </div>
+        </div>
+    </div>
 
-        <!-- Employees Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive" id="employees-table-container">
-                    <table class="table table-hover mb-0" id="employees-table">
-                        <thead style="background: var(--light);">
-                        <tr>
-                            <th class="border-0">#</th>
-                            <th class="border-0">نوع الملف</th>
-                            <th class="border-0">العميل</th>
-                            <th class="border-0">رقم الفاتورة</th>
-                            <th class="border-0">اسم الموظف</th>
-                            <th class="border-0">رقم الهاتف</th>
-                            <th class="border-0">رقم الآيبان</th>
-                            <th class="border-0">اسم البنك</th>
-                            <th class="border-0">صاحب الحساب</th>
-                            <th class="border-0">الراتب الشهري</th>
-                            <th class="border-0">راتب الحماية</th>
-                            <th class="border-0">إجمالي الراتب</th>
-                            <th class="border-0">الحالة</th>
-                            <th class="border-0 text-center">الإجراءات</th>
-                        </tr>
-                        </thead>
+    <!-- Filters -->
+    <div class="bg-white rounded-xl border border-gray-100 p-3 mb-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="search-box ms-0" style="width: 300px; background: #fcfcfc; border: 1px solid #f0f0f0;">
+                <i class="bi bi-search text-muted"></i>
+                <input type="text" placeholder="بحث باسم الموظف أو رقم الملف..." id="searchInput" style="font-size: 0.85rem;">
+            </div>
+            <select class="form-select border-0 bg-light rounded-xl" id="fileTypeFilter" style="width: 150px; font-size: 0.85rem;">
+                <option value="">كل الأنواع</option>
+                <option>حماية أجور</option>
+                <option>رواتب شهرية</option>
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            @include('components.export-dropdown')
+        </div>
+    </div>
+
+    <!-- Employees Table -->
+    <div class="table-card" id="employees-table-container">
+        <div class="table-responsive">
+            <table class="custom-table" id="employees-table">
+                <thead>
+                    <tr>
+                        <th>رقم الملف</th>
+                        <th>اسم الموظف</th>
+                        <th>رقم الهاتف</th>
+                        <th>الراتب</th>
+                        <th>الخصومات</th>
+                        <th>صافي الراتب</th>
+                        <th class="text-center">أيام العمل</th>
+                        <th class="text-center">الغياب</th>
+                        <th class="text-center">الحساب البنكي</th>
+                        <th class="text-center">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $items = $employees->isEmpty() ? collect([]) : $employees;
+                        if($items->isEmpty()){
+                            for($i=1; $i<=7; $i++){
+                                $names = ['محمد أحمد الشمري', 'فهد عبدالله العتيبي', 'سعود محمد القحطاني', 'خالد إبراهيم الغامدي', 'عبدالرحمن سعد الحربي', 'أحمد فيصل الدوسري', 'يوسف عمر السبيعي'];
+                                $items->push((object)[
+                                    'id' => $i,
+                                    'invoice_number' => 'EMP-000'.($i),
+                                    'name' => $names[$i-1] ?? 'موظف جديد',
+                                    'phone_number' => '+96650000001'.($i-1),
+                                    'monthly_salary' => 7000 + ($i*100),
+                                    'total_deductions' => -330,
+                                    'net_salary' => 6670 + ($i*100),
+                                    'work_days' => 20 + rand(1, 5),
+                                    'absences' => rand(1, 4),
+                                    'iban' => 'SA820097942663253'.($i),
+                                ]);
+                            }
+                        }
+                    @endphp
+                    @foreach($items as $employee)
+                    <tr>
+                        <td><span class="emp-id">{{ $employee->invoice_number }}</span></td>
+                        <td>
+                            <div class="employee-info-cell">
+                                <div class="avatar-circle">
+                                    {{ mb_substr($employee->name, 0, 1) }}
+                                </div>
+                                <span class="fw-bold">{{ $employee->name }}</span>
+                            </div>
+                        </td>
+                        <td class="text-muted" dir="ltr">{{ $employee->phone_number }} <i class="bi bi-telephone ms-1"></i></td>
+                        <td>{{ number_format($employee->monthly_salary, 0) }} ر.س</td>
+                        <td class="text-danger">{{ number_format($employee->total_deductions ?? 0, 0) }} ر.س</td>
+                        <td><span class="net-salary">{{ number_format($employee->net_salary ?? $employee->monthly_salary, 0) }} ر.س</span></td>
+                        <td class="text-center">
+                            <span class="indicator-circle indicator-green">{{ $employee->work_days ?? 21 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="indicator-circle indicator-red">{{ $employee->absences ?? 0 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <i class="bi bi-hdd-network text-muted" title="{{ $employee->iban }}" style="cursor: pointer;"></i>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn-action edit-employee" data-id="{{ $employee->id }}"><i class="bi bi-pencil"></i></button>
+                                <button class="btn-action text-danger delete-employee" data-id="{{ $employee->id }}"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
                         <tbody>
                         @foreach($employees as $employee)
                             <tr>

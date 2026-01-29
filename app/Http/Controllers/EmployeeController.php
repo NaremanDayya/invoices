@@ -16,8 +16,15 @@ class EmployeeController extends Controller
         $clients = Client::pluck('name', 'id'); // تغيير الترتيب
         $invoices = Invoice::pluck('number', 'id'); // تغيير الترتيب
 
+        $stats = [
+            'total' => Employee::count(),
+            'wage_protection' => Employee::where('file_type', 'حماية أجور')->count(),
+            'monthly_salary' => Employee::where('file_type', 'رواتب شهرية')->count(),
+            'inactive' => Employee::where('is_active', false)->count(),
+        ];
+
 //         dd($clients);
-        return view('Employees.index', compact('employees', 'clients', 'invoices'));
+        return view('Employees.index', compact('employees', 'clients', 'invoices', 'stats'));
     }
 
     public function store(Request $request)

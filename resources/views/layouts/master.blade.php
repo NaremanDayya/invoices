@@ -8,101 +8,178 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'نظام إدارة الفواتير')</title>
 
+    <!-- Google Fonts: Tajawal & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Bootstrap 5 RTL -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Toastr -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- Flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 
     <style>
         :root {
-            --primary: #10b981;
-            --primary-light: #34d399;
-            --primary-dark: #059669;
-            --secondary: #047857;
-            --light: #f0fdf4;
-            --dark: #064e3b;
+            --sidebar-bg: #1e4a46;
+            --sidebar-hover: #2a635e;
+            --primary-accent: #fbbd08;
+            --text-muted: #a0aec0;
+            --body-bg: #f4f7f6;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --transition-speed: 0.3s;
         }
 
         body {
             font-family: 'Tajawal', sans-serif;
-            background-color: #f8fafc;
+            background-color: var(--body-bg);
+            margin: 0;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* Sidebar Styles */
+        #sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
             min-height: 100vh;
+            color: white;
+            transition: all var(--transition-speed);
+            z-index: 1000;
             display: flex;
             flex-direction: column;
+            position: fixed;
+            right: 0; /* Changed to right for RTL */
+            top: 0;
+            bottom: 0;
         }
 
-        /* Header Styles */
-        .main-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        #sidebar.collapsed {
+            width: 80px;
         }
 
-        .header-content {
+        .sidebar-header {
+            padding: 20px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
         }
 
-        .brand-info {
+        .sidebar-brand {
+            font-weight: 800;
+            font-size: 1.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.2s;
+        }
+
+        #sidebar.collapsed .sidebar-brand {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-section-title {
+            padding: 15px 25px 5px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        #sidebar.collapsed .nav-section-title {
+            display: none;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 2px 15px;
+        }
+
+        .nav-link {
             display: flex;
             align-items: center;
-            gap: 1rem;
-        }
-
-        .logo-container {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .system-name {
-            font-weight: 700;
+            padding: 12px 15px;
             color: white;
-            font-size: 1.5rem;
-            margin: 0;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
 
-        .system-subtitle {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            margin: 0;
+        .nav-link:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
         }
 
-        .user-info {
+        .nav-link i {
+            width: 24px;
+            font-size: 1.1rem;
+            margin-left: 15px; /* Margin left for icon in RTL */
+            text-align: center;
+        }
+
+        .nav-link.active {
+            background-color: var(--primary-accent);
+            color: #1e4a46 !important;
+            font-weight: 700;
+        }
+
+        .nav-link span {
+            transition: opacity 0.2s;
+        }
+
+        #sidebar.collapsed .nav-link span {
+            opacity: 0;
+            width: 0;
+            display: none;
+        }
+
+        /* Profile Section in Sidebar */
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .user-profile {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
         }
 
-        .user-details {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
-        }
-
-        .user-avatar {
+        .user-avatar-sm {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            object-fit: cover;
         }
 
-        .user-text {
-            color: white;
+        .user-info-text {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: opacity 0.2s;
+        }
+
+        #sidebar.collapsed .user-info-text {
+            opacity: 0;
+            width: 0;
+            display: none;
         }
 
         .user-name {
@@ -111,156 +188,144 @@
         }
 
         .user-role {
-            font-size: 0.8rem;
-            opacity: 0.9;
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
 
-        .icon-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
-            color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            position: relative;
-        }
-
-        .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ef4444;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Navigation */
-        .main-nav {
-            background: white;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-container {
-            display: flex;
-            justify-content: center;
-        }
-
-        .nav-list {
-            display: flex;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            gap: 0.5rem;
-        }
-
-        .nav-item {
-            position: relative;
-        }
-
-        .nav-link {
-            color: #64748b;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transition: all 0.3s ease;
-            border-radius: 10px;
-            margin: 0.25rem;
-        }
-
-        .nav-link i {
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: var(--primary);
-            background: var(--light);
-        }
-
-        .nav-link:hover i {
-            transform: scale(1.1);
-        }
-
-        .nav-link.active {
-            color: var(--primary);
-            background: var(--light);
-            font-weight: 600;
-        }
-
-        .nav-link.active::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: 50%;
-            transform: translateX(50%);
-            width: 30px;
-            height: 3px;
-            background: var(--primary);
-            border-radius: 3px 3px 0 0;
-        }
-
-        /* Main Content */
-        .main-content {
+        /* Main Content Wrapper */
+        #content-wrapper {
             flex: 1;
-            padding: 2rem 0;
+            margin-right: 260px; /* Responsive to sidebar width */
+            transition: all var(--transition-speed);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #content-wrapper.expanded {
+            margin-right: 80px;
+        }
+
+        /* Top Bar */
+        .topbar {
+            height: 70px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .search-box {
             background: #f8fafc;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 350px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 0.9rem;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .action-icon {
+            color: #64748b;
+            font-size: 1.2rem;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .badge-dot {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border: 2px solid white;
+            border-radius: 50%;
+        }
+
+        /* Page Header */
+        .page-header {
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1a202c;
+            margin: 0;
+        }
+
+        .page-title p {
+            color: #718096;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* Content Area */
+        .main-content {
+            padding: 0 30px 30px;
+            flex: 1;
         }
 
         .content-card {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #edf2f7;
         }
 
-        /* Footer */
-        .main-footer {
-            background: linear-gradient(135deg, var(--dark) 0%, #0f766e 100%);
-            color: white;
-            padding: 1.5rem 0;
-            text-align: center;
-            margin-top: auto;
-        }
-
-        .footer-text {
-            margin: 0;
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .nav-list {
-                flex-direction: column;
-                gap: 0;
+        /* Utilities */
+        .rounded-xl { border-radius: 16px; }
+        .text-primary-accent { color: var(--primary-accent); }
+        .bg-primary-accent { background-color: var(--primary-accent); }
+        
+        /* Mobile Overlay */
+        @media (max-width: 991.98px) {
+            #sidebar {
+                right: -260px;
             }
-
-            .nav-link {
-                justify-content: center;
-                border-radius: 0;
+            #sidebar.show {
+                right: 0;
             }
-
-            .user-details {
+            #content-wrapper {
+                margin-right: 0 !important;
+            }
+            .sidebar-overlay {
                 display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+            }
+            .sidebar-overlay.show {
+                display: block;
             }
         }
     </style>
@@ -268,225 +333,188 @@
 </head>
 
 <body>
-<!-- Header Section -->
-<header class="main-header">
-    <div class="container">
-        <div class="header-content">
-            <!-- Brand Info -->
-            <div class="brand-info">
-{{--                <div class="logo-container">--}}
-{{--                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="h-10 w-auto">--}}
-{{--                </div>--}}
-                <div>
-                    <h1 class="system-name">نظام إدارة الفواتير</h1>
-                    <p class="system-subtitle">الحل المتكامل لإدارة الفواتير والمستحقات</p>
-                </div>
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <i class="fas fa-file-invoice-dollar text-primary-accent me-2"></i>
+                <span>نظام فواتيرك</span>
+            </div>
+            <button class="btn btn-link text-white p-0 d-none d-lg-block" id="toggle-sidebar">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <button class="btn btn-link text-white p-0 d-lg-none" id="close-sidebar">
+                <i class="bi bi-x-lg fs-4"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-nav">
+            <div class="nav-section-title">القائمة الرئيسية</div>
+            <div class="nav-item">
+                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-grid-fill"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                    <span>الفواتير</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
+                    <i class="bi bi-people-fill"></i>
+                    <span>العملاء</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ route('payments.index') }}" class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}">
+                    <i class="bi bi-wallet2"></i>
+                    <span>أوامر الدفع</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>الموظفين</span>
+                </a>
             </div>
 
-            <!-- User Controls -->
-            <div class="user-info">
-                <!-- Notifications -->
-                <livewire:unread-messages-count />
+            <div class="nav-section-title">إدارة النظام</div>
+            <div class="nav-item">
+                <a href="{{ route('dashboard.reports.issued-invoices') }}" class="nav-link {{ request()->routeIs('dashboard.reports.*') ? 'active' : '' }}">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span>التقارير</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>الإعدادات</span>
+                </a>
+            </div>
+        </div>
 
-                <!-- User Profile -->
-                <div class="user-details">
-                    <div class="relative group">
-                        <img src="{{ asset(Auth::user()->personal_image) }}" alt="User Avatar" id="profileImage"
-                             class="user-avatar">
-
-                        <button type="button"
-                                class="absolute -top-2 -right-2 bg-white text-gray-800 rounded-full p-1 hover:bg-gray-200 transition-all duration-200 shadow-md"
-                                onclick="document.getElementById('profilePhotoInput').click()">
-                            <i class="bi bi-pencil-fill text-xs"></i>
-                        </button>
-
-                        <form id="avatarUploadForm" action="{{ route('admin.updatePhoto') }}" method="POST"
-                              enctype="multipart/form-data">
-                            @csrf
-                            <input type="file" id="profilePhotoInput" name="personal_image"
-                                   accept="image/jpeg,image/png,image/gif" style="display: none;">
-                        </form>
-                    </div>
-
-                    <div class="user-text">
-                        <div class="user-name">{{ Auth::user()->name ?? 'المستخدم' }}</div>
-                        <div class="user-role">مدير النظام</div>
-                    </div>
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img src="{{ asset(Auth::user()->personal_image ?? 'assets/img/default-avatar.png') }}" alt="User" class="user-avatar-sm">
+                <div class="user-info-text">
+                    <span class="user-name">{{ Auth::user()->name }}</span>
+                    <span class="user-role">مدير النظام</span>
                 </div>
-
-                <!-- Logout -->
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}" class="ms-auto">
                     @csrf
-                    <button type="submit" class="icon-btn" title="تسجيل الخروج">
-                        <i class="fas fa-sign-out-alt"></i>
+                    <button type="submit" class="btn btn-link text-white p-0">
+                        <i class="bi bi-box-arrow-left fs-5"></i>
                     </button>
                 </form>
             </div>
         </div>
-    </div>
-</header>
+    </aside>
 
-<!-- Navigation -->
-<nav class="main-nav">
-    <div class="container">
-        <div class="nav-container">
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <a href="{{ route('dashboard') }}"
-                       class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <i class="fas fa-tachometer-alt"></i>
-                        لوحة التحكم
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('invoices.index') }}"
-                       class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
-                        <i class="fas fa-file-invoice"></i>
-                        إدارة الفواتير
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('payments.index') }}"
-                       class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}">
-                        <i class="fas fa-credit-card"></i>
-                        أوامر السداد
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('employees.index') }}"
-                       class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
-                        <i class="fas fa-users"></i>
-                        إدارة العمالة
-                    </a>
-                </li>
-{{--                <li class="nav-item">--}}
-{{--                    <a href="{{ route('welcome') }}"--}}
-{{--                       class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">--}}
-{{--                        <i class="fas fa-chart-bar"></i>--}}
-{{--                        التقارير المالية--}}
-{{--                    </a>--}}
-{{--                </li>--}}
-                <li class="nav-item">
-                    <a href="{{ route('chat.index') }}"
-                       class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}">
-                        <i class="fas fa-boxes"></i>
-                        المحادثات
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<!-- Main Content -->
-<main class="main-content">
-    <div class="container-fluid px-4">
-        <!-- Success/Error Messages -->
-        @if(session()->has('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Content Wrapper -->
+    <div id="content-wrapper">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-link text-dark p-0 d-lg-none" id="mobile-sidebar-toggle">
+                    <i class="bi bi-list fs-3"></i>
+                </button>
+                <div class="search-box d-none d-md-flex">
+                    <i class="bi bi-search text-muted"></i>
+                    <input type="text" placeholder="بحث في النظام...">
+                </div>
             </div>
-        @endif
 
-        @if(session()->has('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="topbar-actions">
+                <div class="d-none d-sm-block text-end">
+                    <div class="fw-bold mb-0 text-dark" style="font-size: 0.85rem;">{{ now()->translatedFormat('l, d F Y') }}</div>
+                </div>
+                <a href="#" class="action-icon">
+                    <i class="bi bi-bell"></i>
+                    <span class="badge-dot"></span>
+                </a>
+                <livewire:unread-messages-count />
             </div>
-        @endif
+        </header>
 
         <!-- Page Content -->
-        <div class="content-card p-4">
-            @yield('content')
-        </div>
-    </div>
-</main>
+        <main>
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>@yield('page_title', 'لوحة التحكم')</h1>
+                    <p>@yield('page_subtitle', 'مرحباً بك في نظام إدارة الفواتير')</p>
+                </div>
+                <div class="page-actions">
+                    @yield('page_actions')
+                </div>
+            </div>
 
-<!-- Footer -->
-<footer class="main-footer">
-    <div class="container">
-        <p class="footer-text">
-            جميع الحقوق محفوظة &copy; {{ date('Y') }} نظام إدارة الفواتير - شركة افاق الخليج
-        </p>
-    </div>
-</footer>
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
+            <div class="main-content">
+                <!-- Messages -->
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show rounded-xl mb-4 border-0 shadow-sm" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
 
-<script>
-    // Auto-dismiss alerts after 5 seconds
-    setTimeout(() => {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show rounded-xl mb-4 border-0 shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @yield('content')
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Sidebar Toggle
+            $('#toggle-sidebar').click(function() {
+                $('#sidebar').toggleClass('collapsed');
+                $('#content-wrapper').toggleClass('expanded');
+            });
+
+            // Mobile Sidebar Toggle
+            $('#mobile-sidebar-toggle').click(function() {
+                $('#sidebar').addClass('show');
+                $('#sidebar-overlay').addClass('show');
+            });
+
+            $('#close-sidebar, #sidebar-overlay').click(function() {
+                $('#sidebar').removeClass('show');
+                $('#sidebar-overlay').removeClass('show');
+            });
+
+            // Flatpickr localization
+            flatpickr.localize(flatpickr.l10ns.ar);
+
+            // Auto-hide alert
+            setTimeout(function() {
+                $(".alert").fadeOut('slow');
+            }, 5000);
         });
-    }, 5000);
+    </script>
 
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Initialize Flatpickr
-    flatpickr.localize(flatpickr.l10ns.ar);
-</script>
-<script>
-    document.getElementById('profilePhotoInput').addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const file = this.files[0];
-            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            const maxSize = 2048 * 1024; // 2MB
-            const editBtn = document.querySelector(
-                '[onclick="document.getElementById(\'profilePhotoInput\').click()"]');
-
-            // Validation
-            if (!validTypes.includes(file.type)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'خطأ',
-                    text: 'الرجاء اختيار صورة بصيغة JPEG أو PNG أو GIF',
-                    confirmButtonText: 'حسناً'
-                });
-                return;
-            }
-
-            if (file.size > maxSize) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'خطأ',
-                    text: 'حجم الملف يجب أن لا يتجاوز 2MB',
-                    confirmButtonText: 'حسناً'
-                });
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('profileImage').src = e.target.result;
-            }
-            reader.readAsDataURL(file);
-
-            const originalContent = editBtn.innerHTML;
-            editBtn.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i>';
-            editBtn.disabled = true;
-
-            document.getElementById('avatarUploadForm').submit();
-        }
-    });
-</script>
-
-
-@livewireScripts
-@stack('scripts')
+    @livewireScripts
+    @stack('scripts')
 </body>
 </html>

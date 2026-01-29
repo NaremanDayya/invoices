@@ -2,9 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Livewire\ListInvoices;
-use App\Livewire\ListPayments;
-use App\Livewire\ListEmployees;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentsController;
@@ -38,7 +35,6 @@ Route::post('invoices/add-service', [InvoiceController::class, 'addService'])->n
 Route::post('/invoices/add-credit-note', [InvoiceController::class, 'addCreditNote'])
     ->name('invoices.add-credit-note');
 Route::middleware('auth')->group(function () {
-    Route::get('/employees',ListEmployees::class)->name('payments.index');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -60,6 +56,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/chat/unread-count', [ChatController::class, 'unreadConversationsCount']);
     Route::post('/chat/send-image', [ChatController::class, 'sendImage'])->name('chat.send-image');
 });
-Route::get('/clients', [\App\Http\Controllers\ClientController::class, 'chatClients']);
+Route::resource('clients', \App\Http\Controllers\ClientController::class);
 Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'getNotifications']);
 require __DIR__.'/auth.php';

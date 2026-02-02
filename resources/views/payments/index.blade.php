@@ -127,10 +127,31 @@
 @endpush
 
 @section('page_actions')
-    <a href="{{ route('payments.create') }}" class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2">
-        <i class="bi bi-plus-lg"></i>
-        <span>إضافة دفعة</span>
-    </a>
+    <div class="d-flex gap-2">
+        <div class="dropdown">
+            <button class="btn btn-outline-success rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2 dropdown-toggle" 
+                    type="button" id="exportDropdownPayments" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download"></i>
+                <span>تصدير</span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="exportDropdownPayments">
+                <li>
+                    <a class="dropdown-item" href="javascript:void(0)" onclick="exportPaymentsToPDF()">
+                        <i class="bi bi-file-pdf text-danger me-2"></i>تصدير PDF
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="javascript:void(0)" onclick="exportPaymentsToExcel()">
+                        <i class="bi bi-file-excel text-success me-2"></i>تصدير Excel
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <a href="{{ route('payments.create') }}" class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i>
+            <span>إضافة دفعة</span>
+        </a>
+    </div>
 @endsection
 
 @section('content')
@@ -264,9 +285,9 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">
-                                <a href="#" class="btn-action" title="عرض"><i class="bi bi-eye"></i></a>
-                                <a href="#" class="btn-action" title="تعديل"><i class="bi bi-pencil"></i></a>
-                                <button class="btn-action text-danger" title="حذف"><i class="bi bi-trash"></i></button>
+                                <a href="{{ route('payments.show', $payment->id) }}" class="btn-action" title="عرض"><i class="bi bi-eye"></i></a>
+                                <a href="{{ route('payments.edit', $payment->id) }}" class="btn-action" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                <button type="button" class="btn-action text-danger" title="حذف" onclick="confirmDeletePayment({{ $payment->id }})"><i class="bi bi-trash"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -276,6 +297,37 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deletePaymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: none;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        تأكيد حذف الدفعة
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <p class="mb-3">هل أنت متأكد من حذف هذه الدفعة؟</p>
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>تحذير:</strong> سيتم تحديث حالة الفاتورة المرتبطة تلقائياً بعد الحذف.
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary rounded-xl" data-bs-dismiss="modal">إلغاء</button>
+                    <form id="deletePaymentForm" method="POST" style="display: inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger rounded-xl">
+                            <i class="bi bi-trash me-2"></i>حذف الدفعة
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @endsection
 
@@ -285,160 +337,127 @@
         // Initialize data
         let PaymentsData = @json($payments);
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Export dropdown functionality
-            const exportBtn = document.getElementById('exportBtn');
-            const dropdown = document.getElementById('exportDropdown');
-
-            if (exportBtn && dropdown) {
-                exportBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    this.closest('.dropdown').classList.toggle('active');
-                });
-
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!exportBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                        document.querySelectorAll('.dropdown').forEach(drop => {
-                            drop.classList.remove('active');
-                        });
-                    }
-                });
-            }
-        });
-
-        // Export function
-        function exportTable(type) {
-            if (type === 'xlsx') {
-                exportPaymentsToExcel();
-            } else if (type === 'pdf') {
-                exportPaymentsToPDF();
-            }
-
-            // Close dropdown
-            document.querySelectorAll('.dropdown').forEach(drop => {
-                drop.classList.remove('active');
-            });
+        // Delete confirmation function
+        function confirmDeletePayment(paymentId) {
+            const form = document.getElementById('deletePaymentForm');
+            form.action = `/payments/${paymentId}`;
+            const modal = new bootstrap.Modal(document.getElementById('deletePaymentModal'));
+            modal.show();
         }
 
-        // Export to Excel
-        function exportPaymentsToExcel() {
-            const table = document.getElementById('paymentsTable');
-            const headers = [];
-            const data = [];
-
-            // Get headers
-            const headerCells = table.querySelectorAll('thead th');
-            headerCells.forEach(header => {
-                if (!header.classList.contains('no-print')) {
-                    headers.push(header.textContent.trim());
-                }
-            });
-
-            // Get data
-            const rows = table.querySelectorAll('tbody tr');
-            rows.forEach(row => {
-                const rowData = [];
-                const cells = row.querySelectorAll('td');
-
-                cells.forEach((cell, index) => {
-                    if (!headerCells[index].classList.contains('no-print')) {
-                        let cellContent = cell.textContent.trim();
-
-                        // Handle badge HTML content
-                        if (cell.querySelector('.badge')) {
-                            const badgeText = cell.querySelector('.badge').textContent.trim();
-                            cellContent = badgeText;
-                        }
-
-                        rowData.push(cellContent);
-                    }
-                });
-
-                if (rowData.length > 0) {
-                    data.push(rowData);
-                }
-            });
-
-            // Prepare worksheet data
-            const wsData = [headers, ...data];
-            const worksheet = XLSX.utils.aoa_to_sheet(wsData);
-
-            // Auto-fit columns
-            const colWidths = wsData[0].map((_, colIndex) => {
-                const maxLen = wsData.reduce((max, row) => {
-                    const cell = row[colIndex] ? String(row[colIndex]) : '';
-                    return Math.max(max, cell.length);
-                }, 10);
-                return { wch: maxLen + 2 };
-            });
-            worksheet['!cols'] = colWidths;
-
-            // Create workbook and save
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "المدفوعات");
-
-            XLSX.writeFile(workbook, `مدفوعات_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        }
-
-        // Export to PDF
+        // Export to PDF Function
         function exportPaymentsToPDF() {
-            // Clone the table
-            const originalTable = document.getElementById('paymentsTable');
-            const table = originalTable.cloneNode(true);
-            const pdfHeader = document.querySelector('.pdf-header').cloneNode(true);
-            const pdfFooter = document.querySelector('.pdf-footer').cloneNode(true);
-
-            // Show header and footer
-            pdfHeader.style.display = 'block';
-            pdfFooter.style.display = 'block';
-
-            // Create container for PDF
-            const pdfContainer = document.createElement('div');
-            pdfContainer.style.padding = '20px';
-            pdfContainer.appendChild(pdfHeader);
-            pdfContainer.appendChild(table);
-            pdfContainer.appendChild(pdfFooter);
-
-            // Hide non-printable columns
-            const headers = table.querySelectorAll('thead th');
-            headers.forEach((header, index) => {
-                if (header.classList.contains('no-print')) {
-                    header.style.display = 'none';
-                    table.querySelectorAll('tbody tr').forEach(row => {
-                        if (row.cells[index]) {
-                            row.cells[index].style.display = 'none';
-                        }
-                    });
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
+            
+            // Title (using English for proper rendering)
+            doc.setFontSize(18);
+            doc.text('Payments Report - تقرير الدفعات', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+            
+            doc.setFontSize(10);
+            const today = new Date();
+            const dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            doc.text('Report Date: ' + dateStr, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+            
+            // Get table data
+            const payments = @json($payments->items());
+            
+            const tableData = payments.map(payment => {
+                const methodMap = {
+                    'cash': 'Cash',
+                    'bank_transfer': 'Bank Transfer',
+                    'check': 'Check',
+                    'credit_card': 'Credit Card',
+                    'other': 'Other'
+                };
+                
+                const statusMap = {
+                    'completed': 'Completed',
+                    'pending': 'Pending',
+                    'cancelled': 'Cancelled'
+                };
+                
+                return [
+                    payment.number || '',
+                    payment.invoice?.number || '',
+                    payment.invoice?.client?.name || '',
+                    payment.payment_date || '',
+                    parseFloat(payment.amount || 0).toFixed(2) + ' SAR',
+                    methodMap[payment.payment_method] || payment.payment_method,
+                    statusMap[payment.status] || payment.status
+                ];
+            });
+            
+            // Add table
+            doc.autoTable({
+                head: [['Payment #', 'Invoice #', 'Client', 'Payment Date', 'Amount', 'Method', 'Status']],
+                body: tableData,
+                startY: 30,
+                styles: {
+                    font: 'helvetica',
+                    fontSize: 9,
+                    halign: 'center'
+                },
+                headStyles: {
+                    fillColor: [30, 74, 70],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245]
                 }
             });
-
-            // PDF options
-            const options = {
-                margin: 10,
-                filename: `تقرير_المدفوعات_${new Date().toISOString().slice(0,10)}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    scrollX: 0,
-                    scrollY: 0,
-                    windowWidth: document.documentElement.offsetWidth
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a4',
-                    orientation: 'landscape',
-                    compress: true
-                }
-            };
-
-            // Generate and save PDF
-            html2pdf().set(options).from(pdfContainer).save();
+            
+            // Save PDF
+            doc.save('payments_' + new Date().toISOString().split('T')[0] + '.pdf');
+            
+            if (window.toastr) toastr.success('Payments exported to PDF successfully');
         }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setupExportDropdown('exportDropdown', 'payments-table-container', 'payments-table', 'تقرير_المدفوعات');
-        });
+        
+        // Export to Excel Function
+        function exportPaymentsToExcel() {
+            const payments = @json($payments->items());
+            
+            const methodMap = {
+                'cash': 'نقدي',
+                'bank_transfer': 'تحويل بنكي',
+                'check': 'شيك',
+                'credit_card': 'بطاقة ائتمان',
+                'other': 'أخرى'
+            };
+            
+            const statusMap = {
+                'completed': 'مكتمل',
+                'pending': 'قيد الانتظار',
+                'cancelled': 'ملغى'
+            };
+            
+            const excelData = payments.map(payment => ({
+                'رقم الدفعة': payment.number || '',
+                'رقم الفاتورة': payment.invoice?.number || '',
+                'العميل': payment.invoice?.client?.name || '',
+                'تاريخ الدفع': payment.payment_date || '',
+                'المبلغ': parseFloat(payment.amount || 0).toFixed(2),
+                'طريقة الدفع': methodMap[payment.payment_method] || payment.payment_method,
+                'الحالة': statusMap[payment.status] || payment.status,
+                'رقم المرجع': payment.reference_number || '',
+                'اسم البنك': payment.bank_name || '',
+                'ملاحظات': payment.notes || ''
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'الدفعات');
+            
+            // Set column widths
+            ws['!cols'] = [
+                { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 15 },
+                { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 30 }
+            ];
+            
+            XLSX.writeFile(wb, 'payments_' + new Date().toISOString().split('T')[0] + '.xlsx');
+            
+            if (window.toastr) toastr.success('Payments exported to Excel successfully');
+        }
     </script>
 @endpush

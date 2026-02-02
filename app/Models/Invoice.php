@@ -23,9 +23,13 @@ class Invoice extends Model
         'approval_date',
         'payment_date',
         'total_workers',
+        'workers_days',
         'total_supervisors',
+        'supervisors_days',
         'total_managers',
+        'managers_days',
         'total_users',
+        'users_days',
         'work_days',
         'daily_rate',
         'base_price',
@@ -185,7 +189,16 @@ class Invoice extends Model
     public function calculateFinancials()
     {
         // Calculate base price
-        $this->base_price = $this->total_workforce * $this->work_days * $this->daily_rate;
+        $totalManDays = ($this->total_workers * $this->workers_days) + 
+                       ($this->total_supervisors * $this->supervisors_days) + 
+                       ($this->total_managers * $this->managers_days) + 
+                       ($this->total_users * $this->users_days);
+
+        if ($totalManDays > 0) {
+            $this->base_price = $totalManDays * $this->daily_rate;
+        } else {
+            $this->base_price = $this->total_workforce * $this->work_days * $this->daily_rate;
+        }
 
         // Calculate tax
         $this->tax_amount = ($this->base_price * $this->tax_rate) / 100;

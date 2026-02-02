@@ -1,22 +1,23 @@
 @extends('layouts.master')
 
-@section('title', 'إضافة دفعة جديدة')
+@section('title', 'تعديل الدفعة')
 
 @section('content')
     <div class="container-fluid px-4 py-6">
-        <form action="{{ route('payments.store') }}" method="POST" id="paymentForm" class="space-y-8">
+        <form action="{{ route('payments.update', $payment->id) }}" method="POST" id="paymentForm" class="space-y-8">
             @csrf
+            @method('PUT')
 
             <!-- Header -->
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
                 <div class="mb-4 lg:mb-0">
                     <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
                         <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">
-                            <i class="fas fa-plus-circle mr-2 text-blue-600"></i>
-                            إضافة دفعة جديدة
+                            <i class="fas fa-edit mr-2 text-blue-600"></i>
+                            تعديل الدفعة #{{ $payment->number }}
                         </span>
                     </h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">سجل عملية دفع جديدة لفاتورة موجودة</p>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">تحديث بيانات الدفعة</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4">
                     <a href="{{ route('payments.index') }}" class="btn-secondary flex items-center justify-center">
@@ -25,7 +26,7 @@
                     </a>
                     <button type="submit" class="btn-primary flex items-center justify-center shadow-blue-500/20">
                         <i class="fas fa-save ml-2"></i>
-                        حفظ الدفعة
+                        حفظ التعديلات
                     </button>
                 </div>
             </div>
@@ -43,11 +44,12 @@
                     </div>
                     <div class="p-8 space-y-6">
                         <div>
-                            <label class="form-label">اختر الفاتورة <span class="text-red-500">*</span></label>
+                            <label class="form-label">الفاتورة المرتبطة <span class="text-red-500">*</span></label>
                             <select name="invoice_id" class="form-select" required id="invoiceSelect">
                                 <option value="">-- اختر الفاتورة --</option>
                                 @foreach($invoices as $invoice)
                                     <option value="{{ $invoice->id }}"
+                                            {{ $payment->invoice_id == $invoice->id ? 'selected' : '' }}
                                             data-total="{{ $invoice->total_price }}"
                                             data-paid="{{ $invoice->paid_amount }}"
                                             data-remaining="{{ $invoice->remaining_amount }}"
@@ -68,17 +70,17 @@
                              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                  <div>
                                      <label class="text-xs text-slate-400 font-bold mb-1 block">اسم العميل</label>
-                                     <input type="text" class="w-full bg-transparent border-none p-0 text-slate-800 dark:text-white font-semibold" id="clientName" readonly placeholder="-">
+                                     <input type="text" class="w-full bg-transparent border-none p-0 text-slate-800 dark:text-white font-semibold" id="clientName" readonly placeholder="-" value="{{ $payment->invoice->client->name ?? '' }}">
                                  </div>
                                  <div>
                                      <label class="text-xs text-slate-400 font-bold mb-1 block">البريد الإلكتروني</label>
-                                     <input type="text" class="w-full bg-transparent border-none p-0 text-slate-800 dark:text-white" id="clientEmail" readonly placeholder="-">
+                                     <input type="text" class="w-full bg-transparent border-none p-0 text-slate-800 dark:text-white" id="clientEmail" readonly placeholder="-" value="{{ $payment->invoice->client->email ?? '' }}">
                                  </div>
                                  <div class="md:col-span-2">
                                      <label class="text-xs text-slate-400 font-bold mb-1 block">الهاتف والعنوان</label>
                                      <div class="flex gap-4">
-                                         <span class="flex items-center text-sm"><i class="fas fa-phone text-blue-400 ml-2"></i> <span id="clientPhone">-</span></span>
-                                         <span class="flex items-center text-sm"><i class="fas fa-map-marker-alt text-blue-400 ml-2"></i> <span id="clientAddress">-</span></span>
+                                         <span class="flex items-center text-sm"><i class="fas fa-phone text-blue-400 ml-2"></i> <span id="clientPhone">{{ $payment->invoice->client->phone ?? '-' }}</span></span>
+                                         <span class="flex items-center text-sm"><i class="fas fa-map-marker-alt text-blue-400 ml-2"></i> <span id="clientAddress">{{ $payment->invoice->client->address ?? '-' }}</span></span>
                                      </div>
                                  </div>
                              </div>
@@ -100,28 +102,28 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="form-label">تاريخ الدفع <span class="text-red-500">*</span></label>
-                                <input type="date" name="payment_date" class="form-input" value="{{ now()->format('Y-m-d') }}" required>
+                                <input type="date" name="payment_date" class="form-input" value="{{ $payment->payment_date }}" required>
                             </div>
                             <div>
                                 <label class="form-label">المبلغ المدفوع (ر.س) <span class="text-red-500">*</span></label>
-                                <input type="number" name="amount" id="amount" class="form-input text-lg font-bold text-green-600" min="0" step="0.01" value="0" required>
+                                <input type="number" name="amount" id="amount" class="form-input text-lg font-bold text-green-600" min="0" step="0.01" value="{{ $payment->amount }}" required>
                             </div>
                             <div>
                                 <label class="form-label">طريقة الدفع <span class="text-red-500">*</span></label>
                                 <select name="payment_method" class="form-select" required>
-                                    <option value="cash">💵 نقدي</option>
-                                    <option value="bank_transfer" selected>🏦 تحويل بنكي</option>
-                                    <option value="check">🎫 شيك</option>
-                                    <option value="credit_card">💳 بطاقة ائتمان</option>
-                                    <option value="other">⚙️ أخرى</option>
+                                    <option value="cash" {{ $payment->payment_method == 'cash' ? 'selected' : '' }}>💵 نقدي</option>
+                                    <option value="bank_transfer" {{ $payment->payment_method == 'bank_transfer' ? 'selected' : '' }}>🏦 تحويل بنكي</option>
+                                    <option value="check" {{ $payment->payment_method == 'check' ? 'selected' : '' }}>🎫 شيك</option>
+                                    <option value="credit_card" {{ $payment->payment_method == 'credit_card' ? 'selected' : '' }}>💳 بطاقة ائتمان</option>
+                                    <option value="other" {{ $payment->payment_method == 'other' ? 'selected' : '' }}>⚙️ أخرى</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="form-label">حالة العملية <span class="text-red-500">*</span></label>
                                 <select name="status" class="form-select" required>
-                                    <option value="pending">🕘 قيد الانتظار</option>
-                                    <option value="completed" selected>✅ مكتمل</option>
-                                    <option value="cancelled">🚫 ملغى</option>
+                                    <option value="pending" {{ $payment->status == 'pending' ? 'selected' : '' }}>🕘 قيد الانتظار</option>
+                                    <option value="completed" {{ $payment->status == 'completed' ? 'selected' : '' }}>✅ مكتمل</option>
+                                    <option value="cancelled" {{ $payment->status == 'cancelled' ? 'selected' : '' }}>🚫 ملغى</option>
                                 </select>
                             </div>
                         </div>
@@ -129,36 +131,36 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="form-label">رقم المرجع</label>
-                                <input type="text" name="reference_number" class="form-input" placeholder="مثال: REF-123456">
+                                <input type="text" name="reference_number" class="form-input" placeholder="مثال: REF-123456" value="{{ $payment->reference_number }}">
                             </div>
                             <div>
                                 <label class="form-label">اسم البنك</label>
-                                <input type="text" name="bank_name" class="form-input" placeholder="مثال: الراجحي">
+                                <input type="text" name="bank_name" class="form-input" placeholder="مثال: الراجحي" value="{{ $payment->bank_name }}">
                             </div>
                         </div>
                         
                         <div>
                             <label class="form-label">ملاحظات</label>
-                            <textarea name="notes" class="form-input" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+                            <textarea name="notes" class="form-input" rows="3" placeholder="أي ملاحظات إضافية...">{{ $payment->notes }}</textarea>
                         </div>
                         
                         <!-- Summary Widget -->
                         <div class="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-slate-800 rounded-xl p-6 border border-blue-100 dark:border-blue-800/30 space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold text-slate-500">إجمالي الفاتورة</span>
-                                <span class="font-mono font-bold text-lg text-slate-800 dark:text-white" id="invoice_total_display">0.00 ر.س</span>
+                                <span class="font-mono font-bold text-lg text-slate-800 dark:text-white" id="invoice_total_display">{{ number_format($payment->invoice->total_price ?? 0, 2) }} ر.س</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold text-blue-600">المبلغ المدفوع سابقاً</span>
-                                <span class="font-mono font-bold text-lg text-blue-600" id="invoice_paid_display">0.00 ر.س</span>
+                                <span class="font-mono font-bold text-lg text-blue-600" id="invoice_paid_display">{{ number_format($payment->invoice->paid_amount ?? 0, 2) }} ر.س</span>
                             </div>
                             <div class="flex items-center justify-between pt-3 border-t border-blue-200">
                                 <span class="text-sm font-bold text-orange-600">المبلغ المتبقي</span>
-                                <span class="font-mono font-bold text-xl text-orange-600" id="invoice_remaining_display">0.00 ر.س</span>
+                                <span class="font-mono font-bold text-xl text-orange-600" id="invoice_remaining_display">{{ number_format($payment->invoice->remaining_amount ?? 0, 2) }} ر.س</span>
                             </div>
                             <div class="flex items-center justify-between pt-3 border-t-2 border-green-200">
-                                <span class="text-sm font-bold text-green-600">المبلغ سيتم دفعه الآن</span>
-                                <span class="font-mono font-bold text-2xl text-green-600" id="paid_amount_display">0.00 ر.س</span>
+                                <span class="text-sm font-bold text-green-600">المبلغ الحالي للدفع</span>
+                                <span class="font-mono font-bold text-2xl text-green-600" id="paid_amount_display">{{ number_format($payment->amount, 2) }} ر.س</span>
                             </div>
                         </div>
                     </div>
@@ -184,6 +186,10 @@
             const invRemainingDisplay = document.getElementById('invoice_remaining_display');
             const paidDisplay = document.getElementById('paid_amount_display');
             
+            // Store original payment amount for validation
+            const originalAmount = parseFloat(amountInput.value);
+            const originalInvoiceId = parseInt(invoiceSelect.value);
+            
             invoiceSelect.addEventListener('change', function() {
                 const opt = this.options[this.selectedIndex];
                 if (!opt.value) {
@@ -193,17 +199,20 @@
                 
                 const total = parseFloat(opt.dataset.total) || 0;
                 const paid = parseFloat(opt.dataset.paid) || 0;
-                const remaining = parseFloat(opt.dataset.remaining) || 0;
+                let remaining = parseFloat(opt.dataset.remaining) || 0;
                 
-                // Auto-fill amount with remaining
-                amountInput.value = remaining.toFixed(2);
+                // If editing same invoice, add back the original payment amount to remaining
+                if (parseInt(opt.value) === originalInvoiceId) {
+                    remaining += originalAmount;
+                }
+                
+                // Auto-fill amount with remaining or keep original
                 amountInput.max = remaining;
                 
                 // Update displays
                 invTotalDisplay.textContent = total.toFixed(2) + ' ر.س';
                 invPaidDisplay.textContent = paid.toFixed(2) + ' ر.س';
                 invRemainingDisplay.textContent = remaining.toFixed(2) + ' ر.س';
-                paidDisplay.textContent = remaining.toFixed(2) + ' ر.س';
                 
                 // Fill Client Info
                 clientName.value = opt.dataset.clientName || '';
@@ -237,11 +246,8 @@
                 }
             });
             
-            // Pre-fill if invoice_id is in URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const invoiceId = urlParams.get('invoice_id');
-            if (invoiceId) {
-                invoiceSelect.value = invoiceId;
+            // Trigger initial display update
+            if (invoiceSelect.value) {
                 invoiceSelect.dispatchEvent(new Event('change'));
             }
         });

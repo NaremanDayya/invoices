@@ -17,44 +17,43 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Invoice::with(['client', 'service']);
+        $query = Invoice::with(['client', 'service', 'payments', 'creditNotes']);
 
-        // Apply filters
-        if ($request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('number', 'like', '%' . $request->search . '%')
-                    ->orWhereHas('client', function($clientQuery) use ($request) {
-                        $clientQuery->where('name', 'like', '%' . $request->search . '%');
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('number', 'like', '%' . $search . '%')
+                    ->orWhereHas('client', function($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', '%' . $search . '%')
+                                    ->orWhere('phone', 'like', '%' . $search . '%');
                     });
             });
         }
 
-        if ($request->statusFilter) {
-            $query->where('payment_status', $request->statusFilter);
+        if ($request->filled('status')) {
+            $query->where('payment_status', $request->status);
         }
 
-        if ($request->clientFilter) {
-            $query->whereHas('client', function($clientQuery) use ($request) {
-                $clientQuery->where('name', $request->clientFilter);
-            });
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->client_id);
         }
 
-        if ($request->startDate) {
-            $query->where('generation_date', '>=', $request->startDate);
+        if ($request->filled('start_date')) {
+            $query->where('generation_date', '>=', $request->start_date);
         }
 
-        if ($request->endDate) {
-            $query->where('generation_date', '<=', $request->endDate);
+        if ($request->filled('end_date')) {
+            $query->where('generation_date', '<=', $request->end_date);
         }
 
-        $invoices = $query->orderBy('created_at', 'desc')->paginate(10);
+        $invoices = $query->orderBy('created_at', 'desc')->paginate(15);
 
         $stats = [
             'total' => Invoice::count(),
             'paid' => Invoice::where('payment_status', 'paid')->count(),
             'pending' => Invoice::where('payment_status', 'pending')->count(),
-            'overdue' => Invoice::where('payment_status', 'overdue')->count(),
             'late' => Invoice::where('payment_status', 'late')->count(),
+            'cancelled' => Invoice::where('is_cancelled', true)->count(),
         ];
 
         $clients = Client::all();
@@ -84,6 +83,10 @@ class InvoiceController extends Controller
             'total_supervisors' => 'required|integer|min:0',
             'total_managers' => 'required|integer|min:0',
             'total_users' => 'required|integer|min:0',
+            'workers_days' => 'nullable|integer|min:0',
+            'supervisors_days' => 'nullable|integer|min:0',
+            'managers_days' => 'nullable|integer|min:0',
+            'users_days' => 'nullable|integer|min:0',
             'work_days' => 'required|integer|min:1',
             'daily_rate' => 'required|numeric|min:0',
             'tax_rate' => 'required|numeric|min:0|max:100',
@@ -91,7 +94,7 @@ class InvoiceController extends Controller
             'payment_status' => 'required|string|in:pending,paid,overdue,late',
             'payment_date' => 'nullable|date',
             'invoice_status' => 'required|string',
-            'custom_status' => 'nullable|string|max:255', // Add custom status validation
+            'custom_status' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
@@ -116,15 +119,24 @@ class InvoiceController extends Controller
                 ->withErrors(['invoice_status' => 'حالة الفاتورة المحددة غير صالحة.']);
         }
 
-        // Full workforce count
         $totalWorkforce =
             ($validated['total_workers'] ?? 0) +
             ($validated['total_supervisors'] ?? 0) +
             ($validated['total_managers'] ?? 0) +
             ($validated['total_users'] ?? 0);
 
-        // Financial calculations
-        $subtotal = $totalWorkforce * $validated['work_days'] * $validated['daily_rate'];
+        $workersDays = $validated['workers_days'] ?? $validated['work_days'];
+        $supervisorsDays = $validated['supervisors_days'] ?? $validated['work_days'];
+        $managersDays = $validated['managers_days'] ?? $validated['work_days'];
+        $usersDays = $validated['users_days'] ?? $validated['work_days'];
+
+        $totalManDays =
+            ($validated['total_workers'] * $workersDays) +
+            ($validated['total_supervisors'] * $supervisorsDays) +
+            ($validated['total_managers'] * $managersDays) +
+            ($validated['total_users'] * $usersDays);
+
+        $subtotal = $totalManDays * $validated['daily_rate'];
         $taxAmount = ($subtotal * $validated['tax_rate']) / 100;
         $totalAmount = $subtotal + $taxAmount + ($validated['amount_difference'] ?? 0);
 
@@ -143,6 +155,11 @@ class InvoiceController extends Controller
             'total_supervisors' => $validated['total_supervisors'],
             'total_managers' => $validated['total_managers'],
             'total_users' => $validated['total_users'],
+
+            'workers_days' => $workersDays,
+            'supervisors_days' => $supervisorsDays,
+            'managers_days' => $managersDays,
+            'users_days' => $usersDays,
 
             'work_days' => $validated['work_days'],
             'daily_rate' => $validated['daily_rate'],
@@ -196,6 +213,117 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.index')
             ->with('success', 'تم إنشاء الفاتورة بنجاح!');
     }
+
+    public function show(Invoice $invoice)
+    {
+        $invoice->load(['client', 'service', 'payments', 'creditNotes']);
+        return view('invoices.show', compact('invoice'));
+    }
+
+    public function edit($id)
+    {
+        $invoice = Invoice::with(['client', 'service'])->findOrFail($id);
+        $clients = Client::all();
+        $services = Service::all();
+        return view('invoices.edit', compact('invoice', 'clients', 'services'));
+    }
+
+    public function update(Request $request, Invoice $invoice)
+    {
+        $validated = $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'service_id' => 'required|exists:services,id',
+            'number' => 'required|string|unique:invoices,number,' . $invoice->id,
+            'generation_date' => 'required|date',
+            'last_generation_date' => 'required|date',
+            'total_workers' => 'required|integer|min:0',
+            'total_supervisors' => 'required|integer|min:0',
+            'total_managers' => 'required|integer|min:0',
+            'total_users' => 'required|integer|min:0',
+            'workers_days' => 'nullable|integer|min:0',
+            'supervisors_days' => 'nullable|integer|min:0',
+            'managers_days' => 'nullable|integer|min:0',
+            'users_days' => 'nullable|integer|min:0',
+            'work_days' => 'required|integer|min:1',
+            'daily_rate' => 'required|numeric|min:0',
+            'tax_rate' => 'required|numeric|min:0|max:100',
+            'amount_difference' => 'nullable|numeric',
+            'payment_status' => 'required|string|in:pending,paid,overdue,late',
+            'payment_date' => 'nullable|date',
+            'invoice_status' => 'required|string',
+            'custom_status' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        $finalInvoiceStatus = $validated['invoice_status'];
+        if ($validated['invoice_status'] === 'other' && !empty($validated['custom_status'])) {
+            $finalInvoiceStatus = $validated['custom_status'];
+        }
+
+        $totalWorkforce =
+            ($validated['total_workers'] ?? 0) +
+            ($validated['total_supervisors'] ?? 0) +
+            ($validated['total_managers'] ?? 0) +
+            ($validated['total_users'] ?? 0);
+
+        $workersDays = $validated['workers_days'] ?? $validated['work_days'];
+        $supervisorsDays = $validated['supervisors_days'] ?? $validated['work_days'];
+        $managersDays = $validated['managers_days'] ?? $validated['work_days'];
+        $usersDays = $validated['users_days'] ?? $validated['work_days'];
+
+        $totalManDays =
+            ($validated['total_workers'] * $workersDays) +
+            ($validated['total_supervisors'] * $supervisorsDays) +
+            ($validated['total_managers'] * $managersDays) +
+            ($validated['total_users'] * $usersDays);
+
+        $subtotal = $totalManDays * $validated['daily_rate'];
+        $taxAmount = ($subtotal * $validated['tax_rate']) / 100;
+        $totalAmount = $subtotal + $taxAmount + ($validated['amount_difference'] ?? 0);
+
+        $invoice->update([
+            'number' => $validated['number'],
+            'client_id' => $validated['client_id'],
+            'service_id' => $validated['service_id'],
+            'generation_date' => $validated['generation_date'],
+            'last_generation_date' => $validated['last_generation_date'],
+            'due_date' => $validated['last_generation_date'],
+            'total_workers' => $validated['total_workers'],
+            'total_supervisors' => $validated['total_supervisors'],
+            'total_managers' => $validated['total_managers'],
+            'total_users' => $validated['total_users'],
+            'workers_days' => $workersDays,
+            'supervisors_days' => $supervisorsDays,
+            'managers_days' => $managersDays,
+            'users_days' => $usersDays,
+            'work_days' => $validated['work_days'],
+            'daily_rate' => $validated['daily_rate'],
+            'base_price' => $subtotal,
+            'tax_rate' => $validated['tax_rate'],
+            'tax_amount' => $taxAmount,
+            'total_price' => $totalAmount,
+            'amount_difference' => $validated['amount_difference'] ?? 0,
+            'payment_status' => $validated['payment_status'],
+            'payment_date' => $validated['payment_date'],
+            'invoice_status' => $finalInvoiceStatus,
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()->route('invoices.index')
+            ->with('success', 'تم تحديث الفاتورة بنجاح!');
+    }
+
+    public function destroy(Invoice $invoice)
+    {
+        if ($invoice->payments()->where('status', 'completed')->exists()) {
+            return back()->with('error', 'لا يمكن حذف فاتورة تحتوي على مدفوعات مكتملة');
+        }
+
+        $invoice->delete();
+        return redirect()->route('invoices.index')
+            ->with('success', 'تم حذف الفاتورة بنجاح!');
+    }
+
     public function addCreditNote(Request $request)
     {
         $request->validate([
@@ -210,23 +338,24 @@ class InvoiceController extends Controller
 
             $creditNoteNumber = 'CN-' . date('Ymd') . '-' . str_pad(CreditNote::count() + 1, 4, '0', STR_PAD_LEFT);
 
+            // Determine if this is the main credit note
+            $isMain = $invoice->creditNotes()->count() === 0;
+            
             $creditNote = CreditNote::create([
                 'invoice_id' => $invoice->id,
                 'number' => $creditNoteNumber,
                 'amount' => $request->credit_amount,
                 'reason' => $request->credit_reason,
                 'issue_date' => now(),
-                'is_main' => true, // or false based on your business logic
+                'is_main' => $isMain,
                 'description' => $request->credit_note_type == 'credit_note' ? 'إشعار دائن' : 'قصائد مديونة',
                 'is_active' => true
             ]);
 
-            // Optional: Update invoice with credit note summary if needed
+            // Update invoice credit note totals
             $invoice->update([
-                'has_credit_note' => true, // if you have this field
-                'credit_note_type' => $request->credit_note_type,
-                'credit_issued_at' => now(),
-                'credit_issued_by' => auth()->id()
+                'credit_notes_count' => $invoice->creditNotes()->count(),
+                'total_credit_notes' => $invoice->creditNotes()->sum('amount')
             ]);
 
             return response()->json([

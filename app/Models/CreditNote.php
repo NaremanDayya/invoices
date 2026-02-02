@@ -68,8 +68,8 @@ class CreditNote extends Model
             // Update invoice credit notes count and total
             $invoice = $creditNote->invoice;
             $invoice->update([
-                'credit_notes_count' => $invoice->credit_notes()->count(),
-                'total_credit_notes' => $invoice->credit_notes()->sum('amount')
+                'credit_notes_count' => $invoice->creditNotes()->count(),
+                'total_credit_notes' => $invoice->creditNotes()->sum('amount')
             ]);
         });
 
@@ -77,8 +77,8 @@ class CreditNote extends Model
             // Update invoice credit notes count and total
             $invoice = $creditNote->invoice;
             $invoice->update([
-                'credit_notes_count' => $invoice->credit_notes()->count(),
-                'total_credit_notes' => $invoice->credit_notes()->sum('amount')
+                'credit_notes_count' => $invoice->creditNotes()->count(),
+                'total_credit_notes' => $invoice->creditNotes()->sum('amount')
             ]);
         });
     }

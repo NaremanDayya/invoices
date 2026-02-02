@@ -69,6 +69,24 @@ class PaymentsController extends Controller
     }
 
     /**
+     * Show payment details
+     */
+    public function show(Payment $payment)
+    {
+        $payment->load(['invoice.client']);
+        return view('payments.show', compact('payment'));
+    }
+
+    /**
+     * Show edit payment form
+     */
+    public function edit(Payment $payment)
+    {
+        $invoices = Invoice::all();
+        return view('payments.edit', compact('payment', 'invoices'));
+    }
+
+    /**
      * Store new payment
      */
     public function store(Request $request)
@@ -76,35 +94,49 @@ class PaymentsController extends Controller
         $validated = $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
             'payment_date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
-            'payment_method' => 'required|in:cash,bank_transfer,check',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:cash,bank_transfer,check,credit_card,other',
             'status' => 'required|in:completed,pending,cancelled',
             'description' => 'nullable|string|max:500',
             'reference_number' => 'nullable|string|max:100',
+            'bank_name' => 'nullable|string|max:100',
+            'account_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string',
         ]);
 
-        // Generate payment number
-        $validated['number'] = 'PAY-' . date('Ymd') . '-' . str_pad(Payment::count() + 1, 3, '0', STR_PAD_LEFT);
+        $invoice = Invoice::findOrFail($validated['invoice_id']);
 
-        Payment::create($validated);
+        if ($validated['amount'] > $invoice->remaining_amount) {
+            return back()->withInput()->withErrors([
+                'amount' => 'المبلغ المدفوع أكبر من المبلغ المتبقي (' . number_format($invoice->remaining_amount, 2) . ' ر.س)'
+            ]);
+        }
+
+        $validated['number'] = 'PAY-' . date('Ymd') . '-' . str_pad(Payment::count() + 1, 4, '0', STR_PAD_LEFT);
+
+        $payment = Payment::create($validated);
+
+        if ($validated['status'] === 'completed') {
+            $invoice->increment('paid_amount', $validated['amount']);
+            
+            if ($invoice->paid_amount >= $invoice->total_price) {
+                $invoice->update([
+                    'payment_status' => 'paid',
+                    'payment_date' => $validated['payment_date']
+                ]);
+            } elseif ($invoice->paid_amount > 0) {
+                $invoice->update(['payment_status' => 'late']);
+            }
+        }
 
         return redirect()->route('payments.index')
             ->with('success', 'تم حفظ بيانات الدفع بنجاح');
     }
 
     /**
-     * Show single payment
+     * Edit payment form (duplicate removed - using the one defined earlier)
      */
-    public function show(Payment $payment)
-    {
-        $payment->load(['client', 'invoice']);
-        return view('payments.show', compact('payment'));
-    }
-
-    /**
-     * Edit payment form
-     */
-    public function edit(Payment $payment)
+    public function editOld(Payment $payment)
     {
         $clients = Client::all();
         $invoices = Invoice::where('status', 'approved')->get();
@@ -117,15 +149,45 @@ class PaymentsController extends Controller
     public function update(Request $request, Payment $payment)
     {
         $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
             'invoice_id' => 'required|exists:invoices,id',
             'payment_date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
-            'payment_method' => 'required|in:cash,bank_transfer,check',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:cash,bank_transfer,check,credit_card,other',
             'status' => 'required|in:completed,pending,cancelled',
             'description' => 'nullable|string|max:500',
             'reference_number' => 'nullable|string|max:100',
+            'bank_name' => 'nullable|string|max:100',
+            'account_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string',
         ]);
+
+        $invoice = Invoice::findOrFail($validated['invoice_id']);
+        $oldAmount = $payment->amount;
+        $oldStatus = $payment->status;
+        $newAmount = $validated['amount'];
+        $newStatus = $validated['status'];
+
+        if ($oldStatus === 'completed') {
+            $invoice->decrement('paid_amount', $oldAmount);
+        }
+
+        if ($newStatus === 'completed') {
+            $availableAmount = $invoice->total_price - $invoice->paid_amount;
+            if ($newAmount > $availableAmount) {
+                return back()->withInput()->withErrors([
+                    'amount' => 'المبلغ المدفوع أكبر من المبلغ المتبقي (' . number_format($availableAmount, 2) . ' ر.س)'
+                ]);
+            }
+            $invoice->increment('paid_amount', $newAmount);
+        }
+
+        if ($invoice->paid_amount >= $invoice->total_price) {
+            $invoice->update(['payment_status' => 'paid', 'payment_date' => $validated['payment_date']]);
+        } elseif ($invoice->paid_amount > 0) {
+            $invoice->update(['payment_status' => 'late']);
+        } else {
+            $invoice->update(['payment_status' => 'pending']);
+        }
 
         $payment->update($validated);
 
@@ -138,6 +200,20 @@ class PaymentsController extends Controller
      */
     public function destroy(Payment $payment)
     {
+        $invoice = $payment->invoice;
+        
+        if ($payment->status === 'completed') {
+            $invoice->decrement('paid_amount', $payment->amount);
+            
+            if ($invoice->paid_amount >= $invoice->total_price) {
+                $invoice->update(['payment_status' => 'paid']);
+            } elseif ($invoice->paid_amount > 0) {
+                $invoice->update(['payment_status' => 'late']);
+            } else {
+                $invoice->update(['payment_status' => 'pending']);
+            }
+        }
+        
         $payment->delete();
         return redirect()->route('payments.index')
             ->with('success', 'تم حذف بيانات الدفع بنجاح');
@@ -148,16 +224,36 @@ class PaymentsController extends Controller
      */
     public function confirm(Payment $payment)
     {
+        if ($payment->status === 'completed') {
+            return back()->with('info', 'الدفع مكتمل بالفعل');
+        }
+
+        $invoice = $payment->invoice;
+        $availableAmount = $invoice->total_price - $invoice->paid_amount;
+        
+        if ($payment->amount > $availableAmount) {
+            return back()->with('error', 'المبلغ المدفوع أكبر من المبلغ المتبقي');
+        }
+
         $payment->update(['status' => 'completed']);
+        $invoice->increment('paid_amount', $payment->amount);
+        
+        if ($invoice->paid_amount >= $invoice->total_price) {
+            $invoice->update(['payment_status' => 'paid', 'payment_date' => $payment->payment_date]);
+        } elseif ($invoice->paid_amount > 0) {
+            $invoice->update(['payment_status' => 'late']);
+        }
+        
         return back()->with('success', 'تم تأكيد الدفع بنجاح');
     }
 
     /**
      * Print payment receipt
      */
-    public function print(Payment $payment)
+    public function print($id)
     {
-        $payment->load(['client', 'invoice']);
+        $payment = Payment::with(['client', 'invoice'])->findOrFail($id);
         return view('payments.print', compact('payment'));
     }
+
 }

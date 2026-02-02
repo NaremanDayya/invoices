@@ -34,6 +34,10 @@ Route::post('invoices/add-client', [InvoiceController::class, 'addClient'])->nam
 Route::post('invoices/add-service', [InvoiceController::class, 'addService'])->name('invoices.add-service');
 Route::post('/invoices/add-credit-note', [InvoiceController::class, 'addCreditNote'])
     ->name('invoices.add-credit-note');
+
+// Payment Additional Routes
+Route::post('/payments/{payment}/confirm', [PaymentsController::class, 'confirm'])->name('payments.confirm');
+Route::get('/payments/{payment}/print', [PaymentsController::class, 'print'])->name('payments.print');
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -383,8 +383,20 @@
                     <span>الموظفين</span>
                 </a>
             </div>
+            <div class="nav-item">
+                <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>الخدمات</span>
+                </a>
+            </div>
 
             <div class="nav-section-title">إدارة النظام</div>
+            <div class="nav-item">
+                <a href="{{ route('invoice-statuses.index') }}" class="nav-link {{ request()->routeIs('invoice-statuses.*') ? 'active' : '' }}">
+                    <i class="bi bi-tags-fill"></i>
+                    <span>حالات الفواتير</span>
+                </a>
+            </div>
             <div class="nav-item">
                 <a href="{{ route('dashboard.reports.issued-invoices') }}" class="nav-link {{ request()->routeIs('dashboard.reports.*') ? 'active' : '' }}">
                     <i class="bi bi-bar-chart-fill"></i>

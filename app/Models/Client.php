@@ -14,6 +14,7 @@ class Client extends Model
         'name',
         'email',
         'phone',
+        'tax_number',
         'address',
         'default_payment_day',
         'grace_period_days',

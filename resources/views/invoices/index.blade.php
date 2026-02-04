@@ -138,7 +138,7 @@
 @section('page_actions')
     <div class="d-flex gap-2">
         <div class="dropdown">
-            <button class="btn btn-outline-success rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2 dropdown-toggle" 
+            <button class="btn btn-outline-success rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2 dropdown-toggle"
                     type="button" id="exportDropdownInvoices" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-download"></i>
                 <span>تصدير</span>
@@ -232,11 +232,13 @@
                     <tr>
                         <th>رقم الفاتورة</th>
                         <th>العميل</th>
+                        <th>الخدمة</th>
                         <th>المبلغ</th>
                         <th>الضريبة</th>
                         <th>الإجمالي</th>
                         <th class="text-center">عدد الموظفين</th>
                         <th class="text-center">أيام العمل</th>
+                        <th class="text-center">أيام التأخير</th>
                         <th class="text-center">إشعارات دائنة</th>
                         <th>الحالة</th>
                         <th class="text-center">الإجراءات</th>
@@ -272,6 +274,9 @@
                                 <span class="phone text-muted" dir="ltr">{{ $invoice->client->phone ?? '' }}</span>
                             </div>
                         </td>
+                        <td>
+                            <span class="badge bg-light text-dark rounded-pill px-3">{{ $invoice->service->name ?? '—' }}</span>
+                        </td>
                         <td>{{ number_format($invoice->base_price, 0) }} ر.س</td>
                         <td>{{ number_format($invoice->tax_amount, 0) }} ر.س</td>
                         <td class="fw-bold">{{ number_format($invoice->total_price, 0) }} ر.س</td>
@@ -279,6 +284,31 @@
                             <span class="emp-count">{{ $invoice->total_workers ?? 0 }}</span>
                         </td>
                         <td class="text-center">{{ $invoice->work_days ?? 0 }} يوم</td>
+                        <td class="text-center">
+                            @php
+                                $issueLate = isset($invoice->issue_delay_days) && $invoice->issue_delay_days > 0;
+                                $paymentLate = isset($invoice->late_days) && $invoice->late_days > 0;
+                            @endphp
+
+                            @if($issueLate || $paymentLate)
+                                <div class="d-flex flex-column gap-1 align-items-center">
+                                    @if($issueLate)
+                                        <span class="badge bg-danger text-white rounded-pill px-3 d-flex align-items-center gap-1" title="تأخير في الإصدار">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                            {{ $invoice->issue_delay_days }} يوم (إصدار)
+                                        </span>
+                                    @endif
+                                    @if($paymentLate)
+                                        <span class="badge bg-success text-white rounded-pill px-3 d-flex align-items-center gap-1" title="تأخير في الدفع من العميل">
+                                            <i class="bi bi-cash-coin"></i>
+                                            {{ $invoice->late_days }} يوم (دفع)
+                                        </span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-muted small">—</span>
+                            @endif
+                        </td>
                         <td class="text-center">
                             @if(isset($invoice->credit_notes_count) && $invoice->credit_notes_count > 0)
                                 <span class="badge rounded-pill bg-warning text-dark px-2">
@@ -509,56 +539,24 @@
                                 </div>
                             </div>
 
-                            <!-- Workforce Details -->
-                            <div class="card mb-4">
+                            <!-- Dynamic Service Details Section -->
+                            <div class="card mb-4" id="serviceDetailsSection" style="display: none;">
                                 <div class="card-header bg-light">
-                                    <i class="fas fa-users me-2"></i>
-                                    تفاصيل العمالة
+                                    <i class="fas fa-list me-2"></i>
+                                    <span id="serviceDetailsSectionTitle">تفاصيل الخدمة</span>
                                 </div>
                                 <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-3">
-                                            <label class="form-label">عدد العمال</label>
-                                            <input type="number" name="total_workers" id="total_workers" class="form-control worker-count" min="0" value="0">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">أيام عمل العمال</label>
-                                            <input type="number" name="workers_days" id="workers_days" class="form-control work-days-input" min="0" value="0">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">عدد المشرفين</label>
-                                            <input type="number" name="total_supervisors" id="total_supervisors" class="form-control worker-count" min="0" value="0">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">أيام عمل المشرفين</label>
-                                            <input type="number" name="supervisors_days" id="supervisors_days" class="form-control work-days-input" min="0" value="0">
-                                        </div>
+                                    <div id="serviceDetailsContainer" class="row g-3">
+                                        <!-- Service details will be populated dynamically based on selected service -->
                                     </div>
-                                    <div class="row mb-3">
-                                        <div class="col-md-3">
-                                            <label class="form-label">عدد المدراء</label>
-                                            <input type="number" name="total_managers" id="total_managers" class="form-control worker-count" min="0" value="0">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">أيام عمل المدراء</label>
-                                            <input type="number" name="managers_days" id="managers_days" class="form-control work-days-input" min="0" value="0">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">عدد المستخدمين</label>
-                                            <input type="number" name="total_users" id="total_users" class="form-control worker-count" min="0" value="0">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">أيام عمل المستخدمين</label>
-                                            <input type="number" name="users_days" id="users_days" class="form-control work-days-input" min="0" value="0">
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-4">
+                                    
+                                    <!-- Workforce Summary -->
+                                    <div class="row mt-4 pt-3 border-top">
+                                        <div class="col-md-6">
                                             <label class="form-label fw-bold">إجمالي العمالة</label>
                                             <input type="text" id="total_workforce_display" class="form-control bg-light fw-bold" value="0" readonly>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label fw-bold">إجمالي أيام العمل</label>
                                             <input type="text" id="total_work_days_display" class="form-control bg-light fw-bold" value="0" readonly>
                                         </div>
@@ -573,31 +571,20 @@
                                     التفاصيل المالية
                                 </div>
                                 <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">أيام العمل <span class="text-danger">*</span></label>
-                                            <input type="number" name="work_days" id="work_days" class="form-control" min="1" value="1" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">الأجر اليومي (﷼) <span class="text-danger">*</span></label>
-                                            <input type="number" name="daily_rate" id="daily_rate" class="form-control" min="0" step="0.01" value="0" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">نسبة الضريبة (%) <span class="text-danger">*</span></label>
-                                            <input type="number" name="tax_rate" id="tax_rate" class="form-control" min="0" max="100" step="0.1" value="15" required>
-                                        </div>
-                                    </div>
-
                                     <div class="row">
-                                        <div class="col-md-4 mb-2">
-                                            <label class="form-label">المبلغ قبل الضريبة (﷼)</label>
-                                            <input type="text" id="subtotal_display" class="form-control bg-light fw-bold" value="0.00" readonly>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">المبلغ قبل الضريبة (﷼) <span class="text-danger">*</span></label>
+                                            <input type="number" name="base_price" id="subtotal_display" class="form-control" value="0" step="0.01" min="0" required>
                                         </div>
-                                        <div class="col-md-4 mb-2">
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">نسبة الضريبة (%) <span class="text-danger">*</span></label>
+                                            <input type="number" name="tax_rate" id="tax_rate" class="form-control" value="15" step="0.1" min="0" max="100" required>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
                                             <label class="form-label">قيمة الضريبة (﷼)</label>
                                             <input type="text" id="tax_amount_display" class="form-control bg-light fw-bold" value="0.00" readonly>
                                         </div>
-                                        <div class="col-md-4 mb-2">
+                                        <div class="col-md-3 mb-3">
                                             <label class="form-label">المبلغ الإجمالي (﷼)</label>
                                             <input type="text" id="total_amount_display" class="form-control bg-light fw-bold" value="0.00" readonly>
                                         </div>
@@ -607,46 +594,17 @@
 
                             <!-- Payment & Status -->
                             <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <i class="fas fa-credit-card me-2"></i>
-                                    حالة السداد
-                                </div>
                                 <div class="card-body">
                                     <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">حالة السداد <span class="text-danger">*</span></label>
-                                            <select name="payment_status" class="form-select" required>
-                                                <option value="pending">قيد الانتظار</option>
-                                                <option value="paid">مدفوعة</option>
-                                                <option value="overdue">متأخرة</option>
-                                                <option value="late">متأخرة (متابعة)</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">تاريخ السداد</label>
-                                            <input type="date" name="payment_date" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
+                                        <div class="col-md-12 mb-3">
                                             <label class="form-label">حالة الفاتورة <span class="text-danger">*</span></label>
-                                            <select name="invoice_status" id="invoice_status" class="form-select" required onchange="toggleCustomStatus()">
-                                                <option value="">اختر حالة الفاتورة</option>
-                                                <option value="رواتب">رواتب</option>
-                                                <option value="عمولات">عمولات</option>
-                                                <option value="عمل اضافي">عمل اضافي</option>
-                                                <option value="رواتب-احتضان قانوني">رواتب-احتضان قانوني</option>
-                                                <option value="مصاريف قانونية- احتضان قانوني">مصاريف قانونية- احتضان قانوني</option>
-                                                <option value="يوزرات">يوزرات</option>
-                                                <option value="ملغية">ملغية</option>
-                                                <option value="ملغية -احتضان قانوني">ملغية -احتضان قانوني</option>
-                                                <option value="بروموتر">بروموتر</option>
-                                                <option value="زيارة مستقلة">زيارة مستقلة</option>
-                                                <option value="other">أخرى (أضف حالة جديدة)</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-12 mb-3" id="custom_status_container" style="display: none;">
-                                            <label class="form-label">الحالة المخصصة <span class="text-danger">*</span></label>
-                                            <input type="text" name="custom_status" class="form-control" placeholder="أدخل الحالة الجديدة للفاتورة">
+                                            <div class="position-relative">
+                                                <input type="text" id="statusSearchInput" class="form-control" placeholder="ابحث عن حالة الفاتورة..." autocomplete="off" required>
+                                                <input type="hidden" name="invoice_status" id="selectedStatusId" required>
+                                                <div id="statusDropdown" class="list-group position-absolute w-100 shadow" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                                    <!-- Options will be populated by JS -->
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1308,6 +1266,148 @@
             serviceInput.value = service.name;
             selectedServiceId.value = service.id;
             serviceDropdown.style.display = 'none';
+
+            // Load service details
+            loadServiceDetails(service.id);
+        }
+
+        async function loadServiceDetails(serviceId) {
+            try {
+                // Fetch service details from server
+                const response = await fetch(`/services/${serviceId}/details`);
+                const serviceDetails = await response.json();
+
+                const detailsSection = document.getElementById('serviceDetailsSection');
+                const detailsContainer = document.getElementById('serviceDetailsContainer');
+                const sectionTitle = document.getElementById('serviceDetailsSectionTitle');
+
+                detailsContainer.innerHTML = '';
+
+                if (serviceDetails && serviceDetails.length > 0) {
+                    sectionTitle.textContent = 'تفاصيل الخدمة: ' + serviceInput.value;
+
+                    serviceDetails.forEach((detail, index) => {
+                        if (detail.has_work_days == 1 || detail.has_work_days === true) {
+                            // Show workforce count and work days side by side
+                            const detailHtml = `
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">${detail.name}</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="form-label">العدد</label>
+                                            <input type="number" name="service_details[${detail.id}][count]"
+                                                   class="form-control service-detail-count"
+                                                   placeholder="العدد"
+                                                   min="0"
+                                                   value="0"
+                                                   data-detail-id="${detail.id}">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label">أيام العمل</label>
+                                            <input type="number" name="service_details[${detail.id}][days]"
+                                                   class="form-control service-detail-days"
+                                                   placeholder="${detail.work_days || '0'} يوم"
+                                                   min="0"
+                                                   value="${detail.work_days || 0}"
+                                                   data-detail-id="${detail.id}">
+                                            <input type="hidden" name="service_details[${detail.id}][name]" value="${detail.name}">
+                                            <input type="hidden" name="service_details[${detail.id}][has_work_days]" value="1">
+                                            <input type="hidden" name="service_details[${detail.id}][work_days]" value="${detail.work_days || 0}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                            detailsContainer.insertAdjacentHTML('beforeend', detailHtml);
+                        } else {
+                            // Show single field for non-workforce details
+                            const detailHtml = `
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">${detail.name}</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">القيمة</label>
+                                        <input type="text" name="service_details[${detail.id}][value]"
+                                               class="form-control"
+                                               placeholder="أدخل القيمة">
+                                        <input type="hidden" name="service_details[${detail.id}][name]" value="${detail.name}">
+                                        <input type="hidden" name="service_details[${detail.id}][has_work_days]" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                            detailsContainer.insertAdjacentHTML('beforeend', detailHtml);
+                        }
+                    });
+
+                    detailsSection.style.display = 'block';
+
+                    // Add event listeners for dynamic calculation
+                    addServiceDetailEventListeners();
+                } else {
+                    detailsSection.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading service details:', error);
+                detailsSection.style.display = 'none';
+            }
+        }
+
+        function addServiceDetailEventListeners() {
+            // Add input event listeners to service detail fields for real-time calculation
+            document.querySelectorAll('.service-detail-count, .service-detail-days').forEach(input => {
+                input.addEventListener('input', calculateServiceDetailsTotal);
+            });
+        }
+
+        function calculateServiceDetailsTotal() {
+            let totalWorkforce = 0;
+            let totalWorkDays = 0;
+
+            // Group by detail ID to calculate properly
+            const detailCounts = {};
+            const detailDays = {};
+
+            // Collect counts
+            document.querySelectorAll('.service-detail-count').forEach(input => {
+                const detailId = input.getAttribute('data-detail-id');
+                detailCounts[detailId] = parseInt(input.value) || 0;
+            });
+
+            // Collect days
+            document.querySelectorAll('.service-detail-days').forEach(input => {
+                const detailId = input.getAttribute('data-detail-id');
+                detailDays[detailId] = parseInt(input.value) || 0;
+            });
+
+            // Calculate totals
+            Object.keys(detailCounts).forEach(detailId => {
+                const count = detailCounts[detailId];
+                const days = detailDays[detailId] || 0;
+
+                totalWorkforce += count;
+                totalWorkDays += count * days;
+            });
+
+            // Update the main workforce display
+            const workforceDisplay = document.getElementById('total_workforce_display');
+            if (workforceDisplay) {
+                workforceDisplay.value = totalWorkforce;
+            }
+
+            // Update total work days display
+            const workDaysDisplay = document.getElementById('total_work_days_display');
+            if (workDaysDisplay) {
+                workDaysDisplay.value = totalWorkDays;
+            }
+
+            // Note: Subtotal is manually entered by user, not auto-calculated
+            // User enters the base_price directly in the financial section
         }
 
         function openAddServiceModal(name) {
@@ -1316,6 +1416,63 @@
             modalEl.querySelector('[name="name"]').value = name;
             modal.show();
             serviceDropdown.style.display = 'none';
+        }
+
+        // Invoice Status Autocomplete
+        const invoiceStatuses = @json($invoiceStatuses ?? []);
+        const statusInput = document.getElementById('statusSearchInput');
+        const statusDropdown = document.getElementById('statusDropdown');
+        const selectedStatusId = document.getElementById('selectedStatusId');
+
+        if (statusInput) {
+            statusInput.addEventListener('input', function() {
+                const search = this.value.toLowerCase();
+                statusDropdown.innerHTML = '';
+
+                if (search.length < 1) {
+                    statusDropdown.style.display = 'none';
+                    return;
+                }
+
+                const filtered = invoiceStatuses.filter(s =>
+                    s.name.toLowerCase().includes(search) ||
+                    (s.name_en && s.name_en.toLowerCase().includes(search))
+                );
+
+                if (filtered.length > 0) {
+                    filtered.forEach(s => {
+                        const item = document.createElement('a');
+                        item.href = '#';
+                        item.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2';
+
+                        const iconHtml = s.icon ? `<i class="bi bi-${s.icon}"></i>` : '';
+                        const colorBadge = `<span class="badge rounded-pill" style="background-color: ${s.color}; width: 20px; height: 20px;"></span>`;
+
+                        item.innerHTML = `${colorBadge} ${iconHtml} <span>${s.name}</span>`;
+                        item.onclick = (e) => {
+                            e.preventDefault();
+                            selectStatus(s);
+                        };
+                        statusDropdown.appendChild(item);
+                    });
+                    statusDropdown.style.display = 'block';
+                } else {
+                    statusDropdown.style.display = 'none';
+                }
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (statusInput && !statusInput.contains(e.target) && !statusDropdown.contains(e.target)) {
+                    statusDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        function selectStatus(status) {
+            statusInput.value = status.name;
+            selectedStatusId.value = status.name;
+            statusDropdown.style.display = 'none';
         }
 
         // Workforce calculation
@@ -1340,9 +1497,9 @@
             const managersDays = parseInt(document.getElementById('managers_days')?.value) || 0;
             const usersDays = parseInt(document.getElementById('users_days')?.value) || 0;
 
-            const totalWorkDays = (workers * workersDays) + (supervisors * supervisorsDays) + 
+            const totalWorkDays = (workers * workersDays) + (supervisors * supervisorsDays) +
                                   (managers * managersDays) + (users * usersDays);
-            
+
             const totalWorkDaysDisplay = document.getElementById('total_work_days_display');
             if (totalWorkDaysDisplay) {
                 totalWorkDaysDisplay.value = totalWorkDays;
@@ -1363,28 +1520,12 @@
         const totalDisplay = document.getElementById('total_amount_display');
 
         function calculateFinancials() {
-            const workers = parseInt(workersInput.value) || 0;
-            const supervisors = parseInt(supervisorsInput.value) || 0;
-            const managers = parseInt(managersInput.value) || 0;
-            const users = parseInt(usersInput.value) || 0;
+            const subtotal = parseFloat(subtotalDisplay.value) || 0;
+            const taxRate = parseFloat(document.getElementById('tax_rate').value) || 0;
 
-            const workersDays = parseInt(document.getElementById('workers_days')?.value) || 0;
-            const supervisorsDays = parseInt(document.getElementById('supervisors_days')?.value) || 0;
-            const managersDays = parseInt(document.getElementById('managers_days')?.value) || 0;
-            const usersDays = parseInt(document.getElementById('users_days')?.value) || 0;
-
-            const totalManDays = (workers * workersDays) + (supervisors * supervisorsDays) + 
-                                 (managers * managersDays) + (users * usersDays);
-
-            const dailyRate = parseFloat(dailyRateInput.value) || 0;
-            const taxRate = parseFloat(taxRateInput.value) || 0;
-            const amountDiff = parseFloat(amountDiffInput ? amountDiffInput.value : 0) || 0;
-
-            const subtotal = totalManDays * dailyRate;
             const taxAmount = (subtotal * taxRate) / 100;
-            const total = subtotal + taxAmount + amountDiff;
+            const total = subtotal + taxAmount;
 
-            subtotalDisplay.value = subtotal.toFixed(2);
             taxDisplay.value = taxAmount.toFixed(2);
             totalDisplay.value = total.toFixed(2);
         }
@@ -1394,7 +1535,7 @@
             [workersInput, supervisorsInput, managersInput, usersInput].forEach(input => {
                 input.addEventListener('input', calculateTotalWorkforce);
             });
-            
+
             // Add listeners for work days inputs
             const workDaysInputs = document.querySelectorAll('.work-days-input');
             workDaysInputs.forEach(input => {
@@ -1403,11 +1544,9 @@
         }
 
         // Event listeners for financial inputs
-        if(workDaysInput) {
-            [workDaysInput, dailyRateInput, taxRateInput].forEach(input => {
-                input.addEventListener('input', calculateFinancials);
-            });
-            if(amountDiffInput) amountDiffInput.addEventListener('input', calculateFinancials);
+        if(subtotalDisplay) {
+            subtotalDisplay.addEventListener('input', calculateFinancials);
+            document.getElementById('tax_rate').addEventListener('input', calculateFinancials);
         }
 
         // Initialize calculations
@@ -1526,19 +1665,19 @@
         function exportInvoicesToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
-            
+
             // Title (using English for now since Arabic needs special font)
             doc.setFontSize(18);
             doc.text('Invoices Report - تقرير الفواتير', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-            
+
             doc.setFontSize(10);
             const today = new Date();
             const dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
             doc.text('Report Date: ' + dateStr, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
-            
+
             // Get table data
             const invoices = @json($invoices->items());
-            
+
             const tableData = invoices.map(invoice => {
                 const statusMap = {
                     'paid': 'Paid',
@@ -1547,7 +1686,7 @@
                     'overdue': 'Overdue',
                     'cancelled': 'Cancelled'
                 };
-                
+
                 return [
                     invoice.number || '',
                     invoice.client?.name || '',
@@ -1558,7 +1697,7 @@
                     statusMap[invoice.payment_status] || invoice.payment_status
                 ];
             });
-            
+
             // Add table
             doc.autoTable({
                 head: [['Invoice #', 'Client', 'Issue Date', 'Total Amount', 'Paid Amount', 'Remaining', 'Status']],
@@ -1578,17 +1717,17 @@
                     fillColor: [245, 245, 245]
                 }
             });
-            
+
             // Save PDF
             doc.save('invoices_' + new Date().toISOString().split('T')[0] + '.pdf');
-            
+
             if (window.toastr) toastr.success('Invoices exported to PDF successfully');
         }
-        
+
         // Export to Excel Function
         function exportInvoicesToExcel() {
             const invoices = @json($invoices->items());
-            
+
             const statusMap = {
                 'paid': 'مدفوعة',
                 'pending': 'قيد الانتظار',
@@ -1596,7 +1735,7 @@
                 'overdue': 'متأخرة',
                 'cancelled': 'ملغاة'
             };
-            
+
             const excelData = invoices.map(invoice => ({
                 'رقم الفاتورة': invoice.number || '',
                 'العميل': invoice.client?.name || '',
@@ -1613,20 +1752,20 @@
                 'حالة السداد': statusMap[invoice.payment_status] || invoice.payment_status,
                 'حالة الفاتورة': invoice.invoice_status || ''
             }));
-            
+
             const ws = XLSX.utils.json_to_sheet(excelData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'الفواتير');
-            
+
             // Set column widths
             ws['!cols'] = [
                 { wch: 15 }, { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 15 },
                 { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 },
                 { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }
             ];
-            
+
             XLSX.writeFile(wb, 'invoices_' + new Date().toISOString().split('T')[0] + '.xlsx');
-            
+
             if (window.toastr) toastr.success('Invoices exported to Excel successfully');
         }
     </script>

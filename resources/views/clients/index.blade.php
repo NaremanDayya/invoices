@@ -163,6 +163,11 @@
                                                             <input type="text" name="phone" class="form-control rounded-xl py-2 px-3" value="{{ $client->phone }}">
                                                         </div>
                                                         <div class="col-12">
+                                                            <label class="form-label small fw-bold text-muted">الرقم الضريبي <span class="text-danger">*</span></label>
+                                                            <input type="text" name="tax_number" class="form-control rounded-xl py-2 px-3" value="{{ $client->tax_number }}" required maxlength="15" pattern="[0-9]{15}">
+                                                            <small class="text-muted">يجب أن يكون 15 رقم بالضبط</small>
+                                                        </div>
+                                                        <div class="col-12">
                                                             <label class="form-label small fw-bold text-muted">العنوان</label>
                                                             <textarea name="address" class="form-control rounded-xl py-2 px-3" rows="3">{{ $client->address }}</textarea>
                                                         </div>
@@ -231,6 +236,11 @@
                             <div class="col-12">
                                 <label class="form-label small fw-bold text-slate-600">الهاتف</label>
                                 <input type="text" name="phone" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" placeholder="05xxxxxxxx">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">الرقم الضريبي <span class="text-danger">*</span></label>
+                                <input type="text" name="tax_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" required placeholder="أدخل 15 رقم" maxlength="15" pattern="[0-9]{15}">
+                                <small class="text-muted">يجب أن يكون 15 رقم بالضبط</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-bold text-slate-600">العنوان</label>

@@ -58,8 +58,9 @@ class InvoiceController extends Controller
 
         $clients = Client::all();
         $services = Service::all();
+        $invoiceStatuses = \App\Models\InvoiceStatus::active()->ordered()->get();
 
-        return view('invoices.index', compact('invoices', 'stats', 'clients', 'services'));
+        return view('invoices.index', compact('invoices', 'stats', 'clients', 'services', 'invoiceStatuses'));
     }
 
     public function create()
@@ -79,23 +80,16 @@ class InvoiceController extends Controller
             'number' => 'required|string|unique:invoices,number',
             'generation_date' => 'required|date',
             'last_generation_date' => 'required|date',
-            'total_workers' => 'required|integer|min:0',
-            'total_supervisors' => 'required|integer|min:0',
-            'total_managers' => 'required|integer|min:0',
-            'total_users' => 'required|integer|min:0',
-            'workers_days' => 'nullable|integer|min:0',
-            'supervisors_days' => 'nullable|integer|min:0',
-            'managers_days' => 'nullable|integer|min:0',
-            'users_days' => 'nullable|integer|min:0',
-            'work_days' => 'required|integer|min:1',
-            'daily_rate' => 'required|numeric|min:0',
+            'base_price' => 'required|numeric|min:0',
             'tax_rate' => 'required|numeric|min:0|max:100',
-            'amount_difference' => 'nullable|numeric',
-            'payment_status' => 'required|string|in:pending,paid,overdue,late',
-            'payment_date' => 'nullable|date',
             'invoice_status' => 'required|string',
-            'custom_status' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'service_details' => 'nullable|array',
+            'service_details.*.count' => 'nullable|integer|min:0',
+            'service_details.*.days' => 'nullable|integer|min:0',
+            'service_details.*.value' => 'nullable|string',
+            'service_details.*.name' => 'nullable|string',
+            'service_details.*.has_work_days' => 'nullable',
         ]);
 
         // Determine the final invoice status
@@ -105,84 +99,67 @@ class InvoiceController extends Controller
         if ($validated['invoice_status'] === 'other' && !empty($validated['custom_status'])) {
             $finalInvoiceStatus = $validated['custom_status'];
         }
-
-        $allowedStatuses = [
-            'رواتب', 'عمولات', 'عمل اضافي', 'رواتب-احتضان قانوني',
-            'مصاريف قانونية- احتضان قانوني', 'يوزرات', 'ملغية',
-            'ملغية -احتضان قانوني', 'بروموتر', 'زيارة مستقلة'
-        ];
-
-        // Validate the final status against allowed statuses
-        if (!in_array($finalInvoiceStatus, $allowedStatuses) && $validated['invoice_status'] !== 'other') {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['invoice_status' => 'حالة الفاتورة المحددة غير صالحة.']);
+        // Get service details from request
+        $serviceDetails = $request->input('service_details', []);
+        
+        // Calculate totals from service details
+        $totalWorkforce = 0;
+        $totalWorkDays = 0;
+        
+        foreach ($serviceDetails as $detailId => $detailData) {
+            if (isset($detailData['has_work_days']) && $detailData['has_work_days'] == 1) {
+                $count = (int)($detailData['count'] ?? 0);
+                $days = (int)($detailData['days'] ?? 0);
+                
+                $totalWorkforce += $count;
+                $totalWorkDays += ($count * $days);
+            }
         }
 
-        $totalWorkforce =
-            ($validated['total_workers'] ?? 0) +
-            ($validated['total_supervisors'] ?? 0) +
-            ($validated['total_managers'] ?? 0) +
-            ($validated['total_users'] ?? 0);
-
-        $workersDays = $validated['workers_days'] ?? $validated['work_days'];
-        $supervisorsDays = $validated['supervisors_days'] ?? $validated['work_days'];
-        $managersDays = $validated['managers_days'] ?? $validated['work_days'];
-        $usersDays = $validated['users_days'] ?? $validated['work_days'];
-
-        $totalManDays =
-            ($validated['total_workers'] * $workersDays) +
-            ($validated['total_supervisors'] * $supervisorsDays) +
-            ($validated['total_managers'] * $managersDays) +
-            ($validated['total_users'] * $usersDays);
-
-        $subtotal = $totalManDays * $validated['daily_rate'];
+        // Use the base_price directly from the form (already calculated by JavaScript)
+        $subtotal = $validated['base_price'];
         $taxAmount = ($subtotal * $validated['tax_rate']) / 100;
-        $totalAmount = $subtotal + $taxAmount + ($validated['amount_difference'] ?? 0);
+        $totalAmount = $subtotal + $taxAmount;
 
         // Prepare invoice data (MAPPED to your DB columns)
         $invoiceData = [
             'number' => $validated['number'],
             'client_id' => $validated['client_id'],
             'service_id' => $validated['service_id'],
+            'service_details_data' => $serviceDetails, // Will be auto-cast to JSON by model
 
             'generation_date' => $validated['generation_date'],
             'last_generation_date' => $validated['last_generation_date'],
+            'due_date' => $validated['last_generation_date'],
 
-            'due_date' => $validated['last_generation_date'], // same as before
+            // Store calculated workforce totals
+            'total_workers' => $totalWorkforce,
+            'total_supervisors' => 0,
+            'total_managers' => 0,
+            'total_users' => 0,
 
-            'total_workers' => $validated['total_workers'],
-            'total_supervisors' => $validated['total_supervisors'],
-            'total_managers' => $validated['total_managers'],
-            'total_users' => $validated['total_users'],
+            'workers_days' => 0,
+            'supervisors_days' => 0,
+            'managers_days' => 0,
+            'users_days' => 0,
 
-            'workers_days' => $workersDays,
-            'supervisors_days' => $supervisorsDays,
-            'managers_days' => $managersDays,
-            'users_days' => $usersDays,
-
-            'work_days' => $validated['work_days'],
-            'daily_rate' => $validated['daily_rate'],
+            'work_days' => $totalWorkDays,
+            'daily_rate' => 0,
 
             'base_price' => $subtotal,
-
             'tax_rate' => $validated['tax_rate'],
             'tax_amount' => $taxAmount,
-
             'total_price' => $totalAmount,
 
-            'paid_amount' => $validated['payment_status'] === 'paid' ? $totalAmount : 0,
+            'paid_amount' => 0,
+            'amount_difference' => 0,
+            'difference_type' => null,
 
-            'amount_difference' => $validated['amount_difference'] ?? 0,
-            'difference_type' => null, // if you add later
-
-            'payment_status' => $validated['payment_status'],
-            'payment_date' => $validated['payment_date'],
+            'payment_status' => 'pending',
+            'payment_date' => null,
 
             'invoice_status' => $finalInvoiceStatus,
-
             'notes' => $validated['notes'] ?? null,
-
         ];
         $authenticatedUserId = Auth::id();
         $invoice = Invoice::create($invoiceData);
@@ -236,20 +213,16 @@ class InvoiceController extends Controller
             'number' => 'required|string|unique:invoices,number,' . $invoice->id,
             'generation_date' => 'required|date',
             'last_generation_date' => 'required|date',
-            'total_workers' => 'required|integer|min:0',
-            'total_supervisors' => 'required|integer|min:0',
-            'total_managers' => 'required|integer|min:0',
-            'total_users' => 'required|integer|min:0',
+            'total_workers' => 'nullable|integer|min:0',
+            'total_supervisors' => 'nullable|integer|min:0',
+            'total_managers' => 'nullable|integer|min:0',
+            'total_users' => 'nullable|integer|min:0',
             'workers_days' => 'nullable|integer|min:0',
             'supervisors_days' => 'nullable|integer|min:0',
             'managers_days' => 'nullable|integer|min:0',
             'users_days' => 'nullable|integer|min:0',
-            'work_days' => 'required|integer|min:1',
-            'daily_rate' => 'required|numeric|min:0',
+            'base_price' => 'required|numeric|min:0',
             'tax_rate' => 'required|numeric|min:0|max:100',
-            'amount_difference' => 'nullable|numeric',
-            'payment_status' => 'required|string|in:pending,paid,overdue,late',
-            'payment_date' => 'nullable|date',
             'invoice_status' => 'required|string',
             'custom_status' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
@@ -296,15 +269,13 @@ class InvoiceController extends Controller
             'supervisors_days' => $supervisorsDays,
             'managers_days' => $managersDays,
             'users_days' => $usersDays,
-            'work_days' => $validated['work_days'],
-            'daily_rate' => $validated['daily_rate'],
+            'work_days' => $totalManDays,
+            'daily_rate' => 0,
             'base_price' => $subtotal,
             'tax_rate' => $validated['tax_rate'],
             'tax_amount' => $taxAmount,
             'total_price' => $totalAmount,
-            'amount_difference' => $validated['amount_difference'] ?? 0,
-            'payment_status' => $validated['payment_status'],
-            'payment_date' => $validated['payment_date'],
+            'amount_difference' => 0,
             'invoice_status' => $finalInvoiceStatus,
             'notes' => $validated['notes'] ?? null,
         ]);
@@ -340,7 +311,7 @@ class InvoiceController extends Controller
 
             // Determine if this is the main credit note
             $isMain = $invoice->creditNotes()->count() === 0;
-            
+
             $creditNote = CreditNote::create([
                 'invoice_id' => $invoice->id,
                 'number' => $creditNoteNumber,

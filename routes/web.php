@@ -50,6 +50,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees/clients/list', [EmployeeController::class, 'getClients'])->name('employees.clients.list');
     Route::get('/employees/invoices/list', [EmployeeController::class, 'getInvoices'])->name('employees.invoices.list');
 });
+Route::get('/services/{service}/details', function ($serviceId) {
+    $service = \App\Models\Service::find($serviceId);
+
+    if (!$service) {
+        return response()->json([]);
+    }
+
+    return response()->json($service->serviceDetails);
+})->name('services.details');
 Route::middleware('auth')->group(function () {
     Route::get('/chat-clients', [InvoiceController::class, 'chatClients']);
     Route::get('/clientChat', Index::class)->name('chat.index');
@@ -61,5 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/chat/send-image', [ChatController::class, 'sendImage'])->name('chat.send-image');
 });
 Route::resource('clients', \App\Http\Controllers\ClientController::class);
+Route::resource('services', \App\Http\Controllers\ServiceController::class);
+Route::resource('invoice-statuses', \App\Http\Controllers\InvoiceStatusController::class);
 Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'getNotifications']);
 require __DIR__.'/auth.php';

@@ -16,6 +16,7 @@ class Invoice extends Model
         'number',
         'client_id',
         'service_id',
+        'service_details_data',
         'generation_date',
         'last_generation_date',
         'due_date',
@@ -71,6 +72,7 @@ class Invoice extends Model
         'tax_rate' => 'decimal:2',
         'total_credit_notes' => 'decimal:2',
         'additional_data' => 'array',
+        'service_details_data' => 'array',
         'is_cancelled' => 'boolean'
     ];
 
@@ -181,6 +183,22 @@ class Invoice extends Model
     public function getRequiresHrDetailsAttribute()
     {
         return $this->service->requires_hr_details ?? false;
+    }
+
+    public function getLateDaysAttribute()
+    {
+        if (!$this->last_generation_date || $this->payment_status === 'paid') {
+            return 0;
+        }
+
+        $gracePeriodDays = $this->client->grace_period_days ?? 0;
+        $dueDate = Carbon::parse($this->last_generation_date)->addDays($gracePeriodDays);
+        
+        $endDate = $this->payment_date ? Carbon::parse($this->payment_date) : Carbon::now();
+        
+        $lateDays = max(0, $dueDate->diffInDays($endDate, false));
+        
+        return $lateDays > 0 ? $lateDays : 0;
     }
 
     /**

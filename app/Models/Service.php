@@ -14,8 +14,12 @@ class Service extends Model
         'name',
         'description',
         'service_type',
+        'service_details',
     ];
 
+    protected $casts = [
+        'service_details' => 'array',
+    ];
 
     /**
      * Relationships
@@ -23,6 +27,11 @@ class Service extends Model
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function serviceDetails()
+    {
+        return $this->hasMany(ServiceDetail::class);
     }
 
     /**

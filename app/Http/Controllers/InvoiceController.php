@@ -74,7 +74,6 @@ class InvoiceController extends Controller
 
     public function store(Request $request)
     {
-        dd($request);
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'service_id' => 'required|exists:services,id',
@@ -92,9 +91,6 @@ class InvoiceController extends Controller
             'service_details.*.name' => 'nullable|string',
             'service_details.*.has_work_days' => 'nullable',
         ]);
-
-        // Determine the final invoice status
-        $finalInvoiceStatus = $validated['invoice_status'];
 
         // Get service details from request
         $serviceDetails = $request->input('service_details', []);
@@ -155,7 +151,7 @@ class InvoiceController extends Controller
             'payment_status' => 'pending',
             'payment_date' => null,
 
-            'invoice_status' => $finalInvoiceStatus,
+            'invoice_status' => $validated['invoice_status'],
             'notes' => $validated['notes'] ?? null,
 
             // Prevent automatic calculations by setting these

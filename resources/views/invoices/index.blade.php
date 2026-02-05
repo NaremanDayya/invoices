@@ -527,15 +527,24 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-slate-600">رقم الفاتورة <span class="text-danger">*</span></label>
-                                    <input type="text" name="number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
+                                    <input type="text" name="number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 @error('number') is-invalid @enderror" value="{{ old('number') }}" required>
+                                    @error('number')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-slate-600">تاريخ الإصدار <span class="text-danger">*</span></label>
-                                    <input type="date" name="generation_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" value="{{ now()->format('Y-m-d') }}" required>
+                                    <input type="date" name="generation_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 @error('generation_date') is-invalid @enderror" value="{{ old('generation_date', now()->format('Y-m-d')) }}" required>
+                                    @error('generation_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-slate-600">تاريخ الاستحقاق <span class="text-danger">*</span></label>
-                                    <input type="date" name="last_generation_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" value="{{ now()->addDays(30)->format('Y-m-d') }}" required>
+                                    <input type="date" name="last_generation_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 @error('last_generation_date') is-invalid @enderror" value="{{ old('last_generation_date', now()->addDays(30)->format('Y-m-d')) }}" required>
+                                    @error('last_generation_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-slate-600">نوع الخدمة <span class="text-danger">*</span></label>
@@ -582,11 +591,17 @@
                             <div class="row g-3">
                                 <div class="col-md-6 col-lg-3">
                                     <label class="form-label small fw-bold text-slate-600">المبلغ قبل الضريبة (﷼) <span class="text-danger">*</span></label>
-                                    <input type="number" name="base_price" id="subtotal_display" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" value="0" step="0.01" min="0" required>
+                                    <input type="number" name="base_price" id="subtotal_display" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 @error('base_price') is-invalid @enderror" value="{{ old('base_price', 0) }}" step="0.01" min="0" required>
+                                    @error('base_price')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6 col-lg-3">
                                     <label class="form-label small fw-bold text-slate-600">نسبة الضريبة (%) <span class="text-danger">*</span></label>
-                                    <input type="number" name="tax_rate" id="tax_rate" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" value="15" step="0.1" min="0" max="100" required>
+                                    <input type="number" name="tax_rate" id="tax_rate" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 @error('tax_rate') is-invalid @enderror" value="{{ old('tax_rate', 15) }}" step="0.1" min="0" max="100" required>
+                                    @error('tax_rate')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6 col-lg-3">
                                     <label class="form-label small fw-bold text-slate-600">قيمة الضريبة (﷼)</label>
@@ -627,7 +642,10 @@
                             </div>
                             <div class="row g-3">
                                 <div class="col-12">
-                                    <textarea name="notes" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" rows="3" placeholder="أي ملاحظات إضافية حول الفاتورة..."></textarea>
+                                    <textarea name="notes" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 @error('notes') is-invalid @enderror" rows="3" placeholder="أي ملاحظات إضافية حول الفاتورة...">{{ old('notes') }}</textarea>
+                                    @error('notes')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
@@ -1043,20 +1061,23 @@
                             });
                         }
                     });
-                    // Financial calculation
+                    // Financial calculation for modal
                     function calculateFinancials() {
-                        const totalWorkforce = parseInt(document.getElementById('total_workforce_display').value) || 0;
-                        const workDays = parseInt(document.getElementById('work_days').value) || 0;
-                        const dailyRate = parseFloat(document.getElementById('daily_rate').value) || 0;
-                        const taxRate = parseFloat(document.getElementById('tax_rate').value) || 0;
+                        const subtotalInput = document.getElementById('subtotal_display');
+                        const taxRateInput = document.getElementById('tax_rate');
+                        const taxAmountDisplay = document.getElementById('tax_amount_display');
+                        const totalAmountDisplay = document.getElementById('total_amount_display');
 
-                        const subtotal = totalWorkforce * workDays * dailyRate;
+                        if (!subtotalInput || !taxRateInput) return;
+
+                        const subtotal = parseFloat(subtotalInput.value) || 0;
+                        const taxRate = parseFloat(taxRateInput.value) || 0;
+
                         const taxAmount = (subtotal * taxRate) / 100;
                         const total = subtotal + taxAmount;
 
-                        document.getElementById('subtotal_display').value = subtotal.toFixed(2);
-                        document.getElementById('tax_amount_display').value = taxAmount.toFixed(2);
-                        document.getElementById('total_amount_display').value = total.toFixed(2);
+                        if (taxAmountDisplay) taxAmountDisplay.value = taxAmount.toFixed(2);
+                        if (totalAmountDisplay) totalAmountDisplay.value = total.toFixed(2);
                     }
 
                     // Event listeners for workforce inputs
@@ -1067,13 +1088,21 @@
                         }
                     });
 
-                    // Event listeners for financial inputs
-                    ['work_days', 'daily_rate', 'tax_rate'].forEach(id => {
+                    // Event listeners for financial inputs - including base_price (subtotal_display)
+                    ['subtotal_display', 'tax_rate'].forEach(id => {
                         const element = document.getElementById(id);
                         if (element) {
                             element.addEventListener('input', calculateFinancials);
                         }
                     });
+
+                    // Initialize calculation on modal open
+                    const createInvoiceModalEl = document.getElementById('createInvoiceModal');
+                    if (createInvoiceModalEl) {
+                        createInvoiceModalEl.addEventListener('shown.bs.modal', function() {
+                            calculateFinancials();
+                        });
+                    }
 
                     // Handle form submission
                     if (createInvoiceForm) {

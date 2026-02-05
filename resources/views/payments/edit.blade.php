@@ -141,17 +141,26 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">رقم المرجع</label>
-                                <input type="text" name="reference_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" placeholder="مثال: REF-123456" value="{{ $payment->reference_number }}">
+                                <input type="text" name="reference_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('reference_number') is-invalid @enderror" placeholder="مثال: REF-123456" value="{{ old('reference_number', $payment->reference_number) }}">
+                                @error('reference_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">اسم البنك</label>
-                                <input type="text" name="bank_name" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" placeholder="مثال: الراجحي" value="{{ $payment->bank_name }}">
+                                <input type="text" name="bank_name" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('bank_name') is-invalid @enderror" placeholder="مثال: الراجحي" value="{{ old('bank_name', $payment->bank_name) }}">
+                                @error('bank_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         
                         <div>
                             <label class="form-label small fw-bold text-slate-600">ملاحظات</label>
-                            <textarea name="notes" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" rows="3" placeholder="أي ملاحظات إضافية...">{{ $payment->notes }}</textarea>
+                            <textarea name="notes" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('notes') is-invalid @enderror" rows="3" placeholder="أي ملاحظات إضافية...">{{ old('notes', $payment->notes) }}</textarea>
+                            @error('notes')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         
                         <!-- Summary Widget -->

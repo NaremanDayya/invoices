@@ -103,22 +103,34 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">تاريخ الدفع <span class="text-danger">*</span></label>
-                                <input type="date" name="payment_date" id="payment_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" value="{{ now()->format('Y-m-d') }}" required>
+                                <input type="date" name="payment_date" id="payment_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('payment_date') is-invalid @enderror" value="{{ old('payment_date', now()->format('Y-m-d')) }}" required>
                                 <small class="text-muted" id="late_indicator" style="display:none;"></small>
+                                @error('payment_date')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">المبلغ المدفوع (ر.س) <span class="text-danger">*</span></label>
-                                <input type="number" name="amount" id="amount" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm text-lg font-bold text-success" min="0" step="0.01" value="0" required>
+                                <input type="number" name="amount" id="amount" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm text-lg font-bold text-success @error('amount') is-invalid @enderror" min="0" step="0.01" value="{{ old('amount', 0) }}" required>
+                                @error('amount')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">عدد الموظفين</label>
-                                <input type="number" name="employees_count" id="employees_count" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" min="0" placeholder="عدد الموظفين المدفوع لهم">
+                                <input type="number" name="employees_count" id="employees_count" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('employees_count') is-invalid @enderror" min="0" value="{{ old('employees_count') }}" placeholder="عدد الموظفين المدفوع لهم">
                                 <small class="text-muted" id="employees_limit"></small>
+                                @error('employees_count')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">أيام العمل</label>
-                                <input type="number" name="work_days" id="work_days" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" min="0" placeholder="أيام العمل المتعلقة بالدفع">
+                                <input type="number" name="work_days" id="work_days" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('work_days') is-invalid @enderror" min="0" value="{{ old('work_days') }}" placeholder="أيام العمل المتعلقة بالدفع">
                                 <small class="text-muted" id="work_days_limit"></small>
+                                @error('work_days')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">طريقة الدفع <span class="text-danger">*</span></label>
@@ -140,17 +152,26 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">رقم المرجع</label>
-                                <input type="text" name="reference_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" placeholder="مثال: REF-123456">
+                                <input type="text" name="reference_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('reference_number') is-invalid @enderror" value="{{ old('reference_number') }}" placeholder="مثال: REF-123456">
+                                @error('reference_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div>
                                 <label class="form-label small fw-bold text-slate-600">اسم البنك</label>
-                                <input type="text" name="bank_name" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" placeholder="مثال: الراجحي">
+                                <input type="text" name="bank_name" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('bank_name') is-invalid @enderror" value="{{ old('bank_name') }}" placeholder="مثال: الراجحي">
+                                @error('bank_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         
                         <div>
                             <label class="form-label small fw-bold text-slate-600">ملاحظات</label>
-                            <textarea name="notes" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+                            <textarea name="notes" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm @error('notes') is-invalid @enderror" rows="3" placeholder="أي ملاحظات إضافية...">{{ old('notes') }}</textarea>
+                            @error('notes')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         
                         <!-- Summary Widget -->

@@ -1574,13 +1574,14 @@
 
         function calculateFinancials() {
             const subtotal = parseFloat(subtotalDisplay.value) || 0;
-            const taxRate = parseFloat(document.getElementById('tax_rate').value) || 0;
+            const taxRateInput = document.getElementById('tax_rate');
+            const taxRate = taxRateInput ? parseFloat(taxRateInput.value) || 0 : 15;
 
             const taxAmount = (subtotal * taxRate) / 100;
             const total = subtotal + taxAmount;
 
-            taxDisplay.value = taxAmount.toFixed(2);
-            totalDisplay.value = total.toFixed(2);
+            if(taxDisplay) taxDisplay.value = taxAmount.toFixed(2);
+            if(totalDisplay) totalDisplay.value = total.toFixed(2);
         }
 
         // Event listeners for workforce inputs
@@ -1599,12 +1600,15 @@
         // Event listeners for financial inputs
         if(subtotalDisplay) {
             subtotalDisplay.addEventListener('input', calculateFinancials);
-            document.getElementById('tax_rate').addEventListener('input', calculateFinancials);
+            const taxRateInput = document.getElementById('tax_rate');
+            if(taxRateInput) {
+                taxRateInput.addEventListener('input', calculateFinancials);
+            }
         }
 
         // Initialize calculations
         if(workersInput) calculateTotalWorkforce();
-        if(workDaysInput) calculateFinancials();
+        if(subtotalDisplay) calculateFinancials();
 
         // Credit Note Modal Function
         window.openCreditNoteModal = function(invoiceId, invoiceNumber, totalAmount) {

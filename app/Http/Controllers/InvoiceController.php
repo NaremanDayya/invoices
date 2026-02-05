@@ -163,6 +163,7 @@ class InvoiceController extends Controller
         ];
         $authenticatedUserId = Auth::id();
         $invoice = Invoice::create($invoiceData);
+        dd($invoiceData ,$invoice);
         $conversation = $invoice->conversation()
             ->where(function ($query) use ($authenticatedUserId) {
                 $query->where('sender_id', $authenticatedUserId)

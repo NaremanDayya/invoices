@@ -101,16 +101,16 @@ class InvoiceController extends Controller
         }
         // Get service details from request
         $serviceDetails = $request->input('service_details', []);
-        
+
         // Calculate totals from service details
         $totalWorkforce = 0;
         $totalWorkDays = 0;
-        
+
         foreach ($serviceDetails as $detailId => $detailData) {
             if (isset($detailData['has_work_days']) && $detailData['has_work_days'] == 1) {
                 $count = (int)($detailData['count'] ?? 0);
                 $days = (int)($detailData['days'] ?? 0);
-                
+
                 $totalWorkforce += $count;
                 $totalWorkDays += ($count * $days);
             }
@@ -170,7 +170,9 @@ class InvoiceController extends Controller
             })->first();
 
         if (!$conversation) {
-            $adminUserId = User::where('role', 'admin')->first()->id;
+            $adminUserId = User::whereHas('roles', function ($q) {
+                $q->where('name', 'admin');
+            })->value('id');
             $conversation = Conversation::create([
                 'sender_id' => $authenticatedUserId,
                 'receiver_id' => $adminUserId,

@@ -15,10 +15,16 @@ class Payment extends Model
         'invoice_id',
         'payment_date',
         'amount',
+        'employees_count',
+        'work_days',
+        'late_days',
         'payment_method',
         'status',
         'description',
-        'reference_number'
+        'reference_number',
+        'bank_name',
+        'account_number',
+        'notes'
     ];
 
     protected $casts = [

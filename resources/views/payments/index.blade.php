@@ -258,7 +258,14 @@
                             <div class="fw-bold">{{ $payment->invoice->client->name ?? '—' }}</div>
                         </td>
                         <td><span class="text-muted">{{ $payment->invoice->number ?? '—' }}</span></td>
-                        <td>{{ is_string($payment->payment_date) ? $payment->payment_date : $payment->payment_date->format('Y-m-d') }}</td>
+                        <td>
+                            <div>{{ is_string($payment->payment_date) ? $payment->payment_date : $payment->payment_date->format('Y-m-d') }}</div>
+                            @if(isset($payment->late_days) && $payment->late_days > 0)
+                                <small class="badge bg-danger mt-1">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>متأخر {{ $payment->late_days }} يوم
+                                </small>
+                            @endif
+                        </td>
                         <td><span class="payment-amount">{{ $payment->formatted_amount }}</span></td>
                         <td>
                             <span class="badge bg-light text-dark border rounded-pill px-3">

@@ -168,7 +168,7 @@
                                                             <small class="text-muted">يجب أن يكون 15 رقم بالضبط</small>
                                                         </div>
                                                         <div class="col-12">
-                                                            <label class="form-label small fw-bold text-muted">العنوان</label>
+                                                            <label class="form-label small fw-bold text-muted">العنوان الوطني</label>
                                                             <textarea name="address" class="form-control rounded-xl py-2 px-3" rows="3">{{ $client->address }}</textarea>
                                                         </div>
                                                     </div>
@@ -243,8 +243,8 @@
                                 <small class="text-muted">يجب أن يكون 15 رقم بالضبط</small>
                             </div>
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-600">العنوان</label>
-                                <textarea name="address" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" rows="3" placeholder="العنوان"></textarea>
+                                <label class="form-label small fw-bold text-slate-600">العنوان الوطني</label>
+                                <textarea name="address" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" rows="3" placeholder="العنوان الوطني"></textarea>
                             </div>
                         </div>
                     </div>

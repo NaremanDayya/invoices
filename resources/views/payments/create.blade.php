@@ -52,6 +52,9 @@
                                             data-paid="{{ $invoice->paid_amount }}"
                                             data-remaining="{{ $invoice->remaining_amount }}"
                                             data-status="{{ $invoice->payment_status }}"
+                                            data-generation-date="{{ $invoice->generation_date ? $invoice->generation_date->format('Y-m-d') : '' }}"
+                                            data-total-workforce="{{ $invoice->total_workforce ?? 0 }}"
+                                            data-work-days="{{ $invoice->work_days ?? 0 }}"
                                             data-client-name="{{ $invoice->client->name }}"
                                             data-client-email="{{ $invoice->client->email ?? '' }}"
                                             data-client-phone="{{ $invoice->client->phone ?? '' }}"
@@ -100,20 +103,28 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="form-label">تاريخ الدفع <span class="text-red-500">*</span></label>
-                                <input type="date" name="payment_date" class="form-input" value="{{ now()->format('Y-m-d') }}" required>
+                                <input type="date" name="payment_date" id="payment_date" class="form-input" value="{{ now()->format('Y-m-d') }}" required>
+                                <small class="text-muted" id="late_indicator" style="display:none;"></small>
                             </div>
                             <div>
                                 <label class="form-label">المبلغ المدفوع (ر.س) <span class="text-red-500">*</span></label>
                                 <input type="number" name="amount" id="amount" class="form-input text-lg font-bold text-green-600" min="0" step="0.01" value="0" required>
                             </div>
                             <div>
+                                <label class="form-label">عدد الموظفين</label>
+                                <input type="number" name="employees_count" id="employees_count" class="form-input" min="0" placeholder="عدد الموظفين المدفوع لهم">
+                                <small class="text-muted" id="employees_limit"></small>
+                            </div>
+                            <div>
+                                <label class="form-label">أيام العمل</label>
+                                <input type="number" name="work_days" id="work_days" class="form-input" min="0" placeholder="أيام العمل المتعلقة بالدفع">
+                                <small class="text-muted" id="work_days_limit"></small>
+                            </div>
+                            <div>
                                 <label class="form-label">طريقة الدفع <span class="text-red-500">*</span></label>
                                 <select name="payment_method" class="form-select" required>
-                                    <option value="cash">💵 نقدي</option>
-                                    <option value="bank_transfer" selected>🏦 تحويل بنكي</option>
-                                    <option value="check">🎫 شيك</option>
-                                    <option value="credit_card">💳 بطاقة ائتمان</option>
-                                    <option value="other">⚙️ أخرى</option>
+                                    <option value="direct_bank_transfer" selected>🏦 تحويل بنكي مباشر</option>
+                                    <option value="bank_wage_protection_transfer">💼 تحويل بنكي حماية الأجور</option>
                                 </select>
                             </div>
                             <div>
@@ -194,10 +205,23 @@
                 const total = parseFloat(opt.dataset.total) || 0;
                 const paid = parseFloat(opt.dataset.paid) || 0;
                 const remaining = parseFloat(opt.dataset.remaining) || 0;
+                const invoiceNumber = opt.text.split('#')[1]?.split(' ')[0] || '';
+                const generationDate = opt.dataset.generationDate || '';
+                const totalWorkforce = parseInt(opt.dataset.totalWorkforce) || 0;
+                const workDays = parseInt(opt.dataset.workDays) || 0;
                 
                 // Auto-fill amount with remaining
                 amountInput.value = remaining.toFixed(2);
                 amountInput.max = remaining;
+                
+                // Set payment date to last day of invoice month
+                if (generationDate) {
+                    const date = new Date(generationDate);
+                    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                    const paymentDateInput = document.getElementById('payment_date');
+                    paymentDateInput.value = lastDay.toISOString().split('T')[0];
+                    paymentDateInput.dataset.lastDay = lastDay.toISOString().split('T')[0];
+                }
                 
                 // Update displays
                 invTotalDisplay.textContent = total.toFixed(2) + ' ر.س';
@@ -205,11 +229,36 @@
                 invRemainingDisplay.textContent = remaining.toFixed(2) + ' ر.س';
                 paidDisplay.textContent = remaining.toFixed(2) + ' ر.س';
                 
+                // Show invoice limits
+                document.getElementById('employees_limit').textContent = 'الحد الأقصى: ' + totalWorkforce + ' موظف';
+                document.getElementById('work_days_limit').textContent = 'الحد الأقصى: ' + workDays + ' يوم';
+                
                 // Fill Client Info
                 clientName.value = opt.dataset.clientName || '';
                 clientEmail.value = opt.dataset.clientEmail || '';
                 clientPhone.textContent = opt.dataset.clientPhone || '-';
                 clientAddress.textContent = opt.dataset.clientAddress || '-';
+            });
+            
+            // Check for late payment
+            const paymentDateInput = document.getElementById('payment_date');
+            paymentDateInput.addEventListener('change', function() {
+                const lastDay = this.dataset.lastDay;
+                if (lastDay) {
+                    const selectedDate = new Date(this.value);
+                    const lastDayDate = new Date(lastDay);
+                    const lateIndicator = document.getElementById('late_indicator');
+                    
+                    if (selectedDate > lastDayDate) {
+                        const diffTime = Math.abs(selectedDate - lastDayDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        lateIndicator.style.display = 'block';
+                        lateIndicator.className = 'text-danger small';
+                        lateIndicator.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>متأخر ' + diffDays + ' يوم';
+                    } else {
+                        lateIndicator.style.display = 'none';
+                    }
+                }
             });
             
             function resetDisplays() {

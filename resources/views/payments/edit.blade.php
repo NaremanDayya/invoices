@@ -102,20 +102,30 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="form-label">تاريخ الدفع <span class="text-red-500">*</span></label>
-                                <input type="date" name="payment_date" class="form-input" value="{{ $payment->payment_date }}" required>
+                                <input type="date" name="payment_date" id="payment_date" class="form-input" value="{{ $payment->payment_date->format('Y-m-d') }}" required>
+                                @if($payment->late_days > 0)
+                                    <small class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>متأخر {{ $payment->late_days }} يوم</small>
+                                @endif
                             </div>
                             <div>
                                 <label class="form-label">المبلغ المدفوع (ر.س) <span class="text-red-500">*</span></label>
                                 <input type="number" name="amount" id="amount" class="form-input text-lg font-bold text-green-600" min="0" step="0.01" value="{{ $payment->amount }}" required>
                             </div>
                             <div>
+                                <label class="form-label">عدد الموظفين</label>
+                                <input type="number" name="employees_count" id="employees_count" class="form-input" min="0" value="{{ $payment->employees_count }}" placeholder="عدد الموظفين المدفوع لهم">
+                                <small class="text-muted">الحد الأقصى: {{ $payment->invoice->total_workforce ?? 0 }} موظف</small>
+                            </div>
+                            <div>
+                                <label class="form-label">أيام العمل</label>
+                                <input type="number" name="work_days" id="work_days" class="form-input" min="0" value="{{ $payment->work_days }}" placeholder="أيام العمل المتعلقة بالدفع">
+                                <small class="text-muted">الحد الأقصى: {{ $payment->invoice->work_days ?? 0 }} يوم</small>
+                            </div>
+                            <div>
                                 <label class="form-label">طريقة الدفع <span class="text-red-500">*</span></label>
                                 <select name="payment_method" class="form-select" required>
-                                    <option value="cash" {{ $payment->payment_method == 'cash' ? 'selected' : '' }}>💵 نقدي</option>
-                                    <option value="bank_transfer" {{ $payment->payment_method == 'bank_transfer' ? 'selected' : '' }}>🏦 تحويل بنكي</option>
-                                    <option value="check" {{ $payment->payment_method == 'check' ? 'selected' : '' }}>🎫 شيك</option>
-                                    <option value="credit_card" {{ $payment->payment_method == 'credit_card' ? 'selected' : '' }}>💳 بطاقة ائتمان</option>
-                                    <option value="other" {{ $payment->payment_method == 'other' ? 'selected' : '' }}>⚙️ أخرى</option>
+                                    <option value="direct_bank_transfer" {{ $payment->payment_method == 'direct_bank_transfer' ? 'selected' : '' }}>🏦 تحويل بنكي مباشر</option>
+                                    <option value="bank_wage_protection_transfer" {{ $payment->payment_method == 'bank_wage_protection_transfer' ? 'selected' : '' }}>💼 تحويل بنكي حماية الأجور</option>
                                 </select>
                             </div>
                             <div>

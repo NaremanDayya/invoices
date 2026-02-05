@@ -292,8 +292,13 @@
                             </div>
                         </div>
                         <div>
-                            <label class="form-label">العنوان</label>
-                            <textarea name="address" class="form-input" rows="2"></textarea>
+                            <label class="form-label">الرقم الضريبي <span class="text-danger">*</span></label>
+                            <input type="text" name="tax_number" class="form-input" required maxlength="15" pattern="[0-9]{15}" placeholder="أدخل 15 رقم">
+                            <small class="text-muted">يجب أن يكون 15 رقم بالضبط</small>
+                        </div>
+                        <div>
+                            <label class="form-label">العنوان الوطني</label>
+                            <textarea name="address" class="form-input" rows="2" placeholder="العنوان الوطني"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">

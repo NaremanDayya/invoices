@@ -95,7 +95,9 @@ class PaymentsController extends Controller
             'invoice_id' => 'required|exists:invoices,id',
             'payment_date' => 'required|date',
             'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:cash,bank_transfer,check,credit_card,other',
+            'employees_count' => 'nullable|integer|min:0',
+            'work_days' => 'nullable|integer|min:0',
+            'payment_method' => 'required|in:direct_bank_transfer,bank_wage_protection_transfer',
             'status' => 'required|in:completed,pending,cancelled',
             'description' => 'nullable|string|max:500',
             'reference_number' => 'nullable|string|max:100',
@@ -112,7 +114,37 @@ class PaymentsController extends Controller
             ]);
         }
 
-        $validated['number'] = 'PAY-' . date('Ymd') . '-' . str_pad(Payment::count() + 1, 4, '0', STR_PAD_LEFT);
+        // Validate employees count and work days against invoice limits
+        if (isset($validated['employees_count']) || isset($validated['work_days'])) {
+            $existingPayments = Payment::where('invoice_id', $invoice->id)
+                ->where('id', '!=', $request->payment_id ?? 0)
+                ->get();
+            
+            $totalEmployees = $existingPayments->sum('employees_count') + ($validated['employees_count'] ?? 0);
+            $totalWorkDays = $existingPayments->sum('work_days') + ($validated['work_days'] ?? 0);
+            
+            if ($totalEmployees > $invoice->total_workforce) {
+                return back()->withInput()->withErrors([
+                    'employees_count' => 'إجمالي عدد الموظفين في الدفعات (' . $totalEmployees . ') يتجاوز عدد موظفي الفاتورة (' . $invoice->total_workforce . ')'
+                ]);
+            }
+            
+            if ($totalWorkDays > $invoice->work_days) {
+                return back()->withInput()->withErrors([
+                    'work_days' => 'إجمالي أيام العمل في الدفعات (' . $totalWorkDays . ') يتجاوز أيام عمل الفاتورة (' . $invoice->work_days . ')'
+                ]);
+            }
+        }
+
+        // Generate payment number: PAY-XXXX matching invoice number
+        $invoiceNumber = str_replace('INV-', '', $invoice->number);
+        $validated['number'] = 'PAY-' . $invoiceNumber;
+
+        // Calculate late days
+        $paymentDate = \Carbon\Carbon::parse($validated['payment_date']);
+        $invoiceMonth = $invoice->generation_date ? \Carbon\Carbon::parse($invoice->generation_date) : \Carbon\Carbon::now();
+        $lastDayOfMonth = $invoiceMonth->endOfMonth();
+        $validated['late_days'] = $paymentDate->gt($lastDayOfMonth) ? $paymentDate->diffInDays($lastDayOfMonth) : 0;
 
         $payment = Payment::create($validated);
 
@@ -152,7 +184,9 @@ class PaymentsController extends Controller
             'invoice_id' => 'required|exists:invoices,id',
             'payment_date' => 'required|date',
             'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:cash,bank_transfer,check,credit_card,other',
+            'employees_count' => 'nullable|integer|min:0',
+            'work_days' => 'nullable|integer|min:0',
+            'payment_method' => 'required|in:direct_bank_transfer,bank_wage_protection_transfer',
             'status' => 'required|in:completed,pending,cancelled',
             'description' => 'nullable|string|max:500',
             'reference_number' => 'nullable|string|max:100',
@@ -167,6 +201,28 @@ class PaymentsController extends Controller
         $newAmount = $validated['amount'];
         $newStatus = $validated['status'];
 
+        // Validate employees count and work days against invoice limits
+        if (isset($validated['employees_count']) || isset($validated['work_days'])) {
+            $existingPayments = Payment::where('invoice_id', $invoice->id)
+                ->where('id', '!=', $payment->id)
+                ->get();
+            
+            $totalEmployees = $existingPayments->sum('employees_count') + ($validated['employees_count'] ?? 0);
+            $totalWorkDays = $existingPayments->sum('work_days') + ($validated['work_days'] ?? 0);
+            
+            if ($totalEmployees > $invoice->total_workforce) {
+                return back()->withInput()->withErrors([
+                    'employees_count' => 'إجمالي عدد الموظفين في الدفعات (' . $totalEmployees . ') يتجاوز عدد موظفي الفاتورة (' . $invoice->total_workforce . ')'
+                ]);
+            }
+            
+            if ($totalWorkDays > $invoice->work_days) {
+                return back()->withInput()->withErrors([
+                    'work_days' => 'إجمالي أيام العمل في الدفعات (' . $totalWorkDays . ') يتجاوز أيام عمل الفاتورة (' . $invoice->work_days . ')'
+                ]);
+            }
+        }
+
         if ($oldStatus === 'completed') {
             $invoice->decrement('paid_amount', $oldAmount);
         }
@@ -180,6 +236,12 @@ class PaymentsController extends Controller
             }
             $invoice->increment('paid_amount', $newAmount);
         }
+
+        // Calculate late days
+        $paymentDate = \Carbon\Carbon::parse($validated['payment_date']);
+        $invoiceMonth = $invoice->generation_date ? \Carbon\Carbon::parse($invoice->generation_date) : \Carbon\Carbon::now();
+        $lastDayOfMonth = $invoiceMonth->endOfMonth();
+        $validated['late_days'] = $paymentDate->gt($lastDayOfMonth) ? $paymentDate->diffInDays($lastDayOfMonth) : 0;
 
         if ($invoice->paid_amount >= $invoice->total_price) {
             $invoice->update(['payment_status' => 'paid', 'payment_date' => $validated['payment_date']]);

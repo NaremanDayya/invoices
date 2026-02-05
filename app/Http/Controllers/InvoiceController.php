@@ -350,6 +350,7 @@ class InvoiceController extends Controller
                 'name' => 'required|string|min:2|unique:clients,name',
                 'email' => 'nullable|email',
                 'phone' => 'nullable|string',
+                'tax_number' => 'required|numeric|digits:15',
                 'address' => 'nullable|string',
             ]);
 

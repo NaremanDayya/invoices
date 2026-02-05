@@ -197,7 +197,7 @@
                     <div class="d-flex align-items-start gap-3">
                         <i class="bi bi-geo-alt text-muted mt-1"></i>
                         <div>
-                            <div class="small text-muted">العنوان التجاري</div>
+                            <div class="small text-muted">العنوان الوطني</div>
                             <div class="fw-medium">{{ $client->address ?? '—' }}</div>
                         </div>
                     </div>

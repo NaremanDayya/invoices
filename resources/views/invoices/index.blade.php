@@ -233,6 +233,7 @@
                         <th>رقم الفاتورة</th>
                         <th>العميل</th>
                         <th>الخدمة</th>
+                        <th>تاريخ الإصدار</th>
                         <th>المبلغ</th>
                         <th>الضريبة</th>
                         <th>الإجمالي</th>
@@ -275,7 +276,21 @@
                             </div>
                         </td>
                         <td>
-                            <span class="badge bg-light text-dark rounded-pill px-3">{{ $invoice->service->name ?? '—' }}</span>
+                            @if(isset($invoice->service_details_data) && is_array($invoice->service_details_data) && count($invoice->service_details_data) > 0)
+                                <span class="badge bg-light text-dark rounded-pill px-3" data-bs-toggle="tooltip" data-bs-html="true" title="
+                                    @foreach($invoice->service_details_data as $detail)
+                                        <strong>{{ $detail['label'] ?? '' }}:</strong> {{ $detail['value'] ?? '' }}<br>
+                                    @endforeach
+                                ">
+                                    {{ $invoice->service->name ?? '—' }}
+                                    <i class="bi bi-info-circle-fill ms-1"></i>
+                                </span>
+                            @else
+                                <span class="badge bg-light text-dark rounded-pill px-3">{{ $invoice->service->name ?? '—' }}</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="small">{{ isset($invoice->generation_date) ? $invoice->generation_date->format('Y-m-d') : '—' }}</div>
                         </td>
                         <td>{{ number_format($invoice->base_price, 0) }} ر.س</td>
                         <td>{{ number_format($invoice->tax_amount, 0) }} ر.س</td>
@@ -311,10 +326,10 @@
                         </td>
                         <td class="text-center">
                             @if(isset($invoice->credit_notes_count) && $invoice->credit_notes_count > 0)
-                                <span class="badge rounded-pill bg-warning text-dark px-2">
+                                <a href="{{ route('invoices.show', $invoice->id) }}#credit-notes" class="badge rounded-pill bg-warning text-dark px-2 text-decoration-none" style="cursor: pointer;" title="عرض الإشعارات الدائنة">
                                     <i class="bi bi-info-circle me-1"></i>
                                     {{ $invoice->credit_notes_count }}
-                                </span>
+                                </a>
                             @elseif(isset($invoice->price_difference) && $invoice->price_difference > 0)
                                 <span class="badge rounded-pill bg-warning text-dark px-2">
                                     <i class="bi bi-info-circle me-1"></i>

@@ -43,6 +43,11 @@
                                 <p class="fw-bold mb-0">
                                     <i class="bi bi-calendar3 text-primary me-1"></i>
                                     {{ \Carbon\Carbon::parse($payment->payment_date)->format('Y-m-d') }}
+                                    @if($payment->late_days > 0)
+                                        <span class="badge bg-danger ms-2">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>متأخر {{ $payment->late_days }} يوم
+                                        </span>
+                                    @endif
                                 </p>
                             </div>
                         </div>
@@ -60,6 +65,8 @@
                                 <p class="fw-bold mb-0">
                                     @php
                                         $methods = [
+                                            'direct_bank_transfer' => ['icon' => 'bank', 'label' => 'تحويل بنكي مباشر'],
+                                            'bank_wage_protection_transfer' => ['icon' => 'shield-check', 'label' => 'تحويل بنكي حماية الأجور'],
                                             'cash' => ['icon' => 'cash-coin', 'label' => 'نقدي'],
                                             'bank_transfer' => ['icon' => 'bank', 'label' => 'تحويل بنكي'],
                                             'check' => ['icon' => 'receipt', 'label' => 'شيك'],
@@ -104,6 +111,28 @@
                             <div class="info-item">
                                 <label class="text-muted small mb-1">اسم البنك</label>
                                 <p class="fw-bold mb-0">{{ $payment->bank_name }}</p>
+                            </div>
+                        </div>
+                        @endif
+                        @if($payment->employees_count)
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="text-muted small mb-1">عدد الموظفين</label>
+                                <p class="fw-bold mb-0">
+                                    <i class="bi bi-people-fill text-primary me-1"></i>
+                                    {{ $payment->employees_count }} موظف
+                                </p>
+                            </div>
+                        </div>
+                        @endif
+                        @if($payment->work_days)
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="text-muted small mb-1">أيام العمل</label>
+                                <p class="fw-bold mb-0">
+                                    <i class="bi bi-calendar-check text-primary me-1"></i>
+                                    {{ $payment->work_days }} يوم
+                                </p>
                             </div>
                         </div>
                         @endif

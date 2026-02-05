@@ -74,6 +74,7 @@ class InvoiceController extends Controller
 
     public function store(Request $request)
     {
+        dd($request);
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'service_id' => 'required|exists:services,id',

@@ -564,7 +564,7 @@
                                     <div id="serviceDetailsContainer" class="row g-3">
                                         <!-- Service details will be populated dynamically based on selected service -->
                                     </div>
-                                    
+
                                     <!-- Workforce Summary -->
                                     <div class="row mt-4 pt-3 border-top">
                                         <div class="col-md-6">
@@ -678,7 +678,12 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">العنوان</label>
+                                <label class="form-label small fw-bold text-slate-600">الرقم الضريبي <span class="text-danger">*</span></label>
+                                <input type="text" name="tax_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" required placeholder="أدخل 15 رقم" maxlength="15" pattern="[0-9]{15}">
+                                <small class="text-muted">يجب أن يكون 15 رقم بالضبط</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label"> العنوان الوطني</label>
                                 <textarea name="address" class="form-control" rows="2"></textarea>
                             </div>
                         </div>

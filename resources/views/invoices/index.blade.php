@@ -516,6 +516,10 @@
                                             <label class="form-label">العنوان</label>
                                             <textarea class="form-control bg-light" id="clientAddress" rows="2" readonly></textarea>
                                         </div>
+                                        <div class="col-md-12 mt-2">
+                                            <label class="form-label">الرقم الضريبي</label>
+                                            <textarea class="form-control bg-light" id="clientTaxNumber" rows="2" readonly></textarea>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -852,6 +856,7 @@
                             document.getElementById('clientEmail').value = selectedOption.getAttribute('data-email') || '';
                             document.getElementById('clientPhone').value = selectedOption.getAttribute('data-phone') || '';
                             document.getElementById('clientAddress').value = selectedOption.getAttribute('data-address') || '';
+                            document.getElementById('clientTaxNumber').value = selectedOption.getAttribute('data-taxNumber) || '';
                         });
                     }
 
@@ -907,6 +912,7 @@
                                         opt.setAttribute('data-email', data.client.email || '');
                                         opt.setAttribute('data-phone', data.client.phone || '');
                                         opt.setAttribute('data-address', data.client.address || '');
+                                        opt.setAttribute('data-taxNumber', data.client.tax_number || '');
                                         clientSelect.appendChild(opt);
                                         clientSelect.value = data.client.id;
 
@@ -1228,6 +1234,8 @@
             document.getElementById('clientEmail').value = client.email || '';
             document.getElementById('clientPhone').value = client.phone || '';
             document.getElementById('clientAddress').value = client.address || '';
+            document.getElementById('clientTaxNumber').value = client.tax_number || '';
+
         }
 
         function openAddClientModal(name) {

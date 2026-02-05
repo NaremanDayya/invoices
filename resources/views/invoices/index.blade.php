@@ -405,340 +405,365 @@
     </div>
 
         <!-- Credit Note Modal -->
-        <div class="modal fade" id="creditNoteModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-file-invoice-dollar me-2"></i>
-                            إضافة إشعار دائن
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form id="creditNoteForm" method="POST" action="{{ route('invoices.add-credit-note') }}">
-                        @csrf
-                        <div class="modal-body">
-                            <input type="hidden" name="invoice_id" id="invoice_id">
+    <div class="modal fade" id="creditNoteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-2xl rounded-2xl overflow-hidden">
+                <div class="modal-header bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4">
+                    <h5 class="modal-title fw-bold text-white flex items-center gap-2">
+                        <i class="bi bi-file-earmark-plus-fill"></i>
+                        إضافة إشعار دائن
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="creditNoteForm" method="POST" action="{{ route('invoices.add-credit-note') }}">
+                    @csrf
+                    <div class="modal-body p-4 bg-slate-50">
+                        <input type="hidden" name="invoice_id" id="invoice_id">
 
-                            <!-- Invoice Info -->
-                            <div class="alert alert-info">
-                                <div class="d-flex justify-content-between">
-                                    <strong>رقم الفاتورة:</strong>
-                                    <span id="invoice_number_display"></span>
-                                </div>
-                                <div class="d-flex justify-content-between mt-2">
-                                    <strong>المبلغ الإجمالي:</strong>
-                                    <span id="total_amount_display"></span> ﷼
-                                </div>
+                        <!-- Invoice Info -->
+                        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 mb-4 border border-emerald-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="fw-bold text-slate-700">رقم الفاتورة:</span>
+                                <span class="fw-bold text-emerald-700" id="invoice_number_display"></span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-emerald-200">
+                                <span class="fw-bold text-slate-700">المبلغ الإجمالي:</span>
+                                <span class="fw-bold text-emerald-700" id="total_amount_display"></span> ﷼
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">مبلغ الإشعار الدائن <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" id="credit_amount" name="credit_amount" required placeholder="أدخل المبلغ">
+                                <small class="text-muted mt-1 d-block">أدخل المبلغ المراد إضافته كإشعار دائن</small>
                             </div>
 
-                            <!-- Credit Amount -->
-                            <div class="mb-3">
-                                <label for="credit_amount" class="form-label">مبلغ الإشعار الدائن <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" class="form-control" id="credit_amount" name="credit_amount" required>
-                                <div class="form-text">أدخل المبلغ المراد إضافته كإشعار دائن</div>
-                            </div>
-
-                            <!-- Credit Type -->
-                            <div class="mb-3">
-                                <label for="credit_note_type" class="form-label">نوع الإشعار الدائن <span class="text-danger">*</span></label>
-                                <select class="form-select" id="credit_note_type" name="credit_note_type" required>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">نوع الإشعار الدائن <span class="text-danger">*</span></label>
+                                <select class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" id="credit_note_type" name="credit_note_type" required>
                                     <option value="">اختر النوع</option>
                                     <option value="credit_note">إشعار دائن (لنا)</option>
                                     <option value="indebted_poems">قصائد مديونة (للشركة)</option>
                                 </select>
                             </div>
 
-                            <!-- Reason -->
-                            <div class="mb-3">
-                                <label for="credit_reason" class="form-label">سبب الإشعار الدائن <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="credit_reason" name="credit_reason" rows="3" required placeholder="أدخل سبب إضافة الإشعار الدائن..."></textarea>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">سبب الإشعار الدائن <span class="text-danger">*</span></label>
+                                <textarea class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" id="credit_reason" name="credit_reason" rows="3" required placeholder="أدخل سبب إضافة الإشعار الدائن..."></textarea>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ الإشعار الدائن
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!-- Create Invoice Modal -->
-        <div class="modal fade" id="createInvoiceModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-plus-circle me-2"></i>
-                            إضافة فاتورة جديدة
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form id="createInvoiceForm" method="POST" action="{{ route('invoices.store') }}">
-                        @csrf
-                        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-
-                            <!-- Client Information -->
-                            <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <i class="fas fa-user me-2"></i>
-                                    معلومات العميل
-                                </div>
-                                <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="row mb-3">
-                                            <div class="col-md-12">
-                                                <label class="form-label">اختر العميل <span class="text-danger">*</span></label>
-                                                <div class="position-relative">
-                                                    <input type="text" class="form-control" id="clientSearchInput" placeholder="ابحث عن عميل..." autocomplete="off">
-                                                    <input type="hidden" name="client_id" id="selectedClientId" required>
-                                                    <div id="clientDropdown" class="list-group position-absolute w-100 shadow" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
-                                                        <!-- Options will be populated by JS -->
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <label class="form-label">البريد الإلكتروني</label>
-                                            <input type="email" class="form-control bg-light" id="clientEmail" readonly>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">الهاتف</label>
-                                            <input type="text" class="form-control bg-light" id="clientPhone" readonly>
-                                        </div>
-                                        <div class="col-md-12 mt-2">
-                                            <label class="form-label">العنوان</label>
-                                            <textarea class="form-control bg-light" id="clientAddress" rows="2" readonly></textarea>
-                                        </div>
-                                        <div class="col-md-12 mt-2">
-                                            <label class="form-label">الرقم الضريبي</label>
-                                            <textarea class="form-control bg-light" id="clientTaxNumber" rows="2" readonly></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Invoice Information -->
-                            <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <i class="fas fa-file-invoice me-2"></i>
-                                    معلومات الفاتورة
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">رقم الفاتورة <span class="text-danger">*</span></label>
-                                            <input type="text" name="number" class="form-control" value="" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">تاريخ الإصدار <span class="text-danger">*</span></label>
-                                            <input type="date" name="generation_date" class="form-control" value="{{ now()->format('Y-m-d') }}" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">تاريخ الاستحقاق <span class="text-danger">*</span></label>
-                                            <input type="date" name="last_generation_date" class="form-control" value="{{ now()->addDays(30)->format('Y-m-d') }}" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">نوع الخدمة <span class="text-danger">*</span></label>
-                                            <div class="position-relative">
-                                                <input type="text" class="form-control" id="serviceSearchInput" placeholder="ابحث عن خدمة..." autocomplete="off">
-                                                <input type="hidden" name="service_id" id="selectedServiceId" required>
-                                                <div id="serviceDropdown" class="list-group position-absolute w-100 shadow" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
-                                                    <!-- Options will be populated by JS -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Dynamic Service Details Section -->
-                            <div class="card mb-4" id="serviceDetailsSection" style="display: none;">
-                                <div class="card-header bg-light">
-                                    <i class="fas fa-list me-2"></i>
-                                    <span id="serviceDetailsSectionTitle">تفاصيل الخدمة</span>
-                                </div>
-                                <div class="card-body">
-                                    <div id="serviceDetailsContainer" class="row g-3">
-                                        <!-- Service details will be populated dynamically based on selected service -->
-                                    </div>
-
-                                    <!-- Workforce Summary -->
-                                    <div class="row mt-4 pt-3 border-top">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold">إجمالي العمالة</label>
-                                            <input type="text" id="total_workforce_display" class="form-control bg-light fw-bold" value="0" readonly>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold">إجمالي أيام العمل</label>
-                                            <input type="text" id="total_work_days_display" class="form-control bg-light fw-bold" value="0" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Financial Details -->
-                            <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <i class="fas fa-calculator me-2"></i>
-                                    التفاصيل المالية
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">المبلغ قبل الضريبة (﷼) <span class="text-danger">*</span></label>
-                                            <input type="number" name="base_price" id="subtotal_display" class="form-control" value="0" step="0.01" min="0" required>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">نسبة الضريبة (%) <span class="text-danger">*</span></label>
-                                            <input type="number" name="tax_rate" id="tax_rate" class="form-control" value="15" step="0.1" min="0" max="100" required>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">قيمة الضريبة (﷼)</label>
-                                            <input type="text" id="tax_amount_display" class="form-control bg-light fw-bold" value="0.00" readonly>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">المبلغ الإجمالي (﷼)</label>
-                                            <input type="text" id="total_amount_display" class="form-control bg-light fw-bold" value="0.00" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Payment & Status -->
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label class="form-label">حالة الفاتورة <span class="text-danger">*</span></label>
-                                            <div class="position-relative">
-                                                <input type="text" id="statusSearchInput" class="form-control" placeholder="ابحث عن حالة الفاتورة..." autocomplete="off" required>
-                                                <input type="hidden" name="invoice_status" id="selectedStatusId" required>
-                                                <div id="statusDropdown" class="list-group position-absolute w-100 shadow" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
-                                                    <!-- Options will be populated by JS -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Notes -->
-                            <div class="card">
-                                <div class="card-header bg-light">
-                                    <i class="fas fa-sticky-note me-2"></i>
-                                    ملاحظات إضافية
-                                </div>
-                                <div class="card-body">
-                                    <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات إضافية حول الفاتورة..."></textarea>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ الفاتورة
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="modal-footer border-t border-slate-100 p-3 bg-white">
+                        <button type="button" class="btn btn-light rounded-xl px-4 font-bold text-slate-600" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl px-6 py-2 fw-bold shadow-lg shadow-amber-500/30 border-0 hover:scale-105 transition-transform">
+                            <i class="bi bi-save-fill me-2"></i>
+                            حفظ الإشعار الدائن
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
+    <!-- Create Invoice Modal -->
+
+    <div class="modal fade" id="createInvoiceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 shadow-2xl rounded-2xl overflow-hidden">
+                <div class="modal-header bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4">
+                    <h5 class="modal-title fw-bold text-white flex items-center gap-2">
+                        <i class="bi bi-file-earmark-plus-fill"></i>
+                        إضافة فاتورة جديدة
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createInvoiceForm" method="POST" action="{{ route('invoices.store') }}">
+                    @csrf
+                    <div class="modal-body p-4 bg-slate-50" style="max-height: 70vh; overflow-y: auto;">
+
+                        <!-- Client Information -->
+                        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border border-slate-100">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="bi bi-person-fill text-emerald-600"></i>
+                                <h6 class="fw-bold text-slate-700 mb-0">معلومات العميل</h6>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-slate-600">اختر العميل <span class="text-danger">*</span></label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" id="clientSearchInput" placeholder="ابحث عن عميل..." autocomplete="off">
+                                        <input type="hidden" name="client_id" id="selectedClientId" required>
+                                        <div id="clientDropdown" class="list-group position-absolute w-100 shadow rounded-xl mt-1 border border-slate-200" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                            <!-- Options will be populated by JS -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-slate-600">البريد الإلكتروني</label>
+                                    <input type="email" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm bg-slate-50" id="clientEmail" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-slate-600">الهاتف</label>
+                                    <input type="text" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm bg-slate-50" id="clientPhone" readonly>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-slate-600">العنوان</label>
+                                    <textarea class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm bg-slate-50" id="clientAddress" rows="2" readonly></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-slate-600">الرقم الضريبي</label>
+                                    <input type="text" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm bg-slate-50" id="clientTaxNumber" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Information -->
+                        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border border-slate-100">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="bi bi-file-earmark-text-fill text-emerald-600"></i>
+                                <h6 class="fw-bold text-slate-700 mb-0">معلومات الفاتورة</h6>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-slate-600">رقم الفاتورة <span class="text-danger">*</span></label>
+                                    <input type="text" name="number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-slate-600">تاريخ الإصدار <span class="text-danger">*</span></label>
+                                    <input type="date" name="generation_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" value="{{ now()->format('Y-m-d') }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-slate-600">تاريخ الاستحقاق <span class="text-danger">*</span></label>
+                                    <input type="date" name="last_generation_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" value="{{ now()->addDays(30)->format('Y-m-d') }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-slate-600">نوع الخدمة <span class="text-danger">*</span></label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" id="serviceSearchInput" placeholder="ابحث عن خدمة..." autocomplete="off">
+                                        <input type="hidden" name="service_id" id="selectedServiceId" required>
+                                        <div id="serviceDropdown" class="list-group position-absolute w-100 shadow rounded-xl mt-1 border border-slate-200" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                            <!-- Options will be populated by JS -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Service Details Section -->
+                        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border border-slate-100" id="serviceDetailsSection" style="display: none;">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="bi bi-list-check text-emerald-600"></i>
+                                <h6 class="fw-bold text-slate-700 mb-0" id="serviceDetailsSectionTitle">تفاصيل الخدمة</h6>
+                            </div>
+                            <div id="serviceDetailsContainer" class="row g-3">
+                                <!-- Service details will be populated dynamically based on selected service -->
+                            </div>
+
+                            <!-- Workforce Summary -->
+                            <div class="row mt-4 pt-4 border-t border-slate-200">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-slate-600">إجمالي العمالة</label>
+                                    <input type="text" id="total_workforce_display" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm bg-slate-50 fw-bold" value="0" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-slate-600">إجمالي أيام العمل</label>
+                                    <input type="text" id="total_work_days_display" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm bg-slate-50 fw-bold" value="0" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Details -->
+                        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border border-slate-100">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="bi bi-calculator-fill text-emerald-600"></i>
+                                <h6 class="fw-bold text-slate-700 mb-0">التفاصيل المالية</h6>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label small fw-bold text-slate-600">المبلغ قبل الضريبة (﷼) <span class="text-danger">*</span></label>
+                                    <input type="number" name="base_price" id="subtotal_display" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" value="0" step="0.01" min="0" required>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label small fw-bold text-slate-600">نسبة الضريبة (%) <span class="text-danger">*</span></label>
+                                    <input type="number" name="tax_rate" id="tax_rate" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" value="15" step="0.1" min="0" max="100" required>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label small fw-bold text-slate-600">قيمة الضريبة (﷼)</label>
+                                    <input type="text" id="tax_amount_display" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm bg-slate-50 fw-bold" value="0.00" readonly>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label small fw-bold text-slate-600">المبلغ الإجمالي (﷼)</label>
+                                    <input type="text" id="total_amount_display" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm bg-slate-50 fw-bold" value="0.00" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment & Status -->
+                        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border border-slate-100">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="bi bi-tag-fill text-emerald-600"></i>
+                                <h6 class="fw-bold text-slate-700 mb-0">حالة الفاتورة</h6>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-slate-600">حالة الفاتورة <span class="text-danger">*</span></label>
+                                    <div class="position-relative">
+                                        <input type="text" id="statusSearchInput" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="ابحث عن حالة الفاتورة..." autocomplete="off" required>
+                                        <input type="hidden" name="invoice_status" id="selectedStatusId" required>
+                                        <div id="statusDropdown" class="list-group position-absolute w-100 shadow rounded-xl mt-1 border border-slate-200" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                            <!-- Options will be populated by JS -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="bi bi-sticky-fill text-emerald-600"></i>
+                                <h6 class="fw-bold text-slate-700 mb-0">ملاحظات إضافية</h6>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <textarea name="notes" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" rows="3" placeholder="أي ملاحظات إضافية حول الفاتورة..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3 bg-white">
+                        <button type="button" class="btn btn-light rounded-xl px-4 font-bold text-slate-600" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl px-6 py-2 fw-bold shadow-lg shadow-emerald-500/30 border-0 hover:scale-105 transition-transform">
+                            <i class="bi bi-save-fill me-2"></i>
+                            حفظ الفاتورة
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
         <!-- Add Client Modal -->
-        <div class="modal fade" id="addClientModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-user-plus me-2"></i>
-                            إضافة عميل جديد
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form id="addClientForm" method="POST">
-                        @csrf
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">اسم العميل <span class="text-danger">*</span></label>
-                                <input type="text" name="name" class="form-control" required>
+    <div class="modal fade" id="addClientModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-2xl rounded-2xl overflow-hidden">
+                <div class="modal-header bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4">
+                    <h5 class="modal-title fw-bold text-white flex items-center gap-2">
+                        <i class="bi bi-person-plus-fill"></i>
+                        إضافة عميل جديد
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addClientForm" method="POST">
+                    @csrf
+                    <div class="modal-body p-4 bg-slate-50">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">اسم العميل <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required placeholder="أدخل اسم العميل">
                                 <div class="invalid-feedback" id="nameError"></div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">البريد الإلكتروني</label>
-                                    <input type="email" name="email" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">الهاتف</label>
-                                    <input type="text" name="phone" class="form-control">
-                                </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-slate-600">البريد الإلكتروني</label>
+                                <input type="email" name="email" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="example@email.com">
                             </div>
-                            <div class="mb-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-slate-600">الهاتف</label>
+                                <input type="text" name="phone" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="05xxxxxxxx">
+                            </div>
+
+                            <div class="col-12">
                                 <label class="form-label small fw-bold text-slate-600">الرقم الضريبي <span class="text-danger">*</span></label>
-                                <input type="text" name="tax_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" required placeholder="أدخل 15 رقم" maxlength="15" pattern="[0-9]{15}">
+                                <input type="text" name="tax_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required placeholder="أدخل 15 رقم" maxlength="15" pattern="[0-9]{15}">
                                 <small class="text-muted">يجب أن يكون 15 رقم بالضبط</small>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label"> العنوان الوطني</label>
-                                <textarea name="address" class="form-control" rows="2"></textarea>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">العنوان الوطني</label>
+                                <textarea name="address" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" rows="3" placeholder="العنوان الوطني"></textarea>
+                            </div>
+
+                            <!-- Additional fields from your original createClientModal -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-slate-600">يوم الدفع</label>
+                                <input type="number" name="default_payment_day" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" min="1" max="31" value="1">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-slate-600">أيام السماح</label>
+                                <input type="number" name="grace_period_days" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" min="0" value="0">
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ العميل
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3 bg-white">
+                        <button type="button" class="btn btn-light rounded-xl px-4 font-bold text-slate-600" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl px-6 py-2 fw-bold shadow-lg shadow-emerald-500/30 border-0 hover:scale-105 transition-transform">
+                            <i class="bi bi-save-fill me-2"></i>
+                            حفظ العميل
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-
+    </div>
         <!-- Add Service Modal -->
-        <div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-plus-circle me-2"></i>
-                            إضافة خدمة جديدة
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form id="addServiceForm" method="POST">
-                        @csrf
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">اسم الخدمة <span class="text-danger">*</span></label>
-                                <input type="text" name="name" class="form-control" required>
+    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-2xl rounded-2xl overflow-hidden">
+                <div class="modal-header bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4">
+                    <h5 class="modal-title fw-bold text-white flex items-center gap-2">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        إضافة خدمة جديدة
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addServiceForm" method="POST">
+                    @csrf
+                    <div class="modal-body p-4 bg-slate-50">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">اسم الخدمة <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required placeholder="أدخل اسم الخدمة">
                                 <div class="invalid-feedback" id="serviceNameError"></div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">الوصف</label>
-                                <textarea name="description" class="form-control" rows="3"></textarea>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">الوصف</label>
+                                <textarea name="description" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" rows="3" placeholder="أدخل وصف الخدمة (اختياري)"></textarea>
+                            </div>
+
+                            <!-- Additional fields that might be needed for services -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-slate-600">سعر الوحدة (﷼)</label>
+                                <input type="number" name="unit_price" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" step="0.01" min="0" placeholder="0.00">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-slate-600">نوع الوحدة</label>
+                                <select name="unit_type" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                    <option value="hour">ساعة</option>
+                                    <option value="day">يوم</option>
+                                    <option value="unit">وحدة</option>
+                                    <option value="person">شخص</option>
+                                    <option value="project">مشروع</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ الخدمة
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3 bg-white">
+                        <button type="button" class="btn btn-light rounded-xl px-4 font-bold text-slate-600" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl px-6 py-2 fw-bold shadow-lg shadow-emerald-500/30 border-0 hover:scale-105 transition-transform">
+                            <i class="bi bi-save-fill me-2"></i>
+                            حفظ الخدمة
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-        <!-- Pagination -->
+    </div>        <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="text-muted">
                 عرض {{ $invoices->firstItem() ?? 0 }} إلى {{ $invoices->lastItem() ?? 0 }} من {{ $invoices->total() ?? 0 }} فاتورة

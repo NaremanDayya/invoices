@@ -12,19 +12,19 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
                 <div class="mb-4 lg:mb-0">
                     <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">
-                            <i class="fas fa-edit mr-2 text-blue-600"></i>
+                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">
+                            <i class="fas fa-edit mr-2 text-emerald-600"></i>
                             تعديل الدفعة #{{ $payment->number }}
                         </span>
                     </h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">تحديث بيانات الدفعة</p>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">تحديث بيانات الدفعة بدقة</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4">
                     <a href="{{ route('payments.index') }}" class="btn-secondary flex items-center justify-center">
                         <i class="fas fa-arrow-right ml-2 group-hover:-translate-x-1 transition-transform"></i>
                         رجوع للقائمة
                     </a>
-                    <button type="submit" class="btn-primary flex items-center justify-center shadow-blue-500/20">
+                    <button type="submit" class="btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl px-6 py-2 fw-bold shadow-lg shadow-emerald-500/30 border-0 hover:scale-105 transition-transform flex items-center justify-center">
                         <i class="fas fa-save ml-2"></i>
                         حفظ التعديلات
                     </button>
@@ -33,19 +33,19 @@
 
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 <!-- Invoice Info -->
-                <div class="card overflow-hidden">
-                    <div class="card-header bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 p-6">
-                        <h3 class="flex items-center text-lg font-bold text-slate-800 dark:text-white">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 ml-3">
+                <div class="card overflow-hidden border-0 shadow-2xl rounded-2xl">
+                    <div class="card-header bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-0 p-6">
+                        <h3 class="flex items-center text-lg font-bold text-white">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white ml-3">
                                 <i class="fas fa-file-invoice text-xl"></i>
                             </div>
                             بيانات الفاتورة والعميل
                         </h3>
                     </div>
-                    <div class="p-8 space-y-6">
+                    <div class="p-8 space-y-6 bg-slate-50">
                         <div>
-                            <label class="form-label">الفاتورة المرتبطة <span class="text-red-500">*</span></label>
-                            <select name="invoice_id" class="form-select" required id="invoiceSelect">
+                            <label class="form-label small fw-bold text-slate-600">الفاتورة المرتبطة <span class="text-danger">*</span></label>
+                            <select name="invoice_id" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" required id="invoiceSelect">
                                 <option value="">-- اختر الفاتورة --</option>
                                 @foreach($invoices as $invoice)
                                     <option value="{{ $invoice->id }}"
@@ -65,8 +65,8 @@
                         </div>
                         
                         <!-- Client Info Readonly -->
-                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-100 dark:border-slate-700">
-                             <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">تفاصيل العميل</h4>
+                        <div class="bg-white dark:bg-slate-800/50 rounded-xl p-6 border border-emerald-100 dark:border-slate-700 shadow-sm">
+                             <h4 class="text-sm font-bold text-emerald-600 uppercase tracking-wider mb-4 border-b border-emerald-200 pb-2"><i class="fas fa-user-circle ml-2"></i>تفاصيل العميل</h4>
                              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                  <div>
                                      <label class="text-xs text-slate-400 font-bold mb-1 block">اسم العميل</label>
@@ -89,48 +89,48 @@
                 </div>
 
                 <!-- Payment Info -->
-                <div class="card overflow-hidden">
-                    <div class="card-header bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 p-6">
-                        <h3 class="flex items-center text-lg font-bold text-slate-800 dark:text-white">
-                            <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 ml-3">
+                <div class="card overflow-hidden border-0 shadow-2xl rounded-2xl">
+                    <div class="card-header bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-0 p-6">
+                        <h3 class="flex items-center text-lg font-bold text-white">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white ml-3">
                                 <i class="fas fa-money-bill-wave text-xl"></i>
                             </div>
                             تفاصيل الدفع
                         </h3>
                     </div>
-                    <div class="p-8 space-y-6">
+                    <div class="p-8 space-y-6 bg-slate-50">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="form-label">تاريخ الدفع <span class="text-red-500">*</span></label>
-                                <input type="date" name="payment_date" id="payment_date" class="form-input" value="{{ $payment->payment_date->format('Y-m-d') }}" required>
+                                <label class="form-label small fw-bold text-slate-600">تاريخ الدفع <span class="text-danger">*</span></label>
+                                <input type="date" name="payment_date" id="payment_date" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" value="{{ $payment->payment_date->format('Y-m-d') }}" required>
                                 @if($payment->late_days > 0)
                                     <small class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>متأخر {{ $payment->late_days }} يوم</small>
                                 @endif
                             </div>
                             <div>
-                                <label class="form-label">المبلغ المدفوع (ر.س) <span class="text-red-500">*</span></label>
-                                <input type="number" name="amount" id="amount" class="form-input text-lg font-bold text-green-600" min="0" step="0.01" value="{{ $payment->amount }}" required>
+                                <label class="form-label small fw-bold text-slate-600">المبلغ المدفوع (ر.س) <span class="text-danger">*</span></label>
+                                <input type="number" name="amount" id="amount" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm text-lg font-bold text-success" min="0" step="0.01" value="{{ $payment->amount }}" required>
                             </div>
                             <div>
-                                <label class="form-label">عدد الموظفين</label>
-                                <input type="number" name="employees_count" id="employees_count" class="form-input" min="0" value="{{ $payment->employees_count }}" placeholder="عدد الموظفين المدفوع لهم">
+                                <label class="form-label small fw-bold text-slate-600">عدد الموظفين</label>
+                                <input type="number" name="employees_count" id="employees_count" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" min="0" value="{{ $payment->employees_count }}" placeholder="عدد الموظفين المدفوع لهم">
                                 <small class="text-muted">الحد الأقصى: {{ $payment->invoice->total_workforce ?? 0 }} موظف</small>
                             </div>
                             <div>
-                                <label class="form-label">أيام العمل</label>
-                                <input type="number" name="work_days" id="work_days" class="form-input" min="0" value="{{ $payment->work_days }}" placeholder="أيام العمل المتعلقة بالدفع">
+                                <label class="form-label small fw-bold text-slate-600">أيام العمل</label>
+                                <input type="number" name="work_days" id="work_days" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" min="0" value="{{ $payment->work_days }}" placeholder="أيام العمل المتعلقة بالدفع">
                                 <small class="text-muted">الحد الأقصى: {{ $payment->invoice->work_days ?? 0 }} يوم</small>
                             </div>
                             <div>
-                                <label class="form-label">طريقة الدفع <span class="text-red-500">*</span></label>
-                                <select name="payment_method" class="form-select" required>
+                                <label class="form-label small fw-bold text-slate-600">طريقة الدفع <span class="text-danger">*</span></label>
+                                <select name="payment_method" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" required>
                                     <option value="direct_bank_transfer" {{ $payment->payment_method == 'direct_bank_transfer' ? 'selected' : '' }}>🏦 تحويل بنكي مباشر</option>
                                     <option value="bank_wage_protection_transfer" {{ $payment->payment_method == 'bank_wage_protection_transfer' ? 'selected' : '' }}>💼 تحويل بنكي حماية الأجور</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">حالة العملية <span class="text-red-500">*</span></label>
-                                <select name="status" class="form-select" required>
+                                <label class="form-label small fw-bold text-slate-600">حالة العملية <span class="text-danger">*</span></label>
+                                <select name="status" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" required>
                                     <option value="pending" {{ $payment->status == 'pending' ? 'selected' : '' }}>🕘 قيد الانتظار</option>
                                     <option value="completed" {{ $payment->status == 'completed' ? 'selected' : '' }}>✅ مكتمل</option>
                                     <option value="cancelled" {{ $payment->status == 'cancelled' ? 'selected' : '' }}>🚫 ملغى</option>
@@ -140,18 +140,18 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="form-label">رقم المرجع</label>
-                                <input type="text" name="reference_number" class="form-input" placeholder="مثال: REF-123456" value="{{ $payment->reference_number }}">
+                                <label class="form-label small fw-bold text-slate-600">رقم المرجع</label>
+                                <input type="text" name="reference_number" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" placeholder="مثال: REF-123456" value="{{ $payment->reference_number }}">
                             </div>
                             <div>
-                                <label class="form-label">اسم البنك</label>
-                                <input type="text" name="bank_name" class="form-input" placeholder="مثال: الراجحي" value="{{ $payment->bank_name }}">
+                                <label class="form-label small fw-bold text-slate-600">اسم البنك</label>
+                                <input type="text" name="bank_name" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" placeholder="مثال: الراجحي" value="{{ $payment->bank_name }}">
                             </div>
                         </div>
                         
                         <div>
-                            <label class="form-label">ملاحظات</label>
-                            <textarea name="notes" class="form-input" rows="3" placeholder="أي ملاحظات إضافية...">{{ $payment->notes }}</textarea>
+                            <label class="form-label small fw-bold text-slate-600">ملاحظات</label>
+                            <textarea name="notes" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" rows="3" placeholder="أي ملاحظات إضافية...">{{ $payment->notes }}</textarea>
                         </div>
                         
                         <!-- Summary Widget -->

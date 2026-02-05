@@ -95,10 +95,6 @@ class InvoiceController extends Controller
         // Determine the final invoice status
         $finalInvoiceStatus = $validated['invoice_status'];
 
-        // If user selected "other" and provided custom status, use the custom status
-        if ($validated['invoice_status'] === 'other' && !empty($validated['custom_status'])) {
-            $finalInvoiceStatus = $validated['custom_status'];
-        }
         // Get service details from request
         $serviceDetails = $request->input('service_details', []);
 
@@ -116,17 +112,17 @@ class InvoiceController extends Controller
             }
         }
 
-        // Use the base_price directly from the form (already calculated by JavaScript)
+        // Use the base_price directly from the form
         $subtotal = $validated['base_price'];
         $taxAmount = ($subtotal * $validated['tax_rate']) / 100;
         $totalAmount = $subtotal + $taxAmount;
 
-        // Prepare invoice data (MAPPED to your DB columns)
+        // Prepare invoice data
         $invoiceData = [
             'number' => $validated['number'],
             'client_id' => $validated['client_id'],
             'service_id' => $validated['service_id'],
-            'service_details_data' => $serviceDetails, // Will be auto-cast to JSON by model
+            'service_details_data' => $serviceDetails,
 
             'generation_date' => $validated['generation_date'],
             'last_generation_date' => $validated['last_generation_date'],
@@ -160,10 +156,18 @@ class InvoiceController extends Controller
 
             'invoice_status' => $finalInvoiceStatus,
             'notes' => $validated['notes'] ?? null,
+
+            // Prevent automatic calculations by setting these
+            'issue_delay_days' => 0,
+            'payment_delay_days' => 0,
         ];
-        $authenticatedUserId = Auth::id();
+
+        // Remove the dd() line and create the invoice
         $invoice = Invoice::create($invoiceData);
-        dd($invoiceData ,$invoice);
+
+        // Continue with your conversation and message creation...
+        $authenticatedUserId = Auth::id();
+
         $conversation = $invoice->conversation()
             ->where(function ($query) use ($authenticatedUserId) {
                 $query->where('sender_id', $authenticatedUserId)
@@ -181,19 +185,18 @@ class InvoiceController extends Controller
                 'invoice_id' => $invoice->id,
             ]);
         }
+
         $message = "فاتورة خاصة بالعميل {$invoice->client->name}، بقيمة: {$totalAmount}";
-        Message::create(
-        [
+        Message::create([
             'conversation_id' => $conversation->id,
             'sender_id' => $authenticatedUserId,
             'receiver_id' => $conversation->sender_id === $authenticatedUserId ? $conversation->receiver_id : $conversation->sender_id,
             'message' => $message,
-        ]
-    );
+        ]);
+
         return redirect()->route('invoices.index')
             ->with('success', 'تم إنشاء الفاتورة بنجاح!');
     }
-
     public function show(Invoice $invoice)
     {
         $invoice->load(['client', 'service', 'payments', 'creditNotes']);

@@ -193,11 +193,11 @@ class Invoice extends Model
 
         $gracePeriodDays = $this->client->grace_period_days ?? 0;
         $dueDate = Carbon::parse($this->last_generation_date)->addDays($gracePeriodDays);
-        
+
         $endDate = $this->payment_date ? Carbon::parse($this->payment_date) : Carbon::now();
-        
+
         $lateDays = max(0, $dueDate->diffInDays($endDate, false));
-        
+
         return $lateDays > 0 ? $lateDays : 0;
     }
 
@@ -207,9 +207,9 @@ class Invoice extends Model
     public function calculateFinancials()
     {
         // Calculate base price
-        $totalManDays = ($this->total_workers * $this->workers_days) + 
-                       ($this->total_supervisors * $this->supervisors_days) + 
-                       ($this->total_managers * $this->managers_days) + 
+        $totalManDays = ($this->total_workers * $this->workers_days) +
+                       ($this->total_supervisors * $this->supervisors_days) +
+                       ($this->total_managers * $this->managers_days) +
                        ($this->total_users * $this->users_days);
 
         if ($totalManDays > 0) {
@@ -359,20 +359,6 @@ class Invoice extends Model
         return $query->whereHas('service', function ($q) {
             $q->where('service_type', 'human_resource')
                 ->orWhere('requires_hr_details', true);
-        });
-    }
-
-    /**
-     * Boot method for automatic calculations
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::saving(function ($invoice) {
-            $invoice->calculateFinancials();
-            $invoice->calculateDelays();
-            $invoice->updatePaymentStatus();
         });
     }
 }

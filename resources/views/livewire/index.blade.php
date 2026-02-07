@@ -1,62 +1,64 @@
-<div>
-<div class="invoices-chat-dashboard">
-    <!-- Welcome Header -->
-    <div class="welcome-header mb-4">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="display-6 fw-bold text-dark mb-2">
-                    <i class="bi bi-chat-left-dots-fill text-success me-3"></i>
-                    Invoice Communications
-                </h1>
-                <p class="text-muted mb-0">
-                    Manage all invoice-related conversations with your clients in one place.
-                    Track payments, resolve queries, and maintain clear communication.
-                </p>
-            </div>
-            <div class="col-md-4 text-md-end">
-                <div class="stats-badge bg-success text-white p-3 rounded-3 d-inline-block">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-chat-square-text-fill fs-1 me-3"></i>
-                        <div>
-                            <h3 class="mb-0">{{ \App\Models\Conversation::count() }}</h3>
-                            <small>Active Conversations</small>
+<div dir="rtl">
+    <div class="invoices-chat-dashboard">
+        <!-- رأس الترحيب -->
+        <div class="welcome-header mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-6 fw-bold text-dark mb-2">
+                        <i class="bi bi-chat-left-dots-fill text-success ms-3"></i>
+                        التواصل بخصوص الفواتير
+                    </h1>
+                    <p class="text-muted mb-0">
+                        أدر جميع المحادثات المتعلقة بالفواتير مع عملائك في مكان واحد.
+                        تتبع المدفوعات، وحل الاستفسارات، وحافظ على تواصل واضح.
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="stats-badge bg-success text-white p-3 rounded-3 d-inline-block">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-chat-square-text-fill fs-1 ms-3"></i>
+                            <div>
+                                <h3 class="mb-0">{{ \App\Models\Conversation::count() }}</h3>
+                                <small>محادثة نشطة</small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Main Chat Layout -->
-    <div class="chat-layout">
-        <!-- Sidebar - Chat List -->
-        <div class="chat-sidebar">
-            <livewire:chat-list />
-        </div>
+        <!-- التخطيط الرئيسي للمحادثة -->
+        <div class="chat-layout">
+            <!-- الشريط الجانبي - قائمة المحادثات -->
+            <div class="chat-sidebar">
+                <livewire:chat-list />
+            </div>
 
-        <!-- Main Chat Area -->
-        <div class="chat-main">
-            @if($selectedConversation)
-                <livewire:chat :conversation="$selectedConversation" :client="$selectedConversation->client" :key="$selectedConversation->id" />
-            @else
-                <!-- Default State (When no chat selected) -->
-                <div class="chat-default-state">
-                    <div class="text-center py-5">
-                        <div class="default-state-icon mb-4">
-                            <i class="bi bi-chat-square-text display-1 text-success"></i>
+            <!-- منطقة المحادثة الرئيسية -->
+            <div class="chat-main">
+                @if($selectedConversation)
+                    <livewire:chat
+                        :conversation="$selectedConversation"
+                        :client="$selectedConversation->client"
+                        :key="$selectedConversation->id" />
+                @else
+                    <!-- الحالة الافتراضية (عند عدم اختيار محادثة) -->
+                    <div class="chat-default-state">
+                        <div class="text-center py-5">
+                            <div class="default-state-icon mb-4">
+                                <i class="bi bi-chat-square-text display-1 text-success"></i>
+                            </div>
+                            <h3 class="mb-3 text-dark">اختر محادثة</h3>
+                            <p class="text-muted mb-4">
+                                اختر عميلاً من الشريط الجانبي لبدء مناقشة الفواتير،
+                                المدفوعات، واستفسارات الفوترة.
+                            </p>
                         </div>
-                        <h3 class="mb-3 text-dark">Select a Conversation</h3>
-                        <p class="text-muted mb-4">
-                            Choose a client from the sidebar to start discussing invoices,
-                            payments, and billing queries.
-                        </p>
                     </div>
-                </div>
-            @endif
+                @endif
+            </div>
         </div>
     </div>
-
-</div>
 </div>
 @push('styles')
     <style>

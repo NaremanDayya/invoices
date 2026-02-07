@@ -1,115 +1,61 @@
-<div class="invoices-chat-list">
-    <!-- Header -->
-    <div class="chat-list-header">
+<div class="invoices-chat-list" dir="rtl">
+    <!-- الرأس -->
+    <div class="chat-list-header pb-2 border-bottom shadow-sm">
         <div class="d-flex justify-content-between align-items-center p-3">
             <div>
                 <h4 class="mb-0 text-dark">
-                    <i class="bi bi-chat-left-text-fill text-success me-2"></i>
-                    Invoice Discussions
+                    <i class="bi bi-chat-left-text-fill text-primary ms-2"></i>
+                    مناقشات الفواتير
                 </h4>
-                <p class="text-muted mb-0 small">Communicate with clients about invoices</p>
-            </div>
-
-            <div class="d-flex align-items-center gap-2">
-                <!-- New Chat Button -->
-                <button class="btn btn-success btn-sm d-flex align-items-center"
-                        data-bs-toggle="modal"
-                        data-bs-target="#clientSelectionModal">
-                    <i class="bi bi-plus-lg me-1"></i>
-                    New Chat
-                </button>
-
+                <p class="text-muted mb-0 small">تواصل مع العملاء بخصوص الفواتير</p>
             </div>
         </div>
 
-        <!-- Search and Filters -->
-        <div class="chat-list-toolbar p-3 bg-light">
+        <!-- البحث والتصفية -->
+        <div class="chat-list-toolbar px-3 pb-2">
             <div class="row g-2">
-                <div class="col-md-6">
+                <div class="col-12 mb-2">
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
+                        <input type="text" wire:model.live="search"
+                               class="form-control border-secondary-subtle"
+                               placeholder="بحث باسم العميل...">
+                        <span class="input-group-text bg-light">
                             <i class="bi bi-search text-muted"></i>
                         </span>
-                        <input type="text" wire:model.live="search"
-                               class="form-control border-start-0"
-                               placeholder="Search by client or invoice number...">
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-12">
                     <div class="d-flex gap-2">
-                        <select wire:model.live="filter" class="form-select form-select-sm">
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="unread">Unread Only</option>
-                            <option value="read">Read Only</option>
+                        <select wire:model.live="filter" class="form-select form-select-sm border-secondary-subtle">
+                            <option value="newest">الأحدث</option>
+                            <option value="unread">غير المقروء</option>
                         </select>
 
-                        <select wire:model.live="perPage" class="form-select form-select-sm" style="width: 80px;">
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="30">30</option>
-                            <option value="50">50</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Stats -->
-            <div class="row mt-3">
-                <div class="col">
-                    <div class="d-flex flex-wrap gap-3">
-                        <div class="stat-card">
-                            <div class="stat-icon bg-success-light">
-                                <i class="bi bi-chat-left-text text-success"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">{{ $conversations->count() }}</h6>
-                                <small class="text-muted">Total Chats</small>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon bg-warning-light">
-                                <i class="bi bi-envelope text-warning"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">
-                                    {{ $conversations->where('unread_count', '>', 0)->count() }}
-                                </h6>
-                                <small class="text-muted">Unread</small>
-                            </div>
-                        </div>
-
-                        {{--                        <div class="stat-card">--}}
-                        {{--                            <div class="stat-icon bg-info-light">--}}
-                        {{--                                <i class="bi bi-clock-history text-info"></i>--}}
-                        {{--                            </div>--}}
-                        {{--                            <div>--}}
-                        {{--                                <h6 class="mb-0">--}}
-                        {{--                                    {{ $conversations->where('is_last_message_read', false)->count() }}--}}
-                        {{--                                </h6>--}}
-                        {{--                                <small class="text-muted">Pending Replies</small>--}}
-                        {{--                            </div>--}}
-                        {{--                        </div>--}}
+                        <button class="btn btn-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center"
+                                data-bs-toggle="modal"
+                                data-bs-target="#clientSelectionModal">
+                            <i class="bi bi-plus-lg ms-1"></i>
+                            محادثة جديدة
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Conversations List -->
-    <div class="conversations-container">
+    <!-- قائمة المحادثات -->
+    <div class="conversations-container" id="conversationsList">
         @if($conversations->isEmpty())
             <div class="empty-state text-center py-5">
                 <i class="bi bi-chat-square-text display-4 text-muted mb-3"></i>
-                <h5 class="text-muted">No conversations found</h5>
-                <p class="text-muted">Start a new chat with your client</p>
+                <h5 class="text-muted">لا توجد محادثات</h5>
+                <p class="text-muted">ابدأ محادثة جديدة مع عميلك</p>
                 <button class="btn btn-success mt-2"
                         data-bs-toggle="modal"
                         data-bs-target="#clientSelectionModal">
-                    <i class="bi bi-plus-lg me-1"></i>
-                    Start New Chat
+                    <i class="bi bi-plus-lg ms-1"></i>
+                    بدء محادثة جديدة
                 </button>
             </div>
         @else
@@ -118,68 +64,79 @@
                     $unreadCount = $conversation->unread_count ?? 0;
                     $isUnread = $unreadCount > 0;
                     $latestMessageTime = $conversation->latest_message_time
-                        ? \Carbon\Carbon::parse($conversation->latest_message_time)->diffForHumans()
-                        : 'No messages';
+                        ? \Carbon\Carbon::parse($conversation->latest_message_time)->locale('ar')->diffForHumans()
+                        : 'لا توجد رسائل';
                     $client = $conversation->client ?? null;
-                    $invoiceCount = $client?->invoices?->count() ?? 0;
-                    $totalAmount = $client?->invoices?->sum('amount') ?? 0;
-                    $paidAmount = $client?->invoices?->where('status', 'paid')->sum('amount') ?? 0;
-                    $pendingAmount = $client?->invoices?->where('status', 'pending')->sum('amount') ?? 0;
+                    
+                    // Improved metrics using correct Invoice fields
+                    $activeInvoices = $client?->invoices?->where('is_cancelled', false) ?? collect();
+                    $invoiceCount = $activeInvoices->count();
+                    $totalAmount = $activeInvoices->sum('total_price');
+                    $paidAmount = $activeInvoices->where('payment_status', 'paid')->sum('paid_amount');
+                    $pendingAmount = $totalAmount - $paidAmount;
                     $hasPending = $pendingAmount > 0;
                 @endphp
 
                 <a href="{{ route('client.chat', ['client' => $client?->id ?? 'unknown', 'conversation' => $conversation->id]) }}"
                    class="conversation-item {{ $isUnread ? 'unread' : '' }} text-decoration-none"
-                   style="cursor: pointer; display: block; text-decoration: none; color: inherit;">
+                   style="cursor: pointer; display: block; text-decoration: none; color: inherit;"
+                   data-name="{{ $client?->name ?? '' }}">
 
 
-                    <!-- Client Avatar -->
+                    <!-- صورة رمزية للعميل -->
                     <div class="conversation-avatar">
-                        <div class="avatar-placeholder-sm bg-success">
-                            {{ substr($client?->name ?? 'CC', 0, 2) }}
+                        <div class="avatar-placeholder-sm bg-primary shadow-sm">
+                            {{ mb_substr($client?->name ?? 'عم', 0, 2) }}
                         </div>
-                        <!-- Online Status -->
+                        <!-- حالة الاتصال -->
                         <div class="online-status {{ rand(0, 1) ? 'online' : 'offline' }}"></div>
                     </div>
 
                     <div class="conversation-details">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-1">{{ $client?->name ?? 'Unknown Client' }}</h6>
-                                <p class="conversation-preview mb-0 text-muted">
-                                    {{ $conversation->latest_message_text ?? 'Start a conversation...' }}
-                                </p>
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="text-end">
+                                <small class="text-muted d-block" style="font-size: 0.7rem;">{{ $latestMessageTime }}</small>
+                                @if($isUnread)
+                                    <span class="badge bg-danger rounded-pill px-2 mt-1">
+                                        {{ $unreadCount }}
+                                    </span>
+                                @endif
                             </div>
 
-                            <div class="text-end">
-                                <small class="text-muted d-block">{{ $latestMessageTime }}</small>
-                                @if($isUnread)
-                                    <span class="badge bg-success rounded-pill px-2">
-                            {{ $unreadCount }}
-                        </span>
-                                @endif
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark">{{ $client?->name ?? 'عميل غير معروف' }}</h6>
+                                <p class="conversation-preview mb-0 text-muted small mt-1">
+                                    {{ $conversation->latest_message_text ?? 'ابدأ المحادثة...' }}
+                                </p>
                             </div>
                         </div>
 
-                        <!-- Invoice Info - Updated to show counts and real data -->
-                        <div class="invoice-info mt-2">
-                            <!-- Invoice Count Badge -->
-                            <span class="badge bg-light text-dark border">
-                    <i class="bi bi-receipt me-1"></i>
-                    {{ $invoiceCount }} {{ Str::plural('Invoice', $invoiceCount) }}
-                </span>
+                        <!-- معلومات الفاتورة - محسنة للعرض -->
+                        <div class="invoice-info mt-2" style="flex-direction: row-reverse;">
+                            <!-- المبلغ الإجمالي -->
+                            <span class="badge bg-light text-dark border-0 shadow-sm py-1 px-2">
+                                <i class="bi bi-cash-coin ms-1 text-primary"></i>
+                                <span class="fw-bold">{{ number_format($totalAmount, 2) }}</span> ر.س
+                            </span>
 
-                            <!-- Total Amount Badge -->
-                            <span class="badge bg-info-light text-info">
-                    <i class="bi bi-cash-coin me-1"></i>
-                    ${{ number_format($totalAmount, 2) }}
-                </span>
+                            <!-- عدد الفواتير -->
+                            <span class="badge bg-light text-muted border-0 shadow-sm py-1 px-2">
+                                <i class="bi bi-receipt ms-1"></i>
+                                {{ $invoiceCount }}
+                            </span>
 
-                            <!-- Payment Status Badge -->
-                            <span class="badge {{ $hasPending ? 'bg-warning-light text-warning' : 'bg-success-light text-success' }}">
-                    <i class="bi bi-circle-fill me-1"></i>
-                    {{ $hasPending ? '$' . number_format($pendingAmount, 2) . ' Pending' : 'All Paid' }}
-                </span>
+                            <!-- حالة المديونية -->
+                            @if($hasPending)
+                                <span class="badge bg-warning-subtle text-warning-emphasis border-0 shadow-sm py-1 px-2">
+                                    <i class="bi bi-clock-history ms-1"></i>
+                                    {{ number_format($pendingAmount, 2) }} معلق
+                                </span>
+                            @else
+                                <span class="badge bg-success-subtle text-success-emphasis border-0 shadow-sm py-1 px-2">
+                                    <i class="bi bi-check-circle-fill ms-1"></i>
+                                    خالص
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </a>
@@ -189,18 +146,18 @@
                 @endif
             @endforeach
 
-            <!-- Load More -->
+            <!-- تحميل المزيد -->
             @if($hasMore)
                 <div class="text-center py-3">
                     <button wire:click="loadMore"
                             class="btn btn-outline-success btn-sm"
                         {{ $loading ? 'disabled' : '' }}>
                         @if($loading)
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            Loading...
+                            <span class="spinner-border spinner-border-sm ms-2"></span>
+                            جاري التحميل...
                         @else
-                            <i class="bi bi-arrow-down-circle me-1"></i>
-                            Load More
+                            <i class="bi bi-arrow-down-circle ms-1"></i>
+                            تحميل المزيد
                         @endif
                     </button>
                 </div>
@@ -209,268 +166,280 @@
     </div>
     @include('partials.client-selection-modal')
 
-</div>
+    @push('styles')
+        <style>
+            .invoices-chat-list {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+                height: 100%;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
 
-@push('styles')
-    <style>
-        .invoices-chat-list {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            height: calc(100vh - 120px);
-            overflow: hidden;
-        }
+            .chat-list-header {
+                background: white;
+                flex-shrink: 0;
+            }
 
-        .chat-list-header {
-            border-bottom: 1px solid #e9ecef;
-            background: white;
-        }
-
-        .chat-list-toolbar {
-            background: #f8f9fa;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .stat-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 15px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
-            min-width: 120px;
-        }
-
-        .stat-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .bg-success-light {
-            background-color: rgba(25, 135, 84, 0.1) !important;
-        }
-
-        .bg-warning-light {
-            background-color: rgba(255, 193, 7, 0.1) !important;
-        }
-
-        .bg-info-light {
-            background-color: rgba(13, 202, 240, 0.1) !important;
-        }
-
-        .conversations-container {
-            height: calc(100% - 180px);
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        .conversation-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            border-radius: 10px;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-
-        .conversation-item:hover, .conversation-item.unread {
-            background: #f8f9fa;
-            border-color: #e9ecef;
-            transform: translateX(5px);
-        }
-
-        .conversation-item.unread {
-            background: rgba(25, 135, 84, 0.05);
-            border-left: 3px solid #198754;
-        }
-
-        .conversation-avatar {
-            position: relative;
-            margin-right: 15px;
-        }
-
-        .company-logo-sm {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 2px solid #20c997;
-        }
-
-        .avatar-placeholder-sm {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            background: linear-gradient(135deg, #20c997, #198754);
-        }
-
-        .online-status {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid white;
-        }
-
-        .online-status.online {
-            background-color: #28a745;
-        }
-
-        .online-status.offline {
-            background-color: #6c757d;
-        }
-
-        .conversation-details {
-            flex: 1;
-        }
-
-        .conversation-preview {
-            font-size: 0.85rem;
-            color: #6c757d;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-
-        .invoice-info {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .invoice-info .badge {
-            font-size: 0.75rem;
-            padding: 4px 8px;
-        }
-
-        .empty-state {
-            padding: 60px 20px;
-        }
-
-        /* Custom Scrollbar */
-        .conversations-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .conversations-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .conversations-container::-webkit-scrollbar-thumb {
-            background: #20c997;
-            border-radius: 10px;
-        }
-
-        .conversations-container::-webkit-scrollbar-thumb:hover {
-            background: #198754;
-        }
-
-        /* Loading Animation */
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .loading .conversation-item {
-            animation: pulse 1.5s infinite;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
             .stat-card {
-                min-width: 100%;
-                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 15px;
+                background: white;
+                border-radius: 8px;
+                border: 1px solid #e9ecef;
+                min-width: 120px;
+                flex-direction: row-reverse;
+                text-align: right;
+            }
+
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+            }
+
+            .bg-success-light {
+                background-color: rgba(25, 135, 84, 0.1) !important;
+            }
+
+            .bg-warning-light {
+                background-color: rgba(255, 193, 7, 0.1) !important;
+            }
+
+            .bg-info-light {
+                background-color: rgba(13, 202, 240, 0.1) !important;
+            }
+
+            .conversations-container {
+                flex-grow: 1;
+                overflow-y: auto;
+                padding: 15px;
+            }
+
+            .conversation-item {
+                display: flex;
+                align-items: center;
+                padding: 12px;
+                border-radius: 10px;
+                transition: all 0.3s;
+                border: 1px solid transparent;
+                text-align: right;
+            }
+
+            .conversation-item:hover, .conversation-item.unread {
+                background: #f8f9fa;
+                border-color: #e9ecef;
+                transform: translateX(-5px);
+            }
+
+            .conversation-item.unread {
+                background: rgba(25, 135, 84, 0.05);
+                border-right: 3px solid #198754;
+                border-left: none;
+            }
+
+            .conversation-avatar {
+                position: relative;
+                margin-left: 15px;
+                margin-right: 0;
+            }
+
+            .company-logo-sm {
+                width: 50px;
+                height: 50px;
+                border-radius: 10px;
+                object-fit: cover;
+                border: 2px solid #20c997;
+            }
+
+            .avatar-placeholder-sm {
+                width: 50px;
+                height: 50px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                background: linear-gradient(135deg, #20c997, #198754);
+            }
+
+            .online-status {
+                position: absolute;
+                bottom: 2px;
+                left: 2px;
+                right: auto;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                border: 2px solid white;
+            }
+
+            .online-status.online {
+                background-color: #28a745;
+            }
+
+            .online-status.offline {
+                background-color: #6c757d;
+            }
+
+            .conversation-details {
+                flex: 1;
+                text-align: right;
+            }
+
+            .conversation-preview {
+                font-size: 0.85rem;
+                color: #6c757d;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
             }
 
             .invoice-info {
-                flex-direction: column;
-                align-items: flex-start;
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
             }
-        }
-    </style>
-@endpush
 
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const conversationsContainer = document.querySelector('.conversations-container');
+            .invoice-info .badge {
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
 
-            // Infinite scroll
-            if (conversationsContainer) {
-                conversationsContainer.addEventListener('scroll', function() {
-                    if (this.scrollTop + this.clientHeight >= this.scrollHeight - 100) {
-                    @this.call('loadMore');
-                    }
+            .empty-state {
+                padding: 60px 20px;
+            }
+
+            /* شريط التمرير المخصص */
+            .conversations-container::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .conversations-container::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+
+            .conversations-container::-webkit-scrollbar-thumb {
+                background: #20c997;
+                border-radius: 10px;
+            }
+
+            .conversations-container::-webkit-scrollbar-thumb:hover {
+                background: #198754;
+            }
+
+            /* رسالة لا توجد محادثات */
+            #noConvoMsg.hidden {
+                display: none;
+            }
+
+            .conversation-item.hidden {
+                display: none;
+            }
+
+            /* رسوم متحركة للتحميل */
+            @keyframes pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.5; }
+                100% { opacity: 1; }
+            }
+
+            .loading .conversation-item {
+                animation: pulse 1.5s infinite;
+            }
+
+            /* تجاوب */
+            @media (max-width: 768px) {
+                .invoice-info {
+                    flex-direction: column;
+                    align-items: flex-end;
+                }
+
+                .conversation-item {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .conversation-avatar {
+                    margin-left: 0;
+                    margin-bottom: 10px;
+                    align-self: flex-end;
+                }
+            }
+        </style>
+    @endpush
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const conversationsContainer = document.querySelector('.conversations-container');
+
+                // التمرير اللانهائي
+                if (conversationsContainer) {
+                    conversationsContainer.addEventListener('scroll', function() {
+                        if (this.scrollTop + this.clientHeight >= this.scrollHeight - 100) {
+                        @this.call('loadMore');
+                        }
+                    });
+                }
+
+                // البحث بفاصل زمني
+                let searchTimeout;
+                const searchInput = document.querySelector('[wire\\:model="search"]');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(() => {
+                        @this.call('refresh');
+                        }, 500);
+                    });
+                }
+
+                // اختيار محادثة
+                window.addEventListener('selectConversation', function(event) {
+                    console.log('المحادثة المختارة:', event.detail.id);
                 });
-            }
-
-            // Search debounce
-            let searchTimeout;
-            const searchInput = document.querySelector('[wire\\:model="search"]');
-            if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                    @this.call('refresh');
-                    }, 500);
-                });
-            }
-
-            // Select conversation
-            window.addEventListener('selectConversation', function(event) {
-                // Your logic to open chat with selected conversation
-                console.log('Selected conversation:', event.detail.id);
             });
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput      = document.getElementById('chats-search-field');
-            const listContainer    = document.getElementById('conversationsList');
-            const emptyState       = document.getElementById('noConvoMsg');
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const searchInput      = document.querySelector('[wire\\:model="search"]');
+                const listContainer    = document.getElementById('conversationsList');
+                const emptyState       = document.getElementById('noConvoMsg');
 
-            if (!searchInput || !listContainer) return;
+                if (!searchInput || !listContainer) return;
 
-            const items = Array.from(listContainer.querySelectorAll('li[data-name]'));
+                const items = Array.from(listContainer.querySelectorAll('a[data-name]'));
 
-            function filterList() {
-                const q = searchInput.value.trim().toLowerCase();
-                let visible = 0;
+                function filterList() {
+                    const q = searchInput.value.trim().toLowerCase();
+                    let visible = 0;
 
-                items.forEach(li => {
-                    const name    = li.dataset.name;
+                    items.forEach(item => {
+                        const name = item.dataset.name.toLowerCase();
+                        const show = !q || name.includes(q);
+                        item.classList.toggle('hidden', !show);
+                        if (show) visible++;
+                    });
 
-                    const show = !q || name.includes(q) || company.includes(q);
+                    if (emptyState) emptyState.classList.toggle('hidden', visible !== 0);
+                }
 
-                    li.classList.toggle('hidden', !show);
-                    if (show) visible++;
-                });
-
-                if (emptyState) emptyState.classList.toggle('hidden', visible !== 0);
-            }
-
-            filterList();
-
-            searchInput.addEventListener('input', filterList);
-        });
-
-    </script>
-
-@endpush
+                filterList();
+                searchInput.addEventListener('input', filterList);
+            });
+        </script>
+    @endpush
+</div>

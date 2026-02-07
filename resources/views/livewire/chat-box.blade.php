@@ -1,5 +1,5 @@
-<div class="invoice-chat-messages">
-    <!-- Messages List -->
+<div class="invoice-chat-messages" dir="rtl">
+    <!-- قائمة الرسائل -->
     <div class="messages-list" id="messages-list">
         @php
             $currentDate = null;
@@ -8,32 +8,32 @@
         @foreach($loadedMessages as $message)
             @php
                 $isSender = $message->sender_id === Auth::id();
-                $messageTime = $message->created_at->format('g:i A');
+                $messageTime = $message->created_at->translatedFormat('g:i A');
                 $messageDate = $message->created_at->format('Y-m-d');
                 $isEdited = $message->edited_at ?? false;
 
-                // Show date separator if date changed
+                // عرض فاصل التاريخ إذا تغير
                 if ($currentDate !== $messageDate):
                     $currentDate = $messageDate;
             @endphp
             <div class="date-separator">
-                <span>{{ $message->created_at->format('F j, Y') }}</span>
+                <span>{{ $message->created_at->translatedFormat('j F, Y') }}</span>
             </div>
             @php endif; @endphp
 
             <div class="message-wrapper {{ $isSender ? 'sent' : 'received' }}" wire:key="message-{{ $message->id }}">
-                <!-- Message Bubble -->
+                <!-- فقاعة الرسالة -->
                 <div class="message-bubble {{ $isSender ? 'sent-bubble' : 'received-bubble' }}">
-                    <!-- Message Content -->
+                    <!-- محتوى الرسالة -->
                     @if($message->message === 'like')
                         <div class="like-message">
                             <i class="bi bi-heart-fill text-danger"></i>
                         </div>
                     @elseif($message->image_path)
-                        <!-- Image Message -->
+                        <!-- رسالة صورة -->
                         <div class="image-message">
                             <img src="{{ Storage::url($message->image_path) }}"
-                                 alt="Shared image"
+                                 alt="صورة مشاركة"
                                  class="chat-image"
                                  onclick="window.open('{{ Storage::url($message->image_path) }}', '_blank')">
                             @if($message->message && $message->message !== '[Image]')
@@ -45,15 +45,13 @@
                             {{ $message->message }}
 
                             @if($isEdited)
-                                <small class="edited-text">(edited)</small>
+                                <small class="edited-text">(تم التعديل)</small>
                             @endif
                         </div>
                     @endif
 
-                    <!-- Message Footer -->
+                    <!-- تذييل الرسالة -->
                     <div class="message-footer">
-                        <span class="message-time">{{ $messageTime }}</span>
-
                         @if($isSender)
                             <span class="message-status">
                                 @if($message->read_at)
@@ -63,10 +61,11 @@
                                 @endif
                             </span>
                         @endif
+                        <span class="message-time">{{ $messageTime }}</span>
                     </div>
                 </div>
 
-                <!-- Message Actions (for sender's messages) -->
+                <!-- إجراءات الرسالة (لرسائل المرسل) -->
                 @if($isSender && $message->message !== 'like')
                     <div class="message-actions">
                         <div class="dropdown">
@@ -74,17 +73,17 @@
                                     data-bs-toggle="dropdown">
                                 <i class="bi bi-three-dots-vertical"></i>
                             </button>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu dropdown-menu-end" dir="rtl">
                                 <li>
                                     <a class="dropdown-item" href="#"
                                        wire:click.prevent="$dispatch('edit-message', { id: {{ $message->id }} })">
-                                        <i class="bi bi-pencil me-2"></i>Edit
+                                        <i class="bi bi-pencil ms-2"></i>تعديل
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item text-danger" href="#"
-                                       onclick="confirm('Are you sure?') && Livewire.dispatch('deleteMessage', { messageId: {{ $message->id }} })">
-                                        <i class="bi bi-trash me-2"></i>Delete
+                                       onclick="confirm('هل أنت متأكد؟') && Livewire.dispatch('deleteMessage', { messageId: {{ $message->id }} })">
+                                        <i class="bi bi-trash ms-2"></i>حذف
                                     </a>
                                 </li>
                             </ul>
@@ -94,53 +93,42 @@
             </div>
         @endforeach
 
-        <!-- Load More Indicator -->
+        <!-- مؤشر تحميل المزيد -->
         @if($hasMoreMessages)
             <div class="load-more-indicator" id="load-more-trigger">
                 <button wire:click="loadMore" class="btn btn-sm btn-outline-success"
                     {{ $loading ? 'disabled' : '' }}>
                     @if($loading)
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        Loading...
+                        <span class="spinner-border spinner-border-sm ms-2"></span>
+                        جاري التحميل...
                     @else
-                        <i class="bi bi-arrow-clockwise me-1"></i>
-                        Load Older Messages
+                        <i class="bi bi-arrow-clockwise ms-1"></i>
+                        تحميل رسائل أقدم
                     @endif
                 </button>
             </div>
         @endif
     </div>
 
-    <!-- Typing Indicator -->
+    <!-- مؤشر الكتابة -->
     <div class="typing-indicator" style="display: none;">
         <div class="typing-dots">
             <span></span>
             <span></span>
             <span></span>
         </div>
-        <span class="typing-text">Client is typing...</span>
+        <span class="typing-text">العميل يكتب الآن...</span>
     </div>
 
-    <!-- Message Input -->
+    <!-- إدخال الرسالة -->
     <div class="message-input-container">
         <div class="input-group">
-            <!-- Attachment Button -->
-            <button class="btn btn-outline-success" type="button" id="attach-file-btn">
-                <i class="bi bi-paperclip"></i>
+            <!-- زر الإعجاب -->
+            <button wire:click="sendLike" class="btn btn-outline-success" type="button">
+                <i class="bi bi-heart"></i>
             </button>
-{{--            <input type="file" id="file-input" accept="image/*" style="display: none;" wire:model="attachment">--}}
 
-            <!-- Main Input -->
-            <input type="text"
-                   wire:model="message"
-                   wire:keydown.enter.prevent="sendMessage"
-                   class="form-control border-success"
-                   placeholder="Type your message about the invoice..."
-                   aria-label="Message"
-                   id="message-input"
-            >
-
-            <!-- Send Button -->
+            <!-- زر الإرسال -->
             <button wire:click="sendMessage"
                     wire:keydown.enter.prevent
                     class="btn btn-success"
@@ -149,21 +137,31 @@
                 <i class="bi bi-send"></i>
             </button>
 
-            <!-- Like Button -->
-            <button wire:click="sendLike" class="btn btn-outline-success" type="button">
-                <i class="bi bi-heart"></i>
+            <!-- حقل الإدخال الرئيسي -->
+            <input type="text"
+                   wire:model="message"
+                   wire:keydown.enter.prevent="sendMessage"
+                   class="form-control border-success"
+                   placeholder="اكتب رسالتك حول الفاتورة..."
+                   aria-label="الرسالة"
+                   id="message-input"
+            >
+
+            <!-- زر المرفقات -->
+            <button class="btn btn-outline-success" type="button" id="attach-file-btn">
+                <i class="bi bi-paperclip"></i>
             </button>
         </div>
 
-        <!-- Quick Suggestions -->
+        <!-- الاقتراحات السريعة -->
         <div class="quick-suggestions mt-2">
-            <small class="text-muted me-2">Quick reply:</small>
+            <small class="text-muted ms-2">رد سريع:</small>
             @php
                 $suggestions = [
-                    'Payment received, thank you!',
-                    'Can you send the invoice again?',
-                    'Please update the due date',
-                    'When will the payment be processed?'
+                    'تم استلام الدفع، شكراً لك!',
+                    'هل يمكنك إرسال الفاتورة مرة أخرى؟',
+                    'الرجاء تحديث تاريخ الاستحقاق',
+                    'متى سيتم معالجة الدفع؟'
                 ];
             @endphp
 
@@ -175,35 +173,35 @@
             @endforeach
         </div>
 
-        <!-- Mentions Suggestions List -->
+        <!-- قائمة اقتراحات الإشارات -->
         <div id="mention-suggestions" class="mention-suggestions" style="display:none;"></div>
     </div>
 
-    <!-- Image Preview Modal (WhatsApp Style) -->
+    <!-- نافذة معاينة الصورة (نمط واتساب) -->
     <div class="image-preview-modal" id="image-preview-modal" style="display: none;">
         <div class="preview-overlay"></div>
         <div class="preview-container">
             <div class="preview-header">
+                <h6 class="mb-0">معاينة الصورة</h6>
                 <button class="preview-close-btn" id="close-preview">
                     <i class="bi bi-x-lg"></i>
                 </button>
-                <h6 class="mb-0">Preview Image</h6>
             </div>
 
             <div class="preview-body">
-                <img id="preview-image" src="" alt="Preview">
+                <img id="preview-image" src="" alt="معاينة">
             </div>
 
             <div class="preview-footer">
+                <button class="btn btn-success send-image-btn" id="send-image-btn">
+                    <i class="bi bi-send-fill ms-2"></i>إرسال
+                </button>
                 <div class="caption-input-group">
                     <input type="text"
                            class="form-control caption-input"
                            id="image-caption"
-                           placeholder="Add a caption...">
+                           placeholder="أضف وصفاً...">
                 </div>
-                <button class="btn btn-success send-image-btn" id="send-image-btn">
-                    <i class="bi bi-send-fill me-2"></i>Send
-                </button>
             </div>
         </div>
     </div>
@@ -251,11 +249,11 @@
         }
 
         .message-wrapper.sent {
-            flex-direction: row-reverse;
+            flex-direction: row;
         }
 
         .message-wrapper.received {
-            flex-direction: row;
+            flex-direction: row-reverse;
         }
 
         .message-bubble {
@@ -269,16 +267,16 @@
         .sent-bubble {
             background: linear-gradient(135deg, #198754, #20c997);
             color: white;
-            border-bottom-right-radius: 4px;
-            margin-left: 10px;
+            border-bottom-left-radius: 4px;
+            margin-right: 10px;
         }
 
         .received-bubble {
             background: white;
             color: #212529;
-            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
             border: 1px solid #e9ecef;
-            margin-right: 10px;
+            margin-left: 10px;
         }
 
         .like-message {
@@ -307,6 +305,7 @@
         .message-content {
             word-break: break-word;
             line-height: 1.5;
+            text-align: right;
         }
 
         .image-message {
@@ -330,6 +329,7 @@
             margin-top: 8px;
             font-size: 0.9rem;
             word-break: break-word;
+            text-align: right;
         }
 
         .sent-bubble .image-caption {
@@ -343,15 +343,24 @@
         .edited-text {
             font-size: 0.75rem;
             opacity: 0.7;
-            margin-left: 5px;
+            margin-right: 5px;
         }
 
         .message-footer {
             display: flex;
-            justify-content: flex-end;
+            justify-content: flex-start;
             align-items: center;
             margin-top: 4px;
             gap: 5px;
+        }
+
+        .sent-bubble .message-footer {
+            justify-content: flex-start;
+        }
+
+        .received-bubble .message-footer {
+            justify-content: flex-start;
+            flex-direction: row-reverse;
         }
 
         .message-time {
@@ -380,6 +389,10 @@
             opacity: 1;
         }
 
+        .dropdown-menu {
+            text-align: right;
+        }
+
         .load-more-indicator {
             text-align: center;
             padding: 10px 0;
@@ -403,6 +416,7 @@
             border: 1px solid #e9ecef;
             max-width: fit-content;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            flex-direction: row-reverse;
         }
 
         .typing-dots {
@@ -430,7 +444,7 @@
             background: white;
             padding: 15px;
             border-top: 1px solid #e9ecef;
-            border-radius: 0 0 12px 12px;
+            border-radius: 12px 12px 0 0;
             flex-shrink: 0;
         }
 
@@ -444,6 +458,7 @@
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 10px;
+            flex-direction: row-reverse;
         }
 
         .quick-suggestions button {
@@ -479,7 +494,7 @@
             }
         }
 
-        /* Scrollbar styling */
+        /* تنسيق شريط التمرير */
         .messages-list::-webkit-scrollbar {
             width: 6px;
         }
@@ -498,7 +513,7 @@
             background: #a1a1a1;
         }
 
-        /* Responsive */
+        /* تجاوب */
         @media (max-width: 768px) {
             .message-bubble {
                 max-width: 85%;
@@ -510,12 +525,12 @@
             }
 
             .quick-suggestions button {
-                text-align: left;
+                text-align: right;
                 white-space: normal;
             }
         }
 
-        /* Image Preview Modal Styles (WhatsApp Style) */
+        /* أنماط نافذة معاينة الصورة (نمط واتساب) */
         .image-preview-modal {
             position: fixed;
             top: 0;
@@ -570,6 +585,7 @@
             background: #2a2a2a;
             border-radius: 12px 12px 0 0;
             border-bottom: 1px solid #3a3a3a;
+            flex-direction: row-reverse;
         }
 
         .preview-header h6 {
@@ -621,6 +637,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-direction: row-reverse;
         }
 
         .caption-input-group {
@@ -634,6 +651,7 @@
             border-radius: 25px;
             padding: 10px 20px;
             font-size: 0.95rem;
+            text-align: right;
         }
 
         .caption-input:focus {
@@ -645,6 +663,7 @@
 
         .caption-input::placeholder {
             color: #888;
+            text-align: right;
         }
 
         .send-image-btn {
@@ -666,7 +685,7 @@
             transform: translateY(0);
         }
 
-        /* Attachment button styling */
+        /* تنسيق زر المرفقات */
         #attach-file-btn {
             border-top-left-radius: 25px;
             border-bottom-left-radius: 25px;
@@ -674,21 +693,24 @@
 
         #message-input {
             border-radius: 0;
+            text-align: right;
         }
 
         .message-input-container .btn-success {
             border-radius: 0;
         }
 
-        .message-input-container .btn-outline-success:last-child {
+        .message-input-container .btn-outline-success:first-child {
             border-top-right-radius: 25px;
             border-bottom-right-radius: 25px;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
         }
 
         .mention-suggestions {
             position: absolute;
             bottom: 100%;
-            left: 15px;
+            right: 15px;
             background: white;
             border: 1px solid #e9ecef;
             border-radius: 8px;
@@ -697,6 +719,7 @@
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            text-align: right;
         }
 
         .mention-item {
@@ -707,6 +730,7 @@
             align-items: center;
             gap: 10px;
             transition: background 0.2s;
+            flex-direction: row-reverse;
         }
 
         .mention-item:last-child {
@@ -740,32 +764,32 @@
             let isLoading = false;
             let scrollPositionBeforeLoad = 0;
 
-            // Auto-scroll to bottom on initial load and new messages
+            // التمرير التلقائي للأسفل عند التحميل الأولي والرسائل الجديدة
             function scrollToBottom() {
                 if (messagesList) {
                     messagesList.scrollTop = messagesList.scrollHeight;
                 }
             }
 
-            // Initial scroll to bottom
+            // التمرير الأولي للأسفل
             scrollToBottom();
 
-            // Listen for Livewire events
+            // الاستماع لأحداث Livewire
             Livewire.on('scroll-bottom', scrollToBottom);
 
-            // Focus input on load
+            // التركيز على حقل الإدخال عند التحميل
             if (messageInput) {
                 messageInput.focus();
             }
 
-            // Auto-scroll after Livewire updates (when new messages are added)
+            // التمرير التلقائي بعد تحديثات Livewire (عند إضافة رسائل جديدة)
             Livewire.hook('morph.updated', ({ el, component }) => {
                 if (el.id === 'messages-list') {
                     scrollToBottom();
                 }
             });
 
-            // Handle sending message with Enter key
+            // التعامل مع إرسال الرسالة بمفتاح Enter
             if (messageInput) {
                 messageInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -777,10 +801,10 @@
                 });
             }
 
-            // Infinite scroll for loading more messages
+            // التمرير اللانهائي لتحميل المزيد من الرسائل
             if (messagesList) {
                 messagesList.addEventListener('scroll', function() {
-                    // Load more messages when scrolling to top
+                    // تحميل المزيد من الرسائل عند التمرير للأعلى
                     if (messagesList.scrollTop < 100 && !isLoading) {
                         const loadMoreTrigger = document.getElementById('load-more-trigger');
                         if (loadMoreTrigger) {
@@ -792,19 +816,17 @@
                 });
             }
 
-            // Reset loading state after messages are loaded
+            // إعادة تعيين حالة التحميل بعد تحميل الرسائل
             Livewire.on('messages-loaded', () => {
                 isLoading = false;
-                // Maintain scroll position after loading more messages
+                // الحفاظ على موضع التمرير بعد تحميل المزيد من الرسائل
                 if (messagesList && scrollPositionBeforeLoad > 0) {
                     const newHeight = messagesList.scrollHeight;
                     messagesList.scrollTop = newHeight - scrollPositionBeforeLoad;
                 }
             });
 
-
-
-            // Typing simulation
+            // محاكاة الكتابة
             let typingTimeout;
             if (messageInput) {
                 messageInput.addEventListener('input', function() {
@@ -823,14 +845,14 @@
                 });
             }
 
-            // Clear message input after sending
+            // مسح حقل الإدخال بعد الإرسال
             Livewire.on('message-sent', () => {
                 if (messageInput) {
                     messageInput.focus();
                 }
             });
 
-            // ========== Screenshot Paste & File Attachment Functionality ==========
+            // ========== وظيفية لصق الصور والمرفقات ==========
 
             let currentImageFile = null;
             const previewModal = document.getElementById('image-preview-modal');
@@ -841,7 +863,7 @@
             const attachFileBtn = document.getElementById('attach-file-btn');
             const fileInput = document.getElementById('file-input');
 
-            // Handle paste event for screenshots
+            // التعامل مع حدث اللصق للصور
             document.addEventListener('paste', function(e) {
                 const items = e.clipboardData?.items;
                 if (!items) return;
@@ -855,9 +877,9 @@
                 }
             });
 
-            // ========== Mentions Logic ==========
+            // ========== منطق الإشارات ==========
             const mentionList = document.getElementById('mention-suggestions');
-            // Safely get participants
+            // الحصول على المشاركين بأمان
             const participants = @json($participants ?? []);
 
             if (messageInput && mentionList) {
@@ -865,29 +887,28 @@
                     const val = messageInput.value;
                     const cursor = messageInput.selectionStart;
 
-                    // Look for @ symbol before cursor
+                    // البحث عن رمز @ قبل المؤشر
                     const lastAt = val.lastIndexOf('@', cursor - 1);
 
                     if (lastAt !== -1) {
                         const query = val.substring(lastAt + 1, cursor);
-                        // Only search if query doesn't contain spaces (simple firstname/lastname check)
-                        // allowing space for "Name Surname" might be tricky regex, sticking to simple first
+                        // البحث فقط إذا لم يحتوي الاستعلام على مسافات
                         if (!/\s/.test(query) || (query.split(' ').length < 3)) {
-                             const matches = participants.filter(p => {
-                                 const name = p.name || '';
-                                 return name.toLowerCase().includes(query.toLowerCase());
-                             });
+                            const matches = participants.filter(p => {
+                                const name = p.name || '';
+                                return name.toLowerCase().includes(query.toLowerCase());
+                            });
 
-                             if (matches.length > 0) {
-                                 showMentions(matches, lastAt, cursor);
-                                 return;
-                             }
+                            if (matches.length > 0) {
+                                showMentions(matches, lastAt, cursor);
+                                return;
+                            }
                         }
                     }
                     hideMentions();
                 });
 
-                // Hide on click outside
+                // الإخفاء عند النقر خارج
                 document.addEventListener('click', function(e) {
                     if (!mentionList.contains(e.target) && e.target !== messageInput) {
                         hideMentions();
@@ -904,7 +925,7 @@
                         const div = document.createElement('div');
                         div.className = 'mention-item';
 
-                        // Avatar placeholder
+                        // صورة رمزية مؤقتة
                         const avatar = document.createElement('div');
                         avatar.className = 'mention-avatar';
                         avatar.innerText = u.name.charAt(0).toUpperCase();
@@ -916,26 +937,26 @@
                         div.appendChild(nameSpan);
 
                         div.onclick = (e) => {
-                             e.preventDefault();
-                             e.stopPropagation();
-                             const val = messageInput.value;
-                             const before = val.substring(0, start);
-                             const after = val.substring(end);
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const val = messageInput.value;
+                            const before = val.substring(0, start);
+                            const after = val.substring(end);
 
-                             // Insert name with "@"
-                             const newValue = before + '@' + u.name + ' ' + after;
+                            // إدراج الاسم مع @
+                            const newValue = before + '@' + u.name + ' ' + after;
 
-                             messageInput.value = newValue;
+                            messageInput.value = newValue;
 
-                             // Trigger Livewire update
-                             messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            // تشغيل تحديث Livewire
+                            messageInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-                             hideMentions();
-                             messageInput.focus();
+                            hideMentions();
+                            messageInput.focus();
 
-                             // Move cursor to end of inserted name
-                             // const newCursorPos = start + u.name.length + 2; // +2 for @ and space
-                             // messageInput.setSelectionRange(newCursorPos, newCursorPos);
+                            // نقل المؤشر لنهاية الاسم المُدخل
+                            // const newCursorPos = start + u.name.length + 2; // +2 لـ @ والمسافة
+                            // messageInput.setSelectionRange(newCursorPos, newCursorPos);
                         };
                         mentionList.appendChild(div);
                     });
@@ -943,9 +964,7 @@
                 }
             }
 
-
-
-            // Handle file input change
+            // التعامل مع تغيير ملف الإدخال
             if (attachFileBtn && fileInput) {
                 attachFileBtn.addEventListener('click', function() {
                     fileInput.click();
@@ -956,12 +975,12 @@
                     if (file && file.type.startsWith('image/')) {
                         showImagePreview(file);
                     }
-                    // Reset file input
+                    // إعادة تعيين ملف الإدخال
                     fileInput.value = '';
                 });
             }
 
-            // Show image preview modal
+            // عرض معاينة الصورة
             function showImagePreview(file) {
                 currentImageFile = file;
                 const reader = new FileReader();
@@ -970,7 +989,7 @@
                     previewImage.src = e.target.result;
                     previewModal.style.display = 'flex';
 
-                    // Focus on caption input
+                    // التركيز على حقل الوصف
                     setTimeout(() => {
                         if (imageCaption) {
                             imageCaption.focus();
@@ -981,14 +1000,14 @@
                 reader.readAsDataURL(file);
             }
 
-            // Close preview modal
+            // إغلاق نافذة المعاينة
             if (closePreviewBtn) {
                 closePreviewBtn.addEventListener('click', function() {
                     closeImagePreview();
                 });
             }
 
-            // Close on overlay click
+            // الإغلاق عند النقر على الخلفية
             if (previewModal) {
                 previewModal.addEventListener('click', function(e) {
                     if (e.target === previewModal || e.target.classList.contains('preview-overlay')) {
@@ -997,7 +1016,7 @@
                 });
             }
 
-            // Close on Escape key
+            // الإغلاق بمفتاح Escape
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && previewModal.style.display === 'flex') {
                     closeImagePreview();
@@ -1011,41 +1030,41 @@
                 currentImageFile = null;
             }
 
-            // Send image with caption
+            // إرسال الصورة مع الوصف
             if (sendImageBtn) {
                 sendImageBtn.addEventListener('click', function() {
                     if (!currentImageFile) return;
 
                     const caption = imageCaption.value.trim();
 
-                    // Show loading state
+                    // عرض حالة التحميل
                     sendImageBtn.disabled = true;
-                    sendImageBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+                    sendImageBtn.innerHTML = '<span class="spinner-border spinner-border-sm ms-2"></span>جاري الرفع...';
 
-                    // Update message with caption
+                    // تحديث الرسالة مع الوصف
                     if(caption) {
-                        @this.set('message', caption);
+                    @this.set('message', caption);
                     }
 
-                    // Upload file using Livewire
-                    @this.upload('attachment', currentImageFile, (uploadedFilename) => {
-                        // Success: Send message
-                        sendImageBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
-                        @this.sendMessage().then(() => {
-                             closeImagePreview();
-                             // Reset button
-                             sendImageBtn.disabled = false;
-                             sendImageBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
-                        });
-                    }, (error) => {
-                        // Error
-                        alert('Error upload image');
-                        sendImageBtn.disabled = false;
-                        sendImageBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
-                    });
+                    // رفع الملف باستخدام Livewire
+                @this.upload('attachment', currentImageFile, (uploadedFilename) => {
+                    // النجاح: إرسال الرسالة
+                    sendImageBtn.innerHTML = '<span class="spinner-border spinner-border-sm ms-2"></span>جاري الإرسال...';
+                @this.sendMessage().then(() => {
+                    closeImagePreview();
+                    // إعادة تعيين الزر
+                    sendImageBtn.disabled = false;
+                    sendImageBtn.innerHTML = '<i class="bi bi-send-fill ms-2"></i>إرسال';
+                });
+                }, (error) => {
+                    // خطأ
+                    alert('خطأ في رفع الصورة');
+                    sendImageBtn.disabled = false;
+                    sendImageBtn.innerHTML = '<i class="bi bi-send-fill ms-2"></i>إرسال';
+                });
                 });
 
-                // Send on Enter key in caption input
+                // إرسال بمفتاح Enter في حقل الوصف
                 if (imageCaption) {
                     imageCaption.addEventListener('keydown', function(e) {
                         if (e.key === 'Enter' && !e.shiftKey) {

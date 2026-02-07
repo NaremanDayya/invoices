@@ -32,6 +32,8 @@ class Invoice extends Model
         'total_users',
         'users_days',
         'work_days',
+        'employees_count',
+        'work_days_count',
         'daily_rate',
         'base_price',
         'tax_rate',

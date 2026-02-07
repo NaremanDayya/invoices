@@ -5,12 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Notifications\MessageSent;
+use App\Services\InvoiceMessageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller
 {
+    protected $invoiceMessageService;
+
+    public function __construct(InvoiceMessageService $invoiceMessageService)
+    {
+        $this->invoiceMessageService = $invoiceMessageService;
+    }
+
     public function sendImage(Request $request)
     {
         $request->validate([
@@ -35,7 +43,8 @@ class ChatController extends Controller
                 'sender_id' => Auth::id(),
                 'receiver_id' => $conversation->getReceiver()->id,
                 'message' => $messageText,
-                'image_path' => $imagePath, // You'll need to add this column to messages table
+                'message_type' => 'image',
+                'image_path' => $imagePath,
             ]);
 
             // Update conversation timestamp
@@ -44,12 +53,14 @@ class ChatController extends Controller
 
             // Send notification
             $receiver = $conversation->getReceiver();
-            $receiver->notify(new MessageSent(
-                Auth::user(),
-                $message,
-                $conversation,
-                $receiver->id
-            ));
+            if ($receiver) {
+                $receiver->notify(new MessageSent(
+                    Auth::user(),
+                    $message,
+                    $conversation,
+                    $receiver->id
+                ));
+            }
 
             return response()->json([
                 'success' => true,
@@ -69,7 +80,12 @@ class ChatController extends Controller
 
     public function unreadConversationsCount()
     {
-        // Add your unread count logic here
-        return response()->json(['count' => 0]);
+        $count = $this->invoiceMessageService->getUnreadCount();
+        
+        return response()->json([
+            'count' => $count,
+            'success' => true
+        ]);
     }
 }
+

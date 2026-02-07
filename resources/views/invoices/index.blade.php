@@ -12,6 +12,32 @@
             gap: 20px;
             margin-bottom: 30px;
         }
+        .service-detail-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 6px 4px;
+        }
+
+        .service-detail-name {
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-bottom: 2px;
+            white-space: nowrap;
+        }
+
+        .service-detail-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #111827;
+            line-height: 1.1;
+        }
+
+        .service-detail-sub {
+            font-size: 0.7rem;
+            color: #9ca3af;
+        }
+
         .stat-mini-card {
             background: white;
             border-radius: 16px;
@@ -233,6 +259,7 @@
                         <th>رقم الفاتورة</th>
                         <th>العميل</th>
                         <th>الخدمة</th>
+                        <th>تفاصيل الخدمة</th>
                         <th>تاريخ الإصدار</th>
                         <th>المبلغ</th>
                         <th>الضريبة</th>
@@ -275,20 +302,62 @@
                                 <span class="phone text-muted" dir="ltr">{{ $invoice->client->phone ?? '' }}</span>
                             </div>
                         </td>
-                        <td>
-                            @if(isset($invoice->service_details_data) && is_array($invoice->service_details_data) && count($invoice->service_details_data) > 0)
-                                <span class="badge bg-light text-dark rounded-pill px-3" data-bs-toggle="tooltip" data-bs-html="true" title="
-                                    @foreach($invoice->service_details_data as $detail)
-                                        <strong>{{ $detail['label'] ?? '' }}:</strong> {{ $detail['value'] ?? '' }}<br>
-                                    @endforeach
-                                ">
-                                    {{ $invoice->service->name ?? '—' }}
-                                    <i class="bi bi-info-circle-fill ms-1"></i>
-                                </span>
-                            @else
-                                <span class="badge bg-light text-dark rounded-pill px-3">{{ $invoice->service->name ?? '—' }}</span>
-                            @endif
+                        <td class="align-middle">
+                    <span class="fw-semibold text-dark">
+                        {{ $invoice->service->name ?? '—' }}
+                    </span>
                         </td>
+                        <td class="align-middle">
+
+                            @php
+                                $details = collect($invoice->service_details_data ?? [])
+                                    ->filter(fn ($d) => !empty($d['name']));
+                            @endphp
+
+                            @if($details->count())
+
+                                <div class="d-grid gap-1"
+                                     style="grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));">
+
+                                    @foreach($details as $detail)
+
+                                        @php
+                                            $cleanName = trim(str_replace('عدد', '', $detail['name']));
+                                        @endphp
+
+                                        <div class="service-detail-card text-center">
+
+                                            <!-- Detail Name -->
+                                            <div class="service-detail-name">
+                                                {{ $cleanName }}
+                                            </div>
+
+                                            <!-- Detail Value -->
+                                            @if(($detail['has_work_days'] ?? 0) == 1)
+                                                <div class="service-detail-value">
+                                                    {{ $detail['count'] ?? 0 }}
+                                                </div>
+                                                <div class="service-detail-sub">
+                                                    × {{ $detail['days'] ?? 0 }} يوم
+                                                </div>
+                                            @else
+                                                <div class="service-detail-value">
+                                                    {{ $detail['value'] ?? '—' }}
+                                                </div>
+                                            @endif
+
+                                        </div>
+
+                                    @endforeach
+
+                                </div>
+
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+
+                        </td>
+
                         <td>
                             <div class="small">{{ isset($invoice->generation_date) ? $invoice->generation_date->format('Y-m-d') : '—' }}</div>
                         </td>

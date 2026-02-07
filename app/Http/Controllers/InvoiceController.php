@@ -59,8 +59,16 @@ class InvoiceController extends Controller
         $clients = Client::all();
         $services = Service::all();
         $invoiceStatuses = \App\Models\InvoiceStatus::active()->ordered()->get();
-
-        return view('invoices.index', compact('invoices', 'stats', 'clients', 'services', 'invoiceStatuses'));
+        $serviceDetailColumns = collect($invoices)
+            ->pluck('service_details_data')
+            ->filter()
+            ->flatMap(function ($details) {
+                return collect($details)->pluck('name');
+            })
+            ->filter()
+            ->unique()
+            ->values();
+        return view('invoices.index', compact('invoices', 'stats', 'clients', 'services', 'invoiceStatuses','serviceDetailColumns'));
     }
 
     public function create()
@@ -98,6 +106,8 @@ class InvoiceController extends Controller
         // Calculate totals from service details
         $totalWorkforce = 0;
         $totalWorkDays = 0;
+        $totalEmployeesCount = 0;
+        $totalWorkDaysCount = 0;
 
         foreach ($serviceDetails as $detailId => $detailData) {
             if (isset($detailData['has_work_days']) && $detailData['has_work_days'] == 1) {
@@ -106,6 +116,10 @@ class InvoiceController extends Controller
 
                 $totalWorkforce += $count;
                 $totalWorkDays += ($count * $days);
+
+                // Store aggregated counts for payment validation
+                $totalEmployeesCount += $count;
+                $totalWorkDaysCount += $days;
             }
         }
 
@@ -137,6 +151,8 @@ class InvoiceController extends Controller
             'users_days' => 0,
 
             'work_days' => $totalWorkDays,
+            'employees_count' => $totalEmployeesCount,
+            'work_days_count' => $totalWorkDaysCount,
             'daily_rate' => 0,
 
             'base_price' => $subtotal,
@@ -216,19 +232,17 @@ class InvoiceController extends Controller
             'number' => 'required|string|unique:invoices,number,' . $invoice->id,
             'generation_date' => 'required|date',
             'last_generation_date' => 'required|date',
-            'total_workers' => 'nullable|integer|min:0',
-            'total_supervisors' => 'nullable|integer|min:0',
-            'total_managers' => 'nullable|integer|min:0',
-            'total_users' => 'nullable|integer|min:0',
-            'workers_days' => 'nullable|integer|min:0',
-            'supervisors_days' => 'nullable|integer|min:0',
-            'managers_days' => 'nullable|integer|min:0',
-            'users_days' => 'nullable|integer|min:0',
             'base_price' => 'required|numeric|min:0',
             'tax_rate' => 'required|numeric|min:0|max:100',
             'invoice_status' => 'required|string',
             'custom_status' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'service_details' => 'nullable|array',
+            'service_details.*.count' => 'nullable|integer|min:0',
+            'service_details.*.days' => 'nullable|integer|min:0',
+            'service_details.*.value' => 'nullable|string',
+            'service_details.*.name' => 'nullable|string',
+            'service_details.*.has_work_days' => 'nullable',
         ]);
 
         $finalInvoiceStatus = $validated['invoice_status'];
@@ -236,49 +250,58 @@ class InvoiceController extends Controller
             $finalInvoiceStatus = $validated['custom_status'];
         }
 
-        $totalWorkforce =
-            ($validated['total_workers'] ?? 0) +
-            ($validated['total_supervisors'] ?? 0) +
-            ($validated['total_managers'] ?? 0) +
-            ($validated['total_users'] ?? 0);
+        // Get service details from request
+        $serviceDetails = $request->input('service_details', []);
 
-        $workersDays = $validated['workers_days'] ?? $validated['work_days'];
-        $supervisorsDays = $validated['supervisors_days'] ?? $validated['work_days'];
-        $managersDays = $validated['managers_days'] ?? $validated['work_days'];
-        $usersDays = $validated['users_days'] ?? $validated['work_days'];
+        // Calculate totals from service details
+        $totalWorkforce = 0;
+        $totalWorkDays = 0;
+        $totalEmployeesCount = 0;
+        $totalWorkDaysCount = 0;
 
-        $totalManDays =
-            ($validated['total_workers'] * $workersDays) +
-            ($validated['total_supervisors'] * $supervisorsDays) +
-            ($validated['total_managers'] * $managersDays) +
-            ($validated['total_users'] * $usersDays);
+        foreach ($serviceDetails as $detailId => $detailData) {
+            if (isset($detailData['has_work_days']) && $detailData['has_work_days'] == 1) {
+                $count = (int)($detailData['count'] ?? 0);
+                $days = (int)($detailData['days'] ?? 0);
 
-        $subtotal = $totalManDays * $validated['daily_rate'];
+                $totalWorkforce += $count;
+                $totalWorkDays += ($count * $days);
+
+                // Store aggregated counts for payment validation
+                $totalEmployeesCount += $count;
+                $totalWorkDaysCount += $days;
+            }
+        }
+
+        // Use the base_price directly from the form
+        $subtotal = $validated['base_price'];
         $taxAmount = ($subtotal * $validated['tax_rate']) / 100;
-        $totalAmount = $subtotal + $taxAmount + ($validated['amount_difference'] ?? 0);
+        $totalAmount = $subtotal + $taxAmount;
 
         $invoice->update([
             'number' => $validated['number'],
             'client_id' => $validated['client_id'],
             'service_id' => $validated['service_id'],
+            'service_details_data' => $serviceDetails,
             'generation_date' => $validated['generation_date'],
             'last_generation_date' => $validated['last_generation_date'],
             'due_date' => $validated['last_generation_date'],
-            'total_workers' => $validated['total_workers'],
-            'total_supervisors' => $validated['total_supervisors'],
-            'total_managers' => $validated['total_managers'],
-            'total_users' => $validated['total_users'],
-            'workers_days' => $workersDays,
-            'supervisors_days' => $supervisorsDays,
-            'managers_days' => $managersDays,
-            'users_days' => $usersDays,
-            'work_days' => $totalManDays,
+            'total_workers' => $totalWorkforce,
+            'total_supervisors' => 0,
+            'total_managers' => 0,
+            'total_users' => 0,
+            'workers_days' => 0,
+            'supervisors_days' => 0,
+            'managers_days' => 0,
+            'users_days' => 0,
+            'work_days' => $totalWorkDays,
+            'employees_count' => $totalEmployeesCount,
+            'work_days_count' => $totalWorkDaysCount,
             'daily_rate' => 0,
             'base_price' => $subtotal,
             'tax_rate' => $validated['tax_rate'],
             'tax_amount' => $taxAmount,
             'total_price' => $totalAmount,
-            'amount_difference' => 0,
             'invoice_status' => $finalInvoiceStatus,
             'notes' => $validated['notes'] ?? null,
         ]);

@@ -80,8 +80,8 @@ class ServiceController extends Controller
             'service_type' => 'required|string|max:255',
             'service_details' => 'nullable|array',
             'details' => 'nullable|array',
-            'details.*.name' => 'required|string|max:255',
-            'details.*.has_work_days' => 'required|boolean',
+            'details.*.name' => 'required_with:details|string|max:255',
+            'details.*.has_work_days' => 'required_with:details',
             'details.*.work_days' => 'nullable|integer|min:1',
         ]);
 
@@ -94,15 +94,21 @@ class ServiceController extends Controller
                 'service_details' => $validated['service_details'] ?? null,
             ]);
 
+            // Delete all existing details
             $service->serviceDetails()->delete();
 
+            // Add new details (including both existing and newly added ones)
             if (isset($validated['details']) && is_array($validated['details'])) {
                 foreach ($validated['details'] as $detail) {
-                    $service->serviceDetails()->create([
-                        'name' => $detail['name'],
-                        'has_work_days' => $detail['has_work_days'],
-                        'work_days' => $detail['has_work_days'] ? ($detail['work_days'] ?? null) : null,
-                    ]);
+                    if (!empty($detail['name'])) {
+                        $hasWorkDays = isset($detail['has_work_days']) && ($detail['has_work_days'] == 1 || $detail['has_work_days'] === true);
+                        
+                        $service->serviceDetails()->create([
+                            'name' => $detail['name'],
+                            'has_work_days' => $hasWorkDays,
+                            'work_days' => $hasWorkDays ? ($detail['work_days'] ?? null) : null,
+                        ]);
+                    }
                 }
             }
 
@@ -110,7 +116,7 @@ class ServiceController extends Controller
             return redirect()->route('services.index')->with('success', 'تم تحديث الخدمة بنجاح');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'حدث خطأ أثناء تحديث الخدمة');
+            return back()->withInput()->with('error', 'حدث خطأ أثناء تحديث الخدمة: ' . $e->getMessage());
         }
     }
 

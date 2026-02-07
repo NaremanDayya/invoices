@@ -114,21 +114,32 @@ class PaymentsController extends Controller
             ]);
         }
 
-        // Validate employees count and work days against invoice limits
-        if (isset($validated['employees_count']) || isset($validated['work_days'])) {
+        // Validate employees count based on service details with has_work_days = true
+        if (isset($validated['employees_count'])) {
             $existingPayments = Payment::where('invoice_id', $invoice->id)
                 ->where('id', '!=', $request->payment_id ?? 0)
                 ->get();
-            
+
             $totalEmployees = $existingPayments->sum('employees_count') + ($validated['employees_count'] ?? 0);
-            $totalWorkDays = $existingPayments->sum('work_days') + ($validated['work_days'] ?? 0);
-            
-            if ($totalEmployees > $invoice->total_workforce) {
+
+            // Use employees_count from invoice (calculated from service details with has_work_days = true)
+            $maxEmployees = $invoice->employees_count ?? $invoice->total_workforce;
+
+            if ($totalEmployees > $maxEmployees) {
                 return back()->withInput()->withErrors([
-                    'employees_count' => 'إجمالي عدد الموظفين في الدفعات (' . $totalEmployees . ') يتجاوز عدد موظفي الفاتورة (' . $invoice->total_workforce . ')'
+                    'employees_count' => 'إجمالي عدد الموظفين في الدفعات (' . $totalEmployees . ') يتجاوز الحد المسموح (' . $maxEmployees . ') من تفاصيل الخدمة'
                 ]);
             }
-            
+        }
+
+        // Validate work days against invoice limits
+        if (isset($validated['work_days'])) {
+            $existingPayments = Payment::where('invoice_id', $invoice->id)
+                ->where('id', '!=', $request->payment_id ?? 0)
+                ->get();
+
+            $totalWorkDays = $existingPayments->sum('work_days') + ($validated['work_days'] ?? 0);
+
             if ($totalWorkDays > $invoice->work_days) {
                 return back()->withInput()->withErrors([
                     'work_days' => 'إجمالي أيام العمل في الدفعات (' . $totalWorkDays . ') يتجاوز أيام عمل الفاتورة (' . $invoice->work_days . ')'
@@ -138,7 +149,14 @@ class PaymentsController extends Controller
 
         // Generate payment number: PAY-XXXX matching invoice number
         $invoiceNumber = str_replace('INV-', '', $invoice->number);
-        $validated['number'] = 'PAY-' . $invoiceNumber;
+
+        $paymentCount = $invoice->payments()->count();
+
+        $paymentNumber = $paymentCount > 0
+            ? 'PAY-' . $invoiceNumber . '-' . ($paymentCount + 1)
+            : 'PAY-' . $invoiceNumber;
+
+        $validated['number'] = $paymentNumber;
 
         // Calculate late days
         $paymentDate = \Carbon\Carbon::parse($validated['payment_date']);
@@ -150,7 +168,7 @@ class PaymentsController extends Controller
 
         if ($validated['status'] === 'completed') {
             $invoice->increment('paid_amount', $validated['amount']);
-            
+
             if ($invoice->paid_amount >= $invoice->total_price) {
                 $invoice->update([
                     'payment_status' => 'paid',
@@ -201,21 +219,32 @@ class PaymentsController extends Controller
         $newAmount = $validated['amount'];
         $newStatus = $validated['status'];
 
-        // Validate employees count and work days against invoice limits
-        if (isset($validated['employees_count']) || isset($validated['work_days'])) {
+        // Validate employees count based on service details with has_work_days = true
+        if (isset($validated['employees_count'])) {
             $existingPayments = Payment::where('invoice_id', $invoice->id)
                 ->where('id', '!=', $payment->id)
                 ->get();
-            
+
             $totalEmployees = $existingPayments->sum('employees_count') + ($validated['employees_count'] ?? 0);
-            $totalWorkDays = $existingPayments->sum('work_days') + ($validated['work_days'] ?? 0);
-            
-            if ($totalEmployees > $invoice->total_workforce) {
+
+            // Use employees_count from invoice (calculated from service details with has_work_days = true)
+            $maxEmployees = $invoice->employees_count ?? $invoice->total_workforce;
+
+            if ($totalEmployees > $maxEmployees) {
                 return back()->withInput()->withErrors([
-                    'employees_count' => 'إجمالي عدد الموظفين في الدفعات (' . $totalEmployees . ') يتجاوز عدد موظفي الفاتورة (' . $invoice->total_workforce . ')'
+                    'employees_count' => 'إجمالي عدد الموظفين في الدفعات (' . $totalEmployees . ') يتجاوز الحد المسموح (' . $maxEmployees . ') من تفاصيل الخدمة'
                 ]);
             }
-            
+        }
+
+        // Validate work days against invoice limits
+        if (isset($validated['work_days'])) {
+            $existingPayments = Payment::where('invoice_id', $invoice->id)
+                ->where('id', '!=', $payment->id)
+                ->get();
+
+            $totalWorkDays = $existingPayments->sum('work_days') + ($validated['work_days'] ?? 0);
+
             if ($totalWorkDays > $invoice->work_days) {
                 return back()->withInput()->withErrors([
                     'work_days' => 'إجمالي أيام العمل في الدفعات (' . $totalWorkDays . ') يتجاوز أيام عمل الفاتورة (' . $invoice->work_days . ')'
@@ -263,10 +292,10 @@ class PaymentsController extends Controller
     public function destroy(Payment $payment)
     {
         $invoice = $payment->invoice;
-        
+
         if ($payment->status === 'completed') {
             $invoice->decrement('paid_amount', $payment->amount);
-            
+
             if ($invoice->paid_amount >= $invoice->total_price) {
                 $invoice->update(['payment_status' => 'paid']);
             } elseif ($invoice->paid_amount > 0) {
@@ -275,7 +304,7 @@ class PaymentsController extends Controller
                 $invoice->update(['payment_status' => 'pending']);
             }
         }
-        
+
         $payment->delete();
         return redirect()->route('payments.index')
             ->with('success', 'تم حذف بيانات الدفع بنجاح');
@@ -292,20 +321,20 @@ class PaymentsController extends Controller
 
         $invoice = $payment->invoice;
         $availableAmount = $invoice->total_price - $invoice->paid_amount;
-        
+
         if ($payment->amount > $availableAmount) {
             return back()->with('error', 'المبلغ المدفوع أكبر من المبلغ المتبقي');
         }
 
         $payment->update(['status' => 'completed']);
         $invoice->increment('paid_amount', $payment->amount);
-        
+
         if ($invoice->paid_amount >= $invoice->total_price) {
             $invoice->update(['payment_status' => 'paid', 'payment_date' => $payment->payment_date]);
         } elseif ($invoice->paid_amount > 0) {
             $invoice->update(['payment_status' => 'late']);
         }
-        
+
         return back()->with('success', 'تم تأكيد الدفع بنجاح');
     }
 

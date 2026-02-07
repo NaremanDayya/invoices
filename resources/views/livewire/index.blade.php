@@ -1,3 +1,4 @@
+<div>
 <div class="invoices-chat-dashboard">
     <!-- Welcome Header -->
     <div class="welcome-header mb-4">
@@ -56,7 +57,7 @@
     </div>
 
 </div>
-
+</div>
 @push('styles')
     <style>
         .invoices-chat-dashboard {

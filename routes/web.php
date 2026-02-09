@@ -7,6 +7,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CreditNoteController;
 use App\Livewire\Index;
 use App\Livewire\Chat;
 
@@ -32,8 +33,11 @@ Route::resource('invoices', InvoiceController::class);
 Route::resource('payments', PaymentsController::class);
 Route::post('invoices/add-client', [InvoiceController::class, 'addClient'])->name('invoices.add-client');
 Route::post('invoices/add-service', [InvoiceController::class, 'addService'])->name('invoices.add-service');
-Route::post('/invoices/add-credit-note', [InvoiceController::class, 'addCreditNote'])
-    ->name('invoices.add-credit-note');
+
+// Credit Notes Routes
+Route::post('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
+Route::delete('/credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
+Route::get('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'getInvoiceCreditNotes'])->name('credit-notes.invoice');
 
 // Payment Additional Routes
 Route::post('/payments/{payment}/confirm', [PaymentsController::class, 'confirm'])->name('payments.confirm');

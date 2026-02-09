@@ -299,72 +299,19 @@
         </div>
     </div>
 
-    <!-- Credit Note Modal -->
-    <div class="modal fade" id="creditNoteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-file-earmark-plus me-2"></i>
-                        إضافة إشعار دائن
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="creditNoteForm" method="POST" action="{{ route('invoices.add-credit-note') }}">
-                    @csrf
-                    <div class="modal-body">
-                        <input type="hidden" name="invoice_id" id="invoice_id">
-                        
-                        <div class="alert alert-info">
-                            <div class="d-flex justify-content-between">
-                                <strong>رقم الفاتورة:</strong>
-                                <span id="invoice_number_display"></span>
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <strong>المبلغ الإجمالي:</strong>
-                                <span id="total_amount_display"></span> ر.س
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">مبلغ الإشعار الدائن <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control" name="credit_amount" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">نوع الإشعار الدائن <span class="text-danger">*</span></label>
-                            <select class="form-select" name="credit_note_type" required>
-                                <option value="">اختر النوع</option>
-                                <option value="credit_note">إشعار دائن (لنا)</option>
-                                <option value="indebted_poems">قصائد مديونة (للشركة)</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">سبب الإشعار الدائن <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="credit_reason" rows="3" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-warning">
-                            <i class="bi bi-save me-2"></i>حفظ
-                        </button>
-                    </div>
-                </form>
-            </div>
+    <!-- Credit Notes Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            @include('partials.credit-notes-history', ['invoice' => $invoice])
         </div>
     </div>
+
+    <!-- Credit Note Modal -->
+    @include('partials.credit-note-modal')
 @endsection
 
 @push('scripts')
 <script>
-function openCreditNoteModal(invoiceId, invoiceNumber, totalAmount) {
-    document.getElementById('invoice_id').value = invoiceId;
-    document.getElementById('invoice_number_display').textContent = invoiceNumber;
-    document.getElementById('total_amount_display').textContent = new Intl.NumberFormat('ar-SA').format(totalAmount);
-}
-
 function confirmDelete(invoiceId) {
     if (confirm('هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء.')) {
         const form = document.createElement('form');

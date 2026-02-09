@@ -12,9 +12,18 @@ class CreditNote extends Model
 
     protected $fillable = [
         'invoice_id',
+        'created_by',
+        'credit_note_number',
+        'type',
+        'previous_values',
+        'new_values',
+        'amount_difference',
+        'previous_total',
+        'new_total',
+        'reason',
+        'notes',
         'number',
         'amount',
-        'reason',
         'issue_date',
         'is_main',
         'description',
@@ -22,6 +31,11 @@ class CreditNote extends Model
     ];
 
     protected $casts = [
+        'previous_values' => 'array',
+        'new_values' => 'array',
+        'amount_difference' => 'decimal:2',
+        'previous_total' => 'decimal:2',
+        'new_total' => 'decimal:2',
         'amount' => 'decimal:2',
         'issue_date' => 'date',
         'is_main' => 'boolean',
@@ -34,6 +48,11 @@ class CreditNote extends Model
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**
@@ -55,6 +74,16 @@ class CreditNote extends Model
     public function scopeMain($query)
     {
         return $query->where('is_main', true);
+    }
+
+    public function scopeInternal($query)
+    {
+        return $query->where('type', 'internal');
+    }
+
+    public function scopeClient($query)
+    {
+        return $query->where('type', 'client');
     }
 
     /**

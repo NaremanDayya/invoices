@@ -430,7 +430,7 @@
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="{{ route('invoices.show', $invoice->id) }}" class="btn-action" title="عرض"><i class="bi bi-eye"></i></a>
                                 <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn-action" title="تعديل"><i class="bi bi-pencil"></i></a>
-                                <button type="button" class="btn-action text-warning" title="إشعار دائن" onclick="openCreditNoteModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }})"><i class="bi bi-file-earmark-text"></i></button>
+                                <button type="button" class="btn-action text-warning" title="إشعار دائن" onclick="openCreditNoteModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->base_price }}, {{ $invoice->tax_rate }}, {{ $invoice->employees_count ?? 0 }}, {{ $invoice->work_days_count ?? 0 }})"><i class="bi bi-file-earmark-text"></i></button>
                                 <button type="button" class="btn-action text-danger" title="حذف" onclick="confirmDelete({{ $invoice->id }})"><i class="bi bi-trash"></i></button>
                             </div>
                         </td>
@@ -473,67 +473,6 @@
         </div>
     </div>
 
-        <!-- Credit Note Modal -->
-    <div class="modal fade" id="creditNoteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-2xl rounded-2xl overflow-hidden">
-                <div class="modal-header bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4">
-                    <h5 class="modal-title fw-bold text-white flex items-center gap-2">
-                        <i class="bi bi-file-earmark-plus-fill"></i>
-                        إضافة إشعار دائن
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="creditNoteForm" method="POST" action="{{ route('invoices.add-credit-note') }}">
-                    @csrf
-                    <div class="modal-body p-4 bg-slate-50">
-                        <input type="hidden" name="invoice_id" id="invoice_id">
-
-                        <!-- Invoice Info -->
-                        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 mb-4 border border-emerald-200">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="fw-bold text-slate-700">رقم الفاتورة:</span>
-                                <span class="fw-bold text-emerald-700" id="invoice_number_display"></span>
-                            </div>
-                            <div class="flex justify-between items-center pt-2 border-t border-emerald-200">
-                                <span class="fw-bold text-slate-700">المبلغ الإجمالي:</span>
-                                <span class="fw-bold text-emerald-700" id="total_amount_display"></span> ﷼
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-600">مبلغ الإشعار الدائن <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" id="credit_amount" name="credit_amount" required placeholder="أدخل المبلغ">
-                                <small class="text-muted mt-1 d-block">أدخل المبلغ المراد إضافته كإشعار دائن</small>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-600">نوع الإشعار الدائن <span class="text-danger">*</span></label>
-                                <select class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" id="credit_note_type" name="credit_note_type" required>
-                                    <option value="">اختر النوع</option>
-                                    <option value="credit_note">إشعار دائن (لنا)</option>
-                                    <option value="indebted_poems">قصائد مديونة (للشركة)</option>
-                                </select>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-600">سبب الإشعار الدائن <span class="text-danger">*</span></label>
-                                <textarea class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" id="credit_reason" name="credit_reason" rows="3" required placeholder="أدخل سبب إضافة الإشعار الدائن..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-t border-slate-100 p-3 bg-white">
-                        <button type="button" class="btn btn-light rounded-xl px-4 font-bold text-slate-600" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl px-6 py-2 fw-bold shadow-lg shadow-amber-500/30 border-0 hover:scale-105 transition-transform">
-                            <i class="bi bi-save-fill me-2"></i>
-                            حفظ الإشعار الدائن
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
     <!-- Create Invoice Modal -->
 
     <div class="modal fade" id="createInvoiceModal" tabindex="-1" aria-hidden="true">
@@ -858,6 +797,9 @@
             {{ $invoices->links() }}
         </div>
     </div>
+
+    <!-- Include Credit Note Modal -->
+    @include('partials.credit-note-modal')
 @endsection
 @push('scripts')
     <script>
@@ -1707,15 +1649,6 @@
         // Initialize calculations
         if(workersInput) calculateTotalWorkforce();
         if(subtotalDisplay) calculateFinancials();
-
-        // Credit Note Modal Function
-        window.openCreditNoteModal = function(invoiceId, invoiceNumber, totalAmount) {
-            document.getElementById('invoice_id').value = invoiceId;
-            document.getElementById('invoice_number_display').textContent = invoiceNumber;
-            document.getElementById('total_amount_display').textContent = new Intl.NumberFormat('ar-SA').format(totalAmount);
-            const modal = new bootstrap.Modal(document.getElementById('creditNoteModal'));
-            modal.show();
-        };
 
         // Delete Confirmation Function
         window.confirmDelete = function(invoiceId) {

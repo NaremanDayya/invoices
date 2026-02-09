@@ -165,7 +165,6 @@ class InvoiceController extends Controller
             'difference_type' => null,
 
             'payment_status' => 'pending',
-            'payment_date' => null,
 
             'invoice_status' => $validated['invoice_status'],
             'notes' => $validated['notes'] ?? null,

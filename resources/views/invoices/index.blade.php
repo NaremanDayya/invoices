@@ -915,18 +915,23 @@
                     }
 
                     // Workforce calculation
-                    function calculateTotalWorkforce() {
-                        const workers = parseInt(document.getElementById('total_workers').value) || 0;
-                        const supervisors = parseInt(document.getElementById('total_supervisors').value) || 0;
-                        const managers = parseInt(document.getElementById('total_managers').value) || 0;
-                        const users = parseInt(document.getElementById('total_users').value) || 0;
+                    function calculateFinancials() {
+                        const subtotalInput = document.getElementById('subtotal_display');
+                        const taxRateInput = document.getElementById('tax_rate');
+                        const taxDisplay = document.getElementById('tax_amount_display');
+                        const totalDisplay = document.getElementById('total_amount_display');
 
-                        const total = workers + supervisors + managers + users;
-                        document.getElementById('total_workforce_display').value = total;
+                        if (!subtotalInput || !taxRateInput || !taxDisplay || !totalDisplay) return;
 
-                        calculateFinancials();
-                    }
-// Inline create: Clients
+                        const subtotal = parseFloat(subtotalInput.value) || 0;
+                        const taxRate = parseFloat(taxRateInput.value) || 15; // Default 15%
+
+                        const taxAmount = (subtotal * taxRate) / 100;
+                        const total = subtotal + taxAmount;
+
+                        taxDisplay.value = taxAmount.toFixed(2);
+                        totalDisplay.value = total.toFixed(2);
+                    }// Inline create: Clients
                     document.addEventListener('DOMContentLoaded', function() {
                         const addClientForm = document.getElementById('addClientForm');
                         if (addClientForm) {

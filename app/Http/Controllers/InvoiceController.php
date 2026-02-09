@@ -127,7 +127,7 @@ class InvoiceController extends Controller
         $subtotal = $validated['base_price'];
         $taxAmount = ($subtotal * $validated['tax_rate']) / 100;
         $totalAmount = $subtotal + $taxAmount;
-dd($validated['invoice_status']);
+//dd($validated['invoice_status']);
         // Prepare invoice data
         $invoiceData = [
             'number' => $validated['number'],

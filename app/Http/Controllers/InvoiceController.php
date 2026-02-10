@@ -439,4 +439,69 @@ class InvoiceController extends Controller
             });
 
     }
+
+    public function addPayment(Request $request, Invoice $invoice)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'payment_method' => 'required|in:bank_transfer,cash,check',
+            'reference_number' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $paymentAmount = $validated['amount'];
+            $remainingAmount = $invoice->total_price - $invoice->paid_amount;
+
+            // Validate payment amount
+            if ($paymentAmount > $remainingAmount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'مبلغ الدفعة لا يمكن أن يكون أكبر من المبلغ المتبقي'
+                ], 422);
+            }
+
+            // Generate payment number
+            $paymentCount = $invoice->payments()->count() + 1;
+            $paymentNumber = 'PAY-' . str_replace(['INV-', '#'], '', $invoice->number) . '-' . str_pad($paymentCount, 3, '0', STR_PAD_LEFT);
+
+            // Create payment
+            $payment = $invoice->payments()->create([
+                'number' => $paymentNumber,
+                'amount' => $paymentAmount,
+                'payment_date' => $validated['payment_date'],
+                'payment_method' => $validated['payment_method'],
+                'reference_number' => $validated['reference_number'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'completed',
+            ]);
+
+            // Update invoice paid amount
+            $newPaidAmount = $invoice->paid_amount + $paymentAmount;
+            $invoice->update([
+                'paid_amount' => $newPaidAmount,
+            ]);
+
+            // Update payment status
+            if ($newPaidAmount >= $invoice->total_price) {
+                $invoice->update(['payment_status' => 'paid']);
+            } elseif ($newPaidAmount > 0) {
+                $invoice->update(['payment_status' => 'partially_paid']);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تسجيل الدفعة بنجاح',
+                'payment' => $payment,
+                'invoice_status' => $invoice->payment_status
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء تسجيل الدفعة: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

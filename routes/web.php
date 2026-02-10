@@ -33,11 +33,13 @@ Route::resource('invoices', InvoiceController::class);
 Route::resource('payments', PaymentsController::class);
 Route::post('invoices/add-client', [InvoiceController::class, 'addClient'])->name('invoices.add-client');
 Route::post('invoices/add-service', [InvoiceController::class, 'addService'])->name('invoices.add-service');
+Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'addPayment'])->name('invoices.add-payment');
 
 // Credit Notes Routes
 Route::post('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
 Route::delete('/credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
 Route::get('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'getInvoiceCreditNotes'])->name('credit-notes.invoice');
+Route::get('/credit-notes/invoice/{invoice}/count', [CreditNoteController::class, 'getCreditNoteCount'])->name('credit-notes.count');
 
 // Payment Additional Routes
 Route::post('/payments/{payment}/confirm', [PaymentsController::class, 'confirm'])->name('payments.confirm');
@@ -74,6 +76,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/chat/send-image', [ChatController::class, 'sendImage'])->name('chat.send-image');
 });
 Route::resource('clients', \App\Http\Controllers\ClientController::class);
+Route::get('clients/{client}/monthly-report', [\App\Http\Controllers\ClientController::class, 'monthlyReport'])->name('clients.monthly-report');
+Route::get('clients/{client}/monthly-report/export', [\App\Http\Controllers\ClientController::class, 'exportMonthlyReport'])->name('clients.monthly-report.export');
 Route::resource('services', \App\Http\Controllers\ServiceController::class);
 Route::resource('invoice-statuses', \App\Http\Controllers\InvoiceStatusController::class);
 Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'getNotifications']);

@@ -94,4 +94,139 @@ class ClientController extends Controller
             });
 
     }
+
+    public function monthlyReport(Request $request, Client $client)
+    {
+        $month = $request->input('month', now()->format('Y-m'));
+        $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+        $endDate = \Carbon\Carbon::parse($month . '-01')->endOfMonth();
+
+        // Get invoices for the month
+        $invoices = $client->invoices()
+            ->whereBetween('generation_date', [$startDate, $endDate])
+            ->with(['payments', 'creditNotes'])
+            ->orderBy('generation_date', 'desc')
+            ->get();
+
+        // Calculate totals
+        $totalInvoiced = $invoices->sum('total_price');
+        $totalPaid = $invoices->sum('paid_amount');
+        $totalRemaining = $totalInvoiced - $totalPaid;
+
+        // Prepare invoice breakdown
+        $invoiceBreakdown = $invoices->map(function ($invoice) {
+            $totalAfterCredits = $invoice->total_price - ($invoice->total_credit_notes ?? 0);
+            $remaining = $totalAfterCredits - $invoice->paid_amount;
+
+            return [
+                'number' => $invoice->number,
+                'date' => $invoice->generation_date->format('Y-m-d'),
+                'total_amount' => $invoice->total_price,
+                'credit_notes' => $invoice->total_credit_notes ?? 0,
+                'total_after_credits' => $totalAfterCredits,
+                'paid_amount' => $invoice->paid_amount,
+                'remaining_balance' => $remaining,
+                'payment_status' => $invoice->payment_status,
+                'payments' => $invoice->payments->map(function ($payment) {
+                    return [
+                        'number' => $payment->number,
+                        'amount' => $payment->amount,
+                        'date' => $payment->payment_date->format('Y-m-d'),
+                        'method' => $payment->payment_method,
+                    ];
+                }),
+            ];
+        });
+
+        $reportData = [
+            'client' => $client,
+            'month' => $month,
+            'period' => [
+                'start' => $startDate->format('Y-m-d'),
+                'end' => $endDate->format('Y-m-d'),
+            ],
+            'summary' => [
+                'total_invoices' => $invoices->count(),
+                'total_invoiced' => $totalInvoiced,
+                'total_paid' => $totalPaid,
+                'total_remaining' => $totalRemaining,
+            ],
+            'invoices' => $invoiceBreakdown,
+        ];
+
+        return view('clients.monthly-report', $reportData);
+    }
+
+    public function exportMonthlyReport(Request $request, Client $client)
+    {
+        $month = $request->input('month', now()->format('Y-m'));
+        $format = $request->input('format', 'pdf'); // pdf or excel
+
+        $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+        $endDate = \Carbon\Carbon::parse($month . '-01')->endOfMonth();
+
+        // Get invoices for the month
+        $invoices = $client->invoices()
+            ->whereBetween('generation_date', [$startDate, $endDate])
+            ->with(['payments', 'creditNotes'])
+            ->orderBy('generation_date', 'desc')
+            ->get();
+
+        // Calculate totals
+        $totalInvoiced = $invoices->sum('total_price');
+        $totalPaid = $invoices->sum('paid_amount');
+        $totalRemaining = $totalInvoiced - $totalPaid;
+
+        // Prepare invoice breakdown
+        $invoiceBreakdown = $invoices->map(function ($invoice) {
+            $totalAfterCredits = $invoice->total_price - ($invoice->total_credit_notes ?? 0);
+            $remaining = $totalAfterCredits - $invoice->paid_amount;
+
+            return [
+                'number' => $invoice->number,
+                'date' => $invoice->generation_date->format('Y-m-d'),
+                'total_amount' => $invoice->total_price,
+                'credit_notes' => $invoice->total_credit_notes ?? 0,
+                'total_after_credits' => $totalAfterCredits,
+                'paid_amount' => $invoice->paid_amount,
+                'remaining_balance' => $remaining,
+                'payment_status' => $invoice->payment_status,
+            ];
+        });
+
+        $reportData = [
+            'client' => $client,
+            'month' => $month,
+            'period' => [
+                'start' => $startDate->format('Y-m-d'),
+                'end' => $endDate->format('Y-m-d'),
+            ],
+            'summary' => [
+                'total_invoices' => $invoices->count(),
+                'total_invoiced' => $totalInvoiced,
+                'total_paid' => $totalPaid,
+                'total_remaining' => $totalRemaining,
+            ],
+            'invoices' => $invoiceBreakdown,
+        ];
+
+        if ($format === 'excel') {
+            return $this->exportToExcel($reportData);
+        } else {
+            return $this->exportToPdf($reportData);
+        }
+    }
+
+    private function exportToPdf($reportData)
+    {
+        $pdf = \PDF::loadView('clients.reports.monthly-pdf', $reportData);
+        $filename = 'monthly-report-' . $reportData['client']->name . '-' . $reportData['month'] . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function exportToExcel($reportData)
+    {
+        return \Excel::download(new \App\Exports\ClientMonthlyReportExport($reportData), 
+            'monthly-report-' . $reportData['client']->name . '-' . $reportData['month'] . '.xlsx');
+    }
 }

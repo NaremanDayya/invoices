@@ -412,6 +412,7 @@
                             @php
                                 $statusMap = [
                                     'paid' => ['class' => 'paid', 'label' => 'مدفوعة', 'icon' => 'check-circle-fill'],
+                                    'partially_paid' => ['class' => 'partially-paid', 'label' => 'مدفوعة جزئياً', 'icon' => 'check-circle'],
                                     'pending' => ['class' => 'pending', 'label' => 'معلقة', 'icon' => 'hourglass-split'],
                                     'late' => ['class' => 'late', 'label' => 'متأخرة', 'icon' => 'exclamation-circle-fill'],
                                     'cancelled' => ['class' => 'cancelled', 'label' => 'ملغاة', 'icon' => 'x-circle-fill'],
@@ -419,17 +420,18 @@
                                 $s = $statusMap[$invoice->payment_status] ?? $statusMap['pending'];
                             @endphp
                             <span class="status-badge {{ $s['class'] }}">
-                                <i class="bi bi-{{ $s['icon'] }}"></i>
-                                {{ $s['label'] }}
+    <i class="bi bi-{{ $s['icon'] }}"></i>
+    {{ $s['label'] }}
                                 @if($invoice->payment_status == 'late')
                                     <div class="small fw-normal opacity-75">متأخر 5 يوم</div>
                                 @endif
-                            </span>
+</span>
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="{{ route('invoices.show', $invoice->id) }}" class="btn-action" title="عرض"><i class="bi bi-eye"></i></a>
                                 <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn-action" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                <button type="button" class="btn-action text-success" title="إضافة دفعة" onclick="openPaymentModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->paid_amount ?? 0 }})"><i class="bi bi-cash-coin"></i></button>
                                 <button type="button" class="btn-action text-warning" title="إشعار دائن" onclick="openCreditNoteModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->base_price }}, {{ $invoice->tax_rate }}, {{ $invoice->employees_count ?? 0 }}, {{ $invoice->work_days_count ?? 0 }})"><i class="bi bi-file-earmark-text"></i></button>
                                 <button type="button" class="btn-action text-danger" title="حذف" onclick="confirmDelete({{ $invoice->id }})"><i class="bi bi-trash"></i></button>
                             </div>
@@ -469,6 +471,94 @@
                         </button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-2xl rounded-3">
+                <div class="modal-header bg-gradient-success text-white p-4">
+                    <h5 class="modal-title fw-bold d-flex align-items-center">
+                        <i class="bi bi-cash-coin ms-2"></i>
+                        إضافة دفعة للفاتورة
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                
+                <form id="paymentForm" method="POST">
+                    @csrf
+                    <input type="hidden" name="invoice_id" id="payment_invoice_id">
+                    
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info border-0 mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-info-circle-fill fs-4 ms-2"></i>
+                                <div>
+                                    <strong>معلومات الفاتورة:</strong>
+                                    <div class="mt-2">
+                                        <span class="badge bg-primary me-2">رقم الفاتورة: <span id="payment_invoice_number"></span></span>
+                                        <span class="badge bg-success me-2">الإجمالي: <span id="payment_total_amount"></span> ر.س</span>
+                                        <span class="badge bg-warning text-dark">المدفوع: <span id="payment_paid_amount"></span> ر.س</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <span class="badge bg-danger">المتبقي: <span id="payment_remaining_amount"></span> ر.س</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">المبلغ المدفوع <span class="text-danger">*</span></label>
+                                <input type="number" name="amount" id="payment_amount" class="form-control" step="0.01" min="0.01" required>
+                                <small class="text-muted">الحد الأقصى: <span id="payment_max_amount"></span> ر.س</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">تاريخ الدفع <span class="text-danger">*</span></label>
+                                <input type="date" name="payment_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">طريقة الدفع <span class="text-danger">*</span></label>
+                                <select name="payment_method" class="form-select" required>
+                                    <option value="">اختر طريقة الدفع</option>
+                                    <option value="bank_transfer">تحويل بنكي</option>
+                                    <option value="cash">نقدي</option>
+                                    <option value="check">شيك</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">رقم المرجع</label>
+                                <input type="text" name="reference_number" class="form-control" placeholder="رقم التحويل أو الشيك">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">ملاحظات</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="أي ملاحظات إضافية..."></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="alert alert-success border-0 mb-0">
+                                    <i class="bi bi-check-circle-fill ms-2"></i>
+                                    <strong>حالة الفاتورة بعد الدفع:</strong>
+                                    <span id="payment_status_preview" class="fw-bold"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 p-4">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle ms-1"></i>
+                            تسجيل الدفعة
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -623,22 +713,17 @@
                         </div>
 
                         <!-- Payment & Status -->
-                        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border border-slate-100">
-                            <div class="flex items-center gap-2 mb-4">
-                                <i class="bi bi-tag-fill text-emerald-600"></i>
-                                <h6 class="fw-bold text-slate-700 mb-0">حالة الفاتورة</h6>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold text-slate-600">حالة الفاتورة <span class="text-danger">*</span></label>
-                                    <div class="position-relative">
-                                        <input type="text" id="statusSearchInput" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="ابحث عن حالة الفاتورة..." autocomplete="off" required>
-                                        <input type="hidden" name="invoice_status" id="selectedStatusId" required>
-                                        <div id="statusDropdown" class="list-group position-absolute w-100 shadow rounded-xl mt-1 border border-slate-200" style="display:none; z-index: 1000; max-height: 200px; overflow-y: auto;">
-                                            <!-- Options will be populated by JS -->
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-slate-600">حالة الفاتورة <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <select id="statusSelect2" name="invoice_status" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
+                                    <option value="">اختر حالة الفاتورة...</option>
+                                    @foreach($invoiceStatuses as $status)
+                                        <option value="{{ $status->name }}" data-color="{{ $status->color }}" data-icon="{{ $status->icon }}">
+                                            {{ $status->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
 
@@ -1462,7 +1547,70 @@
                 input.addEventListener('input', calculateServiceDetailsTotal);
             });
         }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Select2 for invoice status
+            $('#statusSelect2').select2({
+                theme: 'bootstrap-5',
+                language: {
+                    noResults: function() {
+                        return "لا توجد نتائج";
+                    },
+                    searching: function() {
+                        return "جاري البحث...";
+                    }
+                },
+                placeholder: "ابحث عن حالة الفاتورة...",
+                allowClear: true,
+                width: '100%',
+                templateResult: function(state) {
+                    if (!state.id) return state.text;
 
+                    const color = $(state.element).data('color');
+                    const icon = $(state.element).data('icon');
+
+                    const $state = $(
+                        `<span>
+                    <span class="badge rounded-pill me-2" style="background-color: ${color}; width: 12px; height: 12px;"></span>
+                    ${icon ? `<i class="bi bi-${icon} me-2"></i>` : ''}
+                    ${state.text}
+                </span>`
+                    );
+                    return $state;
+                },
+                templateSelection: function(state) {
+                    if (!state.id) return state.text;
+
+                    const color = $(state.element).data('color');
+                    const icon = $(state.element).data('icon');
+
+                    const $selection = $(
+                        `<span>
+                    <span class="badge rounded-pill me-2" style="background-color: ${color}; width: 12px; height: 12px;"></span>
+                    ${icon ? `<i class="bi bi-${icon} me-2"></i>` : ''}
+                    ${state.text}
+                </span>`
+                    );
+                    return $selection;
+                }
+            });
+
+            // Initialize when modal opens
+            const createInvoiceModalEl = document.getElementById('createInvoiceModal');
+            if (createInvoiceModalEl) {
+                createInvoiceModalEl.addEventListener('shown.bs.modal', function() {
+                    $('#statusSelect2').select2('destroy');
+                    $('#statusSelect2').select2({
+                        theme: 'bootstrap-5',
+                        dropdownParent: $('#createInvoiceModal')
+                    });
+                });
+            }
+
+            // Reset Select2 when modal is hidden
+            createInvoiceModalEl.addEventListener('hidden.bs.modal', function() {
+                $('#statusSelect2').val(null).trigger('change');
+            });
+        });
         function calculateServiceDetailsTotal() {
             let totalWorkforce = 0;
             let totalWorkDays = 0;
@@ -1662,6 +1810,115 @@
             const modal = new bootstrap.Modal(document.getElementById('deleteInvoiceModal'));
             modal.show();
         };
+
+        // Payment Modal Function
+        let currentPaymentData = {
+            invoiceId: 0,
+            totalAmount: 0,
+            paidAmount: 0,
+            remainingAmount: 0
+        };
+
+        window.openPaymentModal = function(invoiceId, invoiceNumber, totalAmount, paidAmount) {
+            currentPaymentData = {
+                invoiceId: invoiceId,
+                totalAmount: parseFloat(totalAmount),
+                paidAmount: parseFloat(paidAmount),
+                remainingAmount: parseFloat(totalAmount) - parseFloat(paidAmount)
+            };
+
+            document.getElementById('payment_invoice_id').value = invoiceId;
+            document.getElementById('payment_invoice_number').textContent = invoiceNumber;
+            document.getElementById('payment_total_amount').textContent = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(totalAmount);
+            document.getElementById('payment_paid_amount').textContent = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(paidAmount);
+            document.getElementById('payment_remaining_amount').textContent = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(currentPaymentData.remainingAmount);
+            document.getElementById('payment_max_amount').textContent = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(currentPaymentData.remainingAmount);
+
+            const paymentAmountInput = document.getElementById('payment_amount');
+            paymentAmountInput.max = currentPaymentData.remainingAmount;
+            paymentAmountInput.value = '';
+
+            updatePaymentStatus(0);
+
+            const form = document.getElementById('paymentForm');
+            form.action = `/invoices/${invoiceId}/payments`;
+            form.reset();
+
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        };
+
+        function updatePaymentStatus(paymentAmount) {
+            const newPaidAmount = currentPaymentData.paidAmount + parseFloat(paymentAmount || 0);
+            const statusPreview = document.getElementById('payment_status_preview');
+
+            if (newPaidAmount >= currentPaymentData.totalAmount) {
+                statusPreview.textContent = 'مدفوعة بالكامل';
+                statusPreview.className = 'fw-bold text-success';
+            } else if (newPaidAmount > 0) {
+                statusPreview.textContent = 'مدفوعة جزئياً';
+                statusPreview.className = 'fw-bold text-warning';
+            } else {
+                statusPreview.textContent = 'معلقة';
+                statusPreview.className = 'fw-bold text-danger';
+            }
+        }
+
+        document.getElementById('payment_amount')?.addEventListener('input', function() {
+            const amount = parseFloat(this.value) || 0;
+            if (amount > currentPaymentData.remainingAmount) {
+                this.value = currentPaymentData.remainingAmount.toFixed(2);
+            }
+            updatePaymentStatus(parseFloat(this.value) || 0);
+        });
+
+        document.getElementById('paymentForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const paymentAmount = parseFloat(document.getElementById('payment_amount').value) || 0;
+
+            if (paymentAmount <= 0) {
+                alert('يرجى إدخال مبلغ الدفعة');
+                return false;
+            }
+
+            if (paymentAmount > currentPaymentData.remainingAmount) {
+                alert('مبلغ الدفعة لا يمكن أن يكون أكبر من المبلغ المتبقي');
+                return false;
+            }
+
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> جاري الحفظ...';
+            submitBtn.disabled = true;
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'تم تسجيل الدفعة بنجاح');
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء تسجيل الدفعة');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الاتصال بالخادم');
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
 
         // Custom Status Toggle
         window.toggleCustomStatus = function() {

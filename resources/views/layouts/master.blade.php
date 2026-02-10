@@ -10,7 +10,7 @@
 
     <!-- Google Fonts: Tajawal & Outfit -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Bootstrap 5 RTL -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -25,7 +25,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+    <!-- In your scripts section -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <style>
         /* Select2 Custom Styling */
         .select2-container--default .select2-selection--single {
@@ -35,39 +38,39 @@
             padding: 0.5rem 0.75rem !important;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
         }
-        
+
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: normal !important;
             padding: 0 !important;
             color: #334155 !important;
         }
-        
+
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 100% !important;
         }
-        
+
         .select2-container--default.select2-container--focus .select2-selection--single,
         .select2-container--default.select2-container--open .select2-selection--single {
             border-color: #10b981 !important;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
         }
-        
+
         .select2-dropdown {
             border: 1px solid #e2e8f0 !important;
             border-radius: 0.75rem !important;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
         }
-        
+
         .select2-results__option--highlighted {
             background-color: #10b981 !important;
         }
-        
+
         .select2-search--dropdown .select2-search__field {
             border: 1px solid #e2e8f0 !important;
             border-radius: 0.5rem !important;
             padding: 0.5rem !important;
         }
-        
+
         .select2-search--dropdown .select2-search__field:focus {
             border-color: #10b981 !important;
             outline: none !important;
@@ -352,7 +355,7 @@
         .rounded-xl { border-radius: 16px; }
         .text-primary-accent { color: var(--primary-accent); }
         .bg-primary-accent { background-color: var(--primary-accent); }
-        
+
         /* Mobile Overlay */
         @media (max-width: 991.98px) {
             #sidebar {
@@ -548,7 +551,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
     <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    
+
     <!-- Export Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>

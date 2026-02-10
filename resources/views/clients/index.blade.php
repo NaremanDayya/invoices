@@ -110,6 +110,11 @@
                                     </td>
                                     <td class="px-4 py-3 text-end">
                                         <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ route('clients.monthly-report', $client) }}" 
+                                               class="btn btn-light-soft btn-sm rounded-lg"
+                                               title="التقرير الشهري">
+                                                <i class="bi bi-file-earmark-bar-graph"></i>
+                                            </a>
                                             <button class="btn btn-light-soft btn-sm rounded-lg"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#editClientModal{{ $client->id }}"

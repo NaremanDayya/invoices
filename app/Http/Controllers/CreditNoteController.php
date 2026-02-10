@@ -14,13 +14,10 @@ class CreditNoteController extends Controller
     {
         $validated = $request->validate([
             'type' => 'required|in:internal,client',
-            'amount' => 'required|numeric|min:0.01',
+            'credit_amount_before_tax' => 'required|numeric|min:0.01',
+            'credit_note_number' => 'nullable|string',
             'reason' => 'required|string|max:500',
             'notes' => 'nullable|string|max:1000',
-            'adjust_base_price' => 'nullable|boolean',
-            'adjust_tax' => 'nullable|boolean',
-            'adjust_employees' => 'nullable|boolean',
-            'adjust_work_days' => 'nullable|boolean',
             'new_base_price' => 'nullable|numeric|min:0',
             'new_tax_rate' => 'nullable|numeric|min:0|max:100',
             'new_employees_count' => 'nullable|integer|min:0',
@@ -42,11 +39,15 @@ class CreditNoteController extends Controller
                 'work_days' => $invoice->work_days,
             ];
 
-            // Calculate new values
-            $newBasePrice = $validated['new_base_price'] ?? $invoice->base_price;
+            // Calculate new values based on credit amount before tax
+            $creditBeforeTax = $validated['credit_amount_before_tax'];
+            $newBasePrice = $validated['new_base_price'] ?? ($invoice->base_price - $creditBeforeTax);
             $newTaxRate = $validated['new_tax_rate'] ?? $invoice->tax_rate;
             $newTaxAmount = ($newBasePrice * $newTaxRate) / 100;
             $newTotalPrice = $newBasePrice + $newTaxAmount;
+            
+            // Calculate credit amount after tax
+            $creditAfterTax = $creditBeforeTax * (1 + ($invoice->tax_rate / 100));
             
             $newValues = [
                 'base_price' => $newBasePrice,
@@ -64,9 +65,14 @@ class CreditNoteController extends Controller
                 throw new \Exception('المبلغ الإجمالي الجديد لا يمكن أن يكون سالباً');
             }
 
+            // Validate credit amount doesn't exceed base price
+            if ($creditBeforeTax > $invoice->base_price) {
+                throw new \Exception('مبلغ الخصم لا يمكن أن يكون أكبر من المبلغ الأساسي للفاتورة');
+            }
+
             // Generate credit note number
             $creditNoteCount = $invoice->creditNotes()->count() + 1;
-            $creditNoteNumber = 'CN-' . str_replace('INV-', '', $invoice->number) . '-' . str_pad($creditNoteCount, 3, '0', STR_PAD_LEFT);
+            $creditNoteNumber = $validated['credit_note_number'] ?? ('CN-' . str_replace(['INV-', '#'], '', $invoice->number) . '-' . str_pad($creditNoteCount, 3, '0', STR_PAD_LEFT));
 
             // Create credit note
             $creditNote = CreditNote::create([
@@ -76,13 +82,13 @@ class CreditNoteController extends Controller
                 'type' => $validated['type'],
                 'previous_values' => $previousValues,
                 'new_values' => $newValues,
-                'amount_difference' => $previousValues['total_price'] - $newValues['total_price'],
+                'amount_difference' => $creditAfterTax,
                 'previous_total' => $previousValues['total_price'],
                 'new_total' => $newValues['total_price'],
                 'reason' => $validated['reason'],
                 'notes' => $validated['notes'] ?? null,
                 'number' => $creditNoteNumber,
-                'amount' => abs($previousValues['total_price'] - $newValues['total_price']),
+                'amount' => $creditAfterTax,
                 'issue_date' => now(),
                 'is_main' => $creditNoteCount === 1,
             ]);
@@ -106,6 +112,14 @@ class CreditNoteController extends Controller
         });
 
         return redirect()->back()->with('success', 'تم إضافة إشعار الدائن بنجاح');
+    }
+
+    public function getCreditNoteCount(Invoice $invoice)
+    {
+        return response()->json([
+            'success' => true,
+            'count' => $invoice->creditNotes()->count()
+        ]);
     }
 
     public function destroy(CreditNote $creditNote)

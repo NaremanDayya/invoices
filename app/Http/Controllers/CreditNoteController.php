@@ -14,7 +14,7 @@ class CreditNoteController extends Controller
     {
         $validated = $request->validate([
             'type' => 'required|in:internal,client',
-            'credit_amount_before_tax' => 'required|numeric|min:0.01',
+            'credit_amount_with_tax' => 'required|numeric|min:0.01',
             'credit_note_number' => 'nullable|string',
             'reason' => 'required|string|max:500',
             'notes' => 'nullable|string|max:1000',
@@ -39,15 +39,18 @@ class CreditNoteController extends Controller
                 'work_days' => $invoice->work_days,
             ];
 
-            // Calculate new values based on credit amount before tax
-            $creditBeforeTax = $validated['credit_amount_before_tax'];
+            // Calculate credit amount before tax by removing tax from the entered amount
+            $creditWithTax = $validated['credit_amount_with_tax'];
+            $creditBeforeTax = $creditWithTax / (1 + ($invoice->tax_rate / 100));
+            
+            // Calculate new values
             $newBasePrice = $validated['new_base_price'] ?? ($invoice->base_price - $creditBeforeTax);
             $newTaxRate = $validated['new_tax_rate'] ?? $invoice->tax_rate;
             $newTaxAmount = ($newBasePrice * $newTaxRate) / 100;
             $newTotalPrice = $newBasePrice + $newTaxAmount;
             
-            // Calculate credit amount after tax
-            $creditAfterTax = $creditBeforeTax * (1 + ($invoice->tax_rate / 100));
+            // Credit amount after tax is the amount entered by user
+            $creditAfterTax = $creditWithTax;
             
             $newValues = [
                 'base_price' => $newBasePrice,

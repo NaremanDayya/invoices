@@ -44,8 +44,8 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">مبلغ الخصم قبل الضريبة <span class="text-danger">*</span></label>
-                            <input type="number" name="credit_amount_before_tax" id="cn_credit_before_tax" class="form-control" step="0.01" min="0.01" required>
+                            <label class="form-label fw-bold">مبلغ الخصم (شامل الضريبة) <span class="text-danger">*</span></label>
+                            <input type="number" name="credit_amount_with_tax" id="cn_credit_with_tax" class="form-control" step="0.01" min="0.01" required>
                         </div>
 
                         <div class="col-12">
@@ -199,13 +199,13 @@ function generateCreditNoteNumber() {
 }
 
 function calculateCreditAmounts() {
-    const creditBeforeTax = parseFloat(document.getElementById('cn_credit_before_tax').value) || 0;
+    const creditWithTax = parseFloat(document.getElementById('cn_credit_with_tax').value) || 0;
     const taxRate = currentInvoiceData.taxRate;
     const basePrice = currentInvoiceData.basePrice;
     const currentTotal = currentInvoiceData.totalPrice;
     
-    // Calculate credit amount after tax
-    const creditAfterTax = creditBeforeTax * (1 + (taxRate / 100));
+    // Remove tax from credit amount to get base credit amount
+    const creditBeforeTax = creditWithTax / (1 + (taxRate / 100));
     
     // Calculate new base price and total
     const newBasePrice = basePrice - creditBeforeTax;
@@ -215,7 +215,7 @@ function calculateCreditAmounts() {
     // Update display fields
     document.getElementById('cn_display_base_price').value = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(basePrice) + ' ر.س';
     document.getElementById('cn_display_credit_before').value = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(creditBeforeTax) + ' ر.س';
-    document.getElementById('cn_display_credit_after').value = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(creditAfterTax) + ' ر.س';
+    document.getElementById('cn_display_credit_after').value = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(creditWithTax) + ' ر.س';
     document.getElementById('cn_display_new_total').value = new Intl.NumberFormat('ar-SA', {minimumFractionDigits: 2}).format(newTotal) + ' ر.س';
     
     // Auto-fill new base price if credit is entered
@@ -225,10 +225,12 @@ function calculateCreditAmounts() {
 }
 
 // Add event listener for credit amount input
-document.getElementById('cn_credit_before_tax')?.addEventListener('input', calculateCreditAmounts);
+document.getElementById('cn_credit_with_tax')?.addEventListener('input', calculateCreditAmounts);
 
 document.getElementById('creditNoteForm')?.addEventListener('submit', function(e) {
-    const creditBeforeTax = parseFloat(document.getElementById('cn_credit_before_tax').value) || 0;
+    const creditWithTax = parseFloat(document.getElementById('cn_credit_with_tax').value) || 0;
+    const taxRate = currentInvoiceData.taxRate;
+    const creditBeforeTax = creditWithTax / (1 + (taxRate / 100));
     const newBasePrice = parseFloat(document.getElementById('cn_new_base_price').value) || null;
     const newTaxRate = parseFloat(document.getElementById('cn_new_tax_rate').value) || null;
     

@@ -413,9 +413,15 @@
                 </a>
             </div>
             <div class="nav-item">
-                <a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                <a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') && !request()->routeIs('invoices.salary.*') ? 'active' : '' }}">
                     <i class="bi bi-file-earmark-text-fill"></i>
                     <span>الفواتير</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ route('invoices.index', ['type' => 'salary_invoice']) }}" class="nav-link {{ request()->get('type') === 'salary_invoice' ? 'active' : '' }}">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>فواتير الرواتب</span>
                 </a>
             </div>
             <div class="nav-item">

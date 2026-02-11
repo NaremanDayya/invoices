@@ -17,7 +17,11 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Invoice::with(['client', 'service', 'payments', 'creditNotes']);
+        $query = Invoice::with(['client', 'service', 'payments', 'creditNotes', 'invoiceEmployees']);
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;

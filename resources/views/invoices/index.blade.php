@@ -295,7 +295,16 @@
                     @endphp
                     @foreach($items as $invoice)
                     <tr>
-                        <td><span class="inv-number">{{ $invoice->number }}</span></td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <span class="inv-number">{{ $invoice->number }}</span>
+                                @if($invoice->type === 'salary_invoice')
+                                    <span class="badge bg-purple-100 text-purple-800" style="background: #f3e8ff; color: #7c3aed; font-size: 0.7rem; width: fit-content;">
+                                        <i class="bi bi-cash-stack"></i> فاتورة رواتب
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
                         <td>
                             <div class="customer-info">
                                 <span class="name">{{ $invoice->client->name ?? '—' }}</span>
@@ -431,6 +440,9 @@
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="{{ route('invoices.show', $invoice->id) }}" class="btn-action" title="عرض"><i class="bi bi-eye"></i></a>
                                 <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn-action" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                @if($invoice->type !== 'salary_invoice')
+                                    <button type="button" class="btn-action text-purple-600" title="استيراد رواتب" onclick="openSalaryImportModal({{ $invoice->id }})" style="color: #7c3aed;"><i class="bi bi-upload"></i></button>
+                                @endif
                                 <button type="button" class="btn-action text-success" title="إضافة دفعة" onclick="openPaymentModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->paid_amount ?? 0 }})"><i class="bi bi-cash-coin"></i></button>
                                 <button type="button" class="btn-action text-warning" title="إشعار دائن" onclick="openCreditNoteModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->base_price }}, {{ $invoice->tax_rate }}, {{ $invoice->employees_count ?? 0 }}, {{ $invoice->work_days_count ?? 0 }})"><i class="bi bi-file-earmark-text"></i></button>
                                 <button type="button" class="btn-action text-danger" title="حذف" onclick="confirmDelete({{ $invoice->id }})"><i class="bi bi-trash"></i></button>
@@ -2120,3 +2132,5 @@
         }
     </script>
 @endpush
+
+@include('partials.salary-invoice-import-modal')

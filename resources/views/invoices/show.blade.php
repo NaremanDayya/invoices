@@ -299,6 +299,34 @@
         </div>
     </div>
 
+    <!-- Salary Invoice Employees Section -->
+    @if($invoice->isSalaryInvoice())
+        <div class="row mt-4">
+            <div class="col-12">
+                @include('partials.salary-invoice-employees-table', ['invoice' => $invoice])
+            </div>
+        </div>
+    @else
+        <!-- Import Salary Employees Button -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="detail-card text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-cash-stack" style="font-size: 3rem; color: #7c3aed;"></i>
+                    </div>
+                    <h5 class="mb-3">تحويل إلى فاتورة رواتب</h5>
+                    <p class="text-muted mb-4">قم باستيراد بيانات موظفي الرواتب من ملف Excel لتحويل هذه الفاتورة إلى فاتورة رواتب</p>
+                    <button onclick="openSalaryImportModal({{ $invoice->id }})" 
+                            class="btn btn-lg rounded-xl px-5 py-3 fw-bold d-inline-flex align-items-center gap-2"
+                            style="background: #7c3aed; color: white;">
+                        <i class="bi bi-upload"></i>
+                        <span>استيراد موظفي الرواتب</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Credit Notes Section -->
     <div class="row mt-4">
         <div class="col-12">
@@ -306,8 +334,9 @@
         </div>
     </div>
 
-    <!-- Credit Note Modal -->
+    <!-- Modals -->
     @include('partials.credit-note-modal')
+    @include('partials.salary-invoice-import-modal')
 @endsection
 
 @push('scripts')

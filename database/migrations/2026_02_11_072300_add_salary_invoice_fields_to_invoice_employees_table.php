@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('invoice_employees', function (Blueprint $table) {
-            $table->string('employee_name')->nullable()->after('employee_id');
+            $table->string('employee_name')->nullable();
             $table->string('project')->nullable();
             $table->decimal('basic_salary', 15, 2)->default(0);
             $table->decimal('bonuses', 15, 2)->default(0);
@@ -27,6 +27,11 @@ return new class extends Migration
             $table->enum('payment_status', ['unpaid', 'partially_paid', 'paid'])->default('unpaid');
             $table->date('payment_date')->nullable();
             $table->decimal('paid_amount', 15, 2)->default(0);
+        });
+        
+        Schema::table('invoice_employees', function (Blueprint $table) {
+            $table->dropForeign(['employee_id']);
+            $table->unsignedBigInteger('employee_id')->nullable()->change();
         });
     }
 
@@ -53,6 +58,11 @@ return new class extends Migration
                 'payment_date',
                 'paid_amount'
             ]);
+        });
+        
+        Schema::table('invoice_employees', function (Blueprint $table) {
+            $table->unsignedBigInteger('employee_id')->nullable(false)->change();
+            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
         });
     }
 };

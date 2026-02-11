@@ -41,6 +41,17 @@ Route::delete('/credit-notes/{creditNote}', [CreditNoteController::class, 'destr
 Route::get('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'getInvoiceCreditNotes'])->name('credit-notes.invoice');
 Route::get('/credit-notes/invoice/{invoice}/count', [CreditNoteController::class, 'getCreditNoteCount'])->name('credit-notes.count');
 
+// Salary Invoice Routes
+Route::post('/salary-invoices/import', [\App\Http\Controllers\SalaryInvoiceController::class, 'importEmployees'])->name('salary-invoices.import');
+Route::get('/salary-invoices/{invoice}/employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'getEmployees'])->name('salary-invoices.employees');
+Route::put('/salary-invoices/employees/{employee}/payment-method', [\App\Http\Controllers\SalaryInvoiceController::class, 'updatePaymentMethod'])->name('salary-invoices.update-payment-method');
+Route::post('/salary-invoices/pay-employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'paySelectedEmployees'])->name('salary-invoices.pay-employees');
+Route::delete('/salary-invoices/employees/{employee}', [\App\Http\Controllers\SalaryInvoiceController::class, 'deleteEmployee'])->name('salary-invoices.delete-employee');
+Route::delete('/salary-invoices/{invoice}/employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'deleteAllEmployees'])->name('salary-invoices.delete-all-employees');
+Route::get('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'getWpsSettings'])->name('salary-invoices.wps-settings');
+Route::put('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'updateWpsSettings'])->name('salary-invoices.update-wps-settings');
+Route::get('/salary-invoices/download-template', [\App\Http\Controllers\SalaryInvoiceController::class, 'downloadTemplate'])->name('salary-invoices.download-template');
+
 // Payment Additional Routes
 Route::post('/payments/{payment}/confirm', [PaymentsController::class, 'confirm'])->name('payments.confirm');
 Route::get('/payments/{payment}/print', [PaymentsController::class, 'print'])->name('payments.print');

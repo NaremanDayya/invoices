@@ -14,6 +14,7 @@ class Invoice extends Model
 
     protected $fillable = [
         'number',
+        'type',
         'client_id',
         'service_id',
         'service_details_data',
@@ -362,5 +363,35 @@ class Invoice extends Model
             $q->where('service_type', 'human_resource')
                 ->orWhere('requires_hr_details', true);
         });
+    }
+
+    public function scopeSalaryInvoice($query)
+    {
+        return $query->where('type', 'salary_invoice');
+    }
+
+    public function scopeRegularInvoice($query)
+    {
+        return $query->where('type', 'regular');
+    }
+
+    public function isSalaryInvoice()
+    {
+        return $this->type === 'salary_invoice';
+    }
+
+    public function getSalaryEmployeesCountAttribute()
+    {
+        return $this->invoiceEmployees()->count();
+    }
+
+    public function getTotalPaidSalariesAttribute()
+    {
+        return $this->invoiceEmployees()->sum('paid_amount');
+    }
+
+    public function getRemainingUnpaidSalariesAttribute()
+    {
+        return $this->invoiceEmployees()->sum('net_salary') - $this->total_paid_salaries;
     }
 }

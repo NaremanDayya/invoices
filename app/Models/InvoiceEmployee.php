@@ -12,13 +12,47 @@ class InvoiceEmployee extends Pivot
     protected $fillable = [
         'invoice_id',
         'employee_id',
+        'employee_name',
+        'project',
+        'basic_salary',
+        'bonuses',
+        'monthly_deductions',
+        'advance_deductions',
         'work_days',
+        'work_days_count',
+        'absence_days',
+        'absence_days_count',
         'daily_rate',
         'total_amount',
-        'absence_days',
         'absence_deduction',
         'deductions',
+        'net_salary',
+        'iban',
+        'account_holder_name',
+        'bank_name',
+        'payment_method',
+        'wps_percentage',
+        'wps_amount',
+        'payment_status',
+        'payment_date',
+        'paid_amount',
         'notes'
+    ];
+
+    protected $casts = [
+        'basic_salary' => 'decimal:2',
+        'bonuses' => 'decimal:2',
+        'monthly_deductions' => 'decimal:2',
+        'advance_deductions' => 'decimal:2',
+        'net_salary' => 'decimal:2',
+        'daily_rate' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'absence_deduction' => 'decimal:2',
+        'wps_percentage' => 'decimal:2',
+        'wps_amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'payment_date' => 'date',
+        'deductions' => 'array'
     ];
 
 
@@ -64,6 +98,72 @@ class InvoiceEmployee extends Pivot
         return $this;
     }
 
+    public function calculateNetSalary()
+    {
+        $totalDeductions = $this->monthly_deductions + $this->advance_deductions;
+        $this->net_salary = $this->basic_salary + $this->bonuses - $totalDeductions;
+        return $this;
+    }
+
+    public function calculateWpsAmount()
+    {
+        if ($this->payment_method === 'wps' && $this->wps_percentage) {
+            $this->wps_amount = ($this->net_salary * $this->wps_percentage) / 100;
+        } else {
+            $this->wps_amount = null;
+        }
+        return $this;
+    }
+
+    public function validateWpsPercentage()
+    {
+        if ($this->payment_method === 'wps' && $this->wps_percentage) {
+            $maxWpsPercentage = Setting::where('key', 'wps_max_percentage')->value('value') ?? 70;
+            
+            if ($this->wps_percentage > $maxWpsPercentage) {
+                throw new \Exception("WPS percentage cannot exceed {$maxWpsPercentage}%");
+            }
+        }
+        return true;
+    }
+
+    public function markAsPaid($amount = null)
+    {
+        $paymentAmount = $amount ?? $this->net_salary;
+        
+        $this->paid_amount += $paymentAmount;
+        $this->payment_date = now();
+        
+        if ($this->paid_amount >= $this->net_salary) {
+            $this->payment_status = 'paid';
+        } elseif ($this->paid_amount > 0) {
+            $this->payment_status = 'partially_paid';
+        }
+        
+        $this->save();
+        return $this;
+    }
+
+    public function getRemainingAmountAttribute()
+    {
+        return $this->net_salary - $this->paid_amount;
+    }
+
+    public function getIsFullyPaidAttribute()
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    public function getIsPartiallyPaidAttribute()
+    {
+        return $this->payment_status === 'partially_paid';
+    }
+
+    public function getIsUnpaidAttribute()
+    {
+        return $this->payment_status === 'unpaid';
+    }
+
     /**
      * Boot method for automatic calculations
      */
@@ -72,7 +172,12 @@ class InvoiceEmployee extends Pivot
         parent::boot();
 
         static::saving(function ($invoiceEmployee) {
-            $invoiceEmployee->calculateTotalAmount();
+            if ($invoiceEmployee->basic_salary) {
+                $invoiceEmployee->calculateNetSalary();
+                $invoiceEmployee->calculateWpsAmount();
+            } else {
+                $invoiceEmployee->calculateTotalAmount();
+            }
         });
     }
 }

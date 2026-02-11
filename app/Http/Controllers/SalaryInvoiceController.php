@@ -26,9 +26,17 @@ class SalaryInvoiceController extends Controller
         ]);
 
         try {
+            \Log::info('Salary Import Controller: Starting import', [
+                'invoice_id' => $request->invoice_id,
+                'file_name' => $request->file('excel_file')->getClientOriginalName()
+            ]);
+
             $invoice = Invoice::findOrFail($request->invoice_id);
 
             if ($invoice->invoiceEmployees()->exists()) {
+                \Log::warning('Salary Import Controller: Duplicate import attempt', [
+                    'invoice_id' => $invoice->id
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'هذه الفاتورة تحتوي بالفعل على موظفين مستوردين. يرجى حذفهم أولاً.'
@@ -38,13 +46,22 @@ class SalaryInvoiceController extends Controller
             $file = $request->file('excel_file');
             $filePath = $file->getRealPath();
 
+            \Log::info('Salary Import Controller: Calling import service', [
+                'file_path' => $filePath
+            ]);
+
             $result = $this->importService->import($filePath, $invoice->id);
+
+            \Log::info('Salary Import Controller: Import result', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'No message'
+            ]);
 
             if ($result['success']) {
                 return response()->json([
                     'success' => true,
                     'message' => $result['message'],
-                    'data' => $result['data']
+                    'data' => $result['data'] ?? []
                 ]);
             } else {
                 return response()->json([
@@ -54,6 +71,12 @@ class SalaryInvoiceController extends Controller
             }
 
         } catch (\Exception $e) {
+            \Log::error('Salary Import Controller: Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ أثناء استيراد الموظفين: ' . $e->getMessage()

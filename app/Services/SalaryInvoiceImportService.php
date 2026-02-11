@@ -51,6 +51,7 @@ class SalaryInvoiceImportService
             $invoice = Invoice::findOrFail($invoiceId);
 
             if ($invoice->invoiceEmployees()->exists()) {
+                Log::warning('Salary Import: Duplicate import attempt', ['invoice_id' => $invoiceId]);
                 throw new \Exception('هذه الفاتورة تحتوي بالفعل على موظفين مستوردين. يرجى حذفهم أولاً.');
             }
 
@@ -59,6 +60,7 @@ class SalaryInvoiceImportService
             $rows = $worksheet->toArray();
 
             if (empty($rows)) {
+                Log::warning('Salary Import: Empty file', ['invoice_id' => $invoiceId]);
                 throw new \Exception('الملف فارغ');
             }
 
@@ -79,7 +81,15 @@ class SalaryInvoiceImportService
 
                 $employeeData = $this->mapRowToEmployee($headers, $row, $invoice->id);
                 
-                $this->validateEmployeeData($employeeData);
+                try {
+                    $this->validateEmployeeData($employeeData);
+                } catch (\Exception $e) {
+                    Log::warning('Salary Import: Row validation failed', [
+                        'row' => $i + 1,
+                        'error' => $e->getMessage()
+                    ]);
+                    continue;
+                }
                 
                 $employee = InvoiceEmployee::create($employeeData);
                 
@@ -90,6 +100,9 @@ class SalaryInvoiceImportService
             }
 
             if (empty($employees)) {
+                Log::error('Salary Import: No employees imported', [
+                    'invoice_id' => $invoiceId
+                ]);
                 throw new \Exception('لم يتم العثور على بيانات موظفين صالحة في الملف');
             }
 
@@ -101,6 +114,11 @@ class SalaryInvoiceImportService
             ]);
 
             DB::commit();
+
+            Log::info('Salary Import: Success', [
+                'invoice_id' => $invoiceId,
+                'imported' => count($employees)
+            ]);
 
             return [
                 'success' => true,
@@ -115,6 +133,13 @@ class SalaryInvoiceImportService
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Salary Import: Critical error', [
+                'invoice_id' => $invoiceId,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             return [
                 'success' => false,

@@ -283,13 +283,30 @@
                                     'number' => 'INV-00'.($i),
                                     'type' => 'regular',
                                     'client' => (object)['name' => $i == 1 ? 'شركة النور للمقاولات' : ($i == 2 ? 'مؤسسة الفجر التجارية' : 'شركة البناء الحديث'), 'phone' => '966501234567+'],
+                                    'service' => (object)['name' => 'خدمة الحراسة'],
+                                    'service_details_data' => [],
+                                    'generation_date' => (object)['format' => fn($f) => date('Y-m-d')],
                                     'base_price' => 150000,
                                     'tax_amount' => 22500,
+                                    'tax_rate' => 15,
                                     'total_price' => 172500,
+                                    'paid_amount' => $i == 1 ? 172500 : 0,
                                     'total_workers' => 25 + ($i*10),
+                                    'total_supervisors' => 0,
+                                    'total_managers' => 0,
+                                    'total_users' => 0,
                                     'work_days' => 21,
+                                    'workers_days' => 21,
+                                    'supervisors_days' => 0,
+                                    'managers_days' => 0,
+                                    'users_days' => 0,
+                                    'employees_count' => 0,
+                                    'work_days_count' => 0,
                                     'payment_status' => $i == 1 ? 'paid' : ($i == 2 ? 'pending' : 'late'),
-                                    'price_difference' => $i % 2 == 0 ? 10000 : 0
+                                    'price_difference' => $i % 2 == 0 ? 10000 : 0,
+                                    'issue_delay_days' => 0,
+                                    'late_days' => $i == 3 ? 5 : 0,
+                                    'credit_notes_count' => 0
                                 ]);
                             }
                         }

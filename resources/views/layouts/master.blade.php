@@ -463,8 +463,8 @@
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="bi bi-gear-fill"></i>
+                <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                    <i class="bi bi-sliders"></i>
                     <span>الإعدادات</span>
                 </a>
             </div>

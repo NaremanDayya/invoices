@@ -125,20 +125,37 @@ class SalaryInvoiceController extends Controller
         }
     }
 
-    public function updatePaymentMethod(Request $request, $employeeId)
+    public function updatePaymentMethod(Request $request, $employee)
     {
-        dd($request);
-        $request->validate([
-            'payment_method' => 'required|in:wps,monthly',
-            'wps_percentage' => 'required_if:payment_method,wps|nullable|numeric|min:0|max:100'
+        \Log::info('Payment Method Update: Request received', [
+            'employee_id' => $employee,
+            'method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
+            'all_data' => $request->all(),
+            'json_data' => $request->json()->all(),
+            'raw_body' => $request->getContent()
         ]);
 
         try {
+            $validated = $request->validate([
+                'payment_method' => 'required|in:wps,monthly',
+                'wps_percentage' => 'required_if:payment_method,wps|nullable|numeric|min:0|max:100'
+            ]);
+
+            \Log::info('Payment Method Update: Validation passed', [
+                'validated' => $validated
+            ]);
+
             $result = $this->importService->updateEmployeePaymentMethod(
-                $employeeId,
-                $request->payment_method,
-                $request->wps_percentage
+                $employee,
+                $request->input('payment_method'),
+                $request->input('wps_percentage')
             );
+
+            \Log::info('Payment Method Update: Service result', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'No message'
+            ]);
 
             if ($result['success']) {
                 return response()->json([
@@ -146,14 +163,29 @@ class SalaryInvoiceController extends Controller
                     'message' => $result['message'],
                     'employee' => $result['employee']
                 ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result['message']
-                ], 422);
             }
 
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 422);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('Payment Method Update: Validation failed', [
+                'errors' => $e->errors()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'خطأ في البيانات المدخلة',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
+            \Log::error('Payment Method Update: Exception', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ: ' . $e->getMessage()

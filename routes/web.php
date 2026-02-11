@@ -52,6 +52,11 @@ Route::get('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoice
 Route::put('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'updateWpsSettings'])->name('salary-invoices.update-wps-settings');
 Route::get('/salary-invoices/download-template', [\App\Http\Controllers\SalaryInvoiceController::class, 'downloadTemplate'])->name('salary-invoices.download-template');
 
+// Settings Routes
+Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+Route::put('/settings/wps-percentage', [\App\Http\Controllers\SettingsController::class, 'updateWpsPercentage'])->name('settings.update-wps');
+Route::get('/settings/wps-percentage', [\App\Http\Controllers\SettingsController::class, 'getWpsPercentage'])->name('settings.get-wps');
+
 // Payment Additional Routes
 Route::post('/payments/{payment}/confirm', [PaymentsController::class, 'confirm'])->name('payments.confirm');
 Route::get('/payments/{payment}/print', [PaymentsController::class, 'print'])->name('payments.print');

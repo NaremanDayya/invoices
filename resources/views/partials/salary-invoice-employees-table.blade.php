@@ -298,30 +298,96 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
     const paymentMethod = document.getElementById('payment_method').value;
     const wpsPercentage = document.getElementById('wps_percentage').value;
 
+    console.log('Payment Method Update: Starting request', {
+        employeeId,
+        paymentMethod,
+        wpsPercentage,
+        url: `/salary-invoices/employees/${employeeId}/payment-method`
+    });
+
     try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            alert('خطأ: لم يتم العثور على رمز الأمان (CSRF)');
+            return;
+        }
+
+        const requestBody = {
+            payment_method: paymentMethod,
+            wps_percentage: wpsPercentage || null
+        };
+
+        console.log('Payment Method Update: Request details', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: requestBody
+        });
+
         const response = await fetch(`/salary-invoices/employees/${employeeId}/payment-method`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
             },
-            body: JSON.stringify({
-                payment_method: paymentMethod,
-                wps_percentage: wpsPercentage
-            })
+            body: JSON.stringify(requestBody)
         });
 
-        const data = await response.json();
+        console.log('Payment Method Update: Response received', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            headers: Object.fromEntries(response.headers.entries())
+        });
 
-        if (data.success) {
-            alert(data.message);
+        // Handle non-JSON responses
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Payment Method Update: Non-JSON response', {
+                status: response.status,
+                contentType,
+                body: text.substring(0, 500)
+            });
+            alert(`خطأ في الخادم (${response.status}): الاستجابة غير صالحة`);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Payment Method Update: Response data', data);
+
+        if (response.ok && data.success) {
+            console.log('Payment Method Update: Success');
+            alert(data.message || 'تم التحديث بنجاح');
             closePaymentMethodModal();
             loadSalaryEmployees({{ $invoice->id }});
         } else {
-            alert(data.message);
+            console.warn('Payment Method Update: Failed', data);
+            
+            // Handle validation errors
+            if (data.errors) {
+                const errorMessages = Object.values(data.errors).flat().join('\n');
+                alert(`خطأ في البيانات:\n${errorMessages}`);
+            } else {
+                alert(data.message || 'فشل التحديث');
+            }
         }
     } catch (error) {
-        alert('حدث خطأ أثناء التحديث');
+        console.error('Payment Method Update: Exception caught', {
+            error: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            alert('خطأ في الاتصال: تعذر الوصول إلى الخادم. تحقق من اتصال الإنترنت.');
+        } else {
+            alert(`حدث خطأ أثناء التحديث: ${error.message}`);
+        }
     }
 });
 

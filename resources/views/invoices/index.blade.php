@@ -285,7 +285,7 @@
                                     'client' => (object)['name' => $i == 1 ? 'شركة النور للمقاولات' : ($i == 2 ? 'مؤسسة الفجر التجارية' : 'شركة البناء الحديث'), 'phone' => '966501234567+'],
                                     'service' => (object)['name' => 'خدمة الحراسة'],
                                     'service_details_data' => [],
-                                    'generation_date' => (object)['format' => fn($f) => date('Y-m-d')],
+                                    'generation_date' => \Carbon\Carbon::now(),
                                     'base_price' => 150000,
                                     'tax_amount' => 22500,
                                     'tax_rate' => 15,

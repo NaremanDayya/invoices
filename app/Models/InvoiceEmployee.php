@@ -33,6 +33,8 @@ class InvoiceEmployee extends Pivot
         'payment_method',
         'wps_percentage',
         'wps_amount',
+        'monthly_amount',
+        'wps_percentage_applied',
         'payment_status',
         'payment_date',
         'paid_amount',
@@ -50,6 +52,8 @@ class InvoiceEmployee extends Pivot
         'absence_deduction' => 'decimal:2',
         'wps_percentage' => 'decimal:2',
         'wps_amount' => 'decimal:2',
+        'monthly_amount' => 'decimal:2',
+        'wps_percentage_applied' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'payment_date' => 'date',
         'deductions' => 'array'
@@ -107,24 +111,53 @@ class InvoiceEmployee extends Pivot
 
     public function calculateWpsAmount()
     {
-        if ($this->payment_method === 'wps' && $this->wps_percentage) {
-            $this->wps_amount = ($this->net_salary * $this->wps_percentage) / 100;
+        if ($this->payment_method === 'wps' && $this->wps_amount !== null) {
+            $this->monthly_amount = $this->net_salary - $this->wps_amount;
+            
+            if ($this->net_salary > 0) {
+                $this->wps_percentage_applied = ($this->wps_amount / $this->net_salary) * 100;
+            } else {
+                $this->wps_percentage_applied = 0;
+            }
         } else {
-            $this->wps_amount = null;
+            $this->wps_amount = 0;
+            $this->monthly_amount = $this->net_salary;
+            $this->wps_percentage_applied = null;
         }
         return $this;
     }
 
-    public function validateWpsPercentage()
+    public function validateWpsAmount()
     {
-        if ($this->payment_method === 'wps' && $this->wps_percentage) {
-            $maxWpsPercentage = Setting::where('key', 'wps_max_percentage')->value('value') ?? 70;
+        if ($this->payment_method === 'wps') {
+            if ($this->wps_amount < 0) {
+                throw new \Exception('مبلغ WPS يجب أن يكون أكبر من أو يساوي صفر');
+            }
             
-            if ($this->wps_percentage > $maxWpsPercentage) {
-                throw new \Exception("WPS percentage cannot exceed {$maxWpsPercentage}%");
+            $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
+            $maxWpsAmount = ($this->net_salary * $maxWpsPercentage) / 100;
+            
+            if ($this->wps_amount > $maxWpsAmount) {
+                throw new \Exception("مبلغ WPS لا يمكن أن يتجاوز {$maxWpsAmount} ريال (الحد الأقصى {$maxWpsPercentage}% من صافي الراتب)");
+            }
+            
+            if ($this->wps_amount > $this->net_salary) {
+                throw new \Exception('مبلغ WPS لا يمكن أن يتجاوز صافي الراتب');
+            }
+            
+            $this->monthly_amount = $this->net_salary - $this->wps_amount;
+            
+            if ($this->monthly_amount < 0) {
+                throw new \Exception('المبلغ الشهري يجب أن يكون أكبر من أو يساوي صفر');
             }
         }
         return true;
+    }
+    
+    public function getMaxWpsAmountAttribute()
+    {
+        $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
+        return ($this->net_salary * $maxWpsPercentage) / 100;
     }
 
     public function markAsPaid($amount = null)

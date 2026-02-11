@@ -1,6 +1,29 @@
 <div class="bg-white rounded-lg shadow-md p-6 mt-6" id="salaryEmployeesSection">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-xl font-semibold text-gray-900">موظفي الرواتب</h3>
+        <div class="flex gap-2" id="filterButtons">
+            <button onclick="filterEmployees('all')" class="filter-btn active px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm">
+                <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                الكل (<span id="countAll">0</span>)
+            </button>
+            <button onclick="filterEmployees('wps')" class="filter-btn px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
+                <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                </svg>
+                WPS (<span id="countWps">0</span>)
+            </button>
+            <button onclick="filterEmployees('monthly')" class="filter-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                راتب شهري (<span id="countMonthly">0</span>)
+            </button>
+        </div>
+    </div>
+    
+    <div class="flex justify-end items-center mb-4">
         <div class="flex gap-2">
             <button onclick="loadSalaryEmployees({{ $invoice->id }})" 
                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
@@ -56,10 +79,9 @@
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">ID</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم الموظف</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المشروع</th>
-                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الراتب الأساسي</th>
-                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المكافآت</th>
-                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الخصومات</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">صافي الراتب</th>
+                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">مبلغ WPS</th>
+                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ الشهري</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">طريقة الدفع</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
@@ -93,12 +115,17 @@
                 </select>
             </div>
 
-            <div id="wpsPercentageDiv" class="mb-4 hidden">
-                <label class="block text-sm font-medium text-gray-700 mb-2">نسبة WPS (%)</label>
-                <input type="number" id="wps_percentage" name="wps_percentage" 
+            <div id="wpsAmountDiv" class="mb-4 hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ WPS (ريال)</label>
+                <input type="number" id="wps_amount" name="wps_amount" 
                        class="w-full px-3 py-2 border border-gray-300 rounded-md" 
-                       min="0" max="100" step="0.01">
-                <p class="text-xs text-gray-500 mt-1">الحد الأقصى: <span id="maxWpsPercentage">70</span>%</p>
+                       min="0" step="0.01" oninput="calculateMonthlyAmount()">
+                <div class="mt-2 p-3 bg-blue-50 rounded-md">
+                    <p class="text-xs text-blue-700 mb-1"><strong>صافي الراتب:</strong> <span id="displayNetSalary">0.00</span> ريال</p>
+                    <p class="text-xs text-purple-700 mb-1"><strong>الحد الأقصى لـ WPS:</strong> <span id="maxWpsAmount">0.00</span> ريال (<span id="maxWpsPercentage">70</span>%)</p>
+                    <p class="text-xs text-green-700"><strong>المبلغ الشهري المتبقي:</strong> <span id="calculatedMonthlyAmount">0.00</span> ريال</p>
+                </div>
+                <p class="text-xs text-red-600 mt-1 hidden" id="wpsAmountError"></p>
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
@@ -117,6 +144,9 @@
 <script>
 let selectedEmployees = new Set();
 let maxWpsPercentage = 70;
+let allEmployeesData = [];
+let currentFilter = 'all';
+let currentEmployeeNetSalary = 0;
 
 async function loadSalaryEmployees(invoiceId) {
     try {
@@ -153,8 +183,10 @@ function displayEmployees(employees, summary) {
     document.getElementById('totalNetSalaries').textContent = parseFloat(summary.total_net_salaries).toFixed(2) + ' ريال';
     document.getElementById('remainingUnpaid').textContent = parseFloat(summary.remaining_unpaid).toFixed(2) + ' ريال';
 
+    allEmployeesData = employees;
+    
     tableBody.innerHTML = employees.map(emp => `
-        <tr class="hover:bg-gray-50">
+        <tr class="hover:bg-gray-50 employee-row" data-payment-method="${emp.payment_method}" data-wps-amount="${emp.wps_amount || 0}">
             <td class="px-3 py-4 whitespace-nowrap">
                 <input type="checkbox" class="employee-checkbox rounded border-gray-300" 
                        value="${emp.id}" 
@@ -164,18 +196,17 @@ function displayEmployees(employees, summary) {
             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">${emp.id}</td>
             <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${emp.employee_name || '-'}</td>
             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${emp.project || '-'}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(emp.basic_salary).toFixed(2)}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(emp.bonuses).toFixed(2)}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm text-red-600">${parseFloat(emp.monthly_deductions + emp.advance_deductions).toFixed(2)}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-green-600">${parseFloat(emp.net_salary).toFixed(2)}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">${parseFloat(emp.net_salary).toFixed(2)} ريال</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-purple-600">${parseFloat(emp.wps_amount || 0).toFixed(2)} ريال</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-green-600">${parseFloat(emp.monthly_amount || emp.net_salary).toFixed(2)} ريال</td>
             <td class="px-3 py-4 whitespace-nowrap">
-                ${getPaymentMethodBadge(emp.payment_method, emp.wps_percentage)}
+                ${getPaymentMethodBadge(emp.payment_method, emp.wps_amount, emp.wps_percentage_applied)}
             </td>
             <td class="px-3 py-4 whitespace-nowrap">
                 ${getPaymentStatusBadge(emp.payment_status)}
             </td>
             <td class="px-3 py-4 whitespace-nowrap text-sm">
-                <button onclick="openPaymentMethodModal(${emp.id})" 
+                <button onclick="openPaymentMethodModal(${emp.id}, ${emp.net_salary}, ${emp.wps_amount || 0}, '${emp.payment_method}')" 
                         class="text-blue-600 hover:text-blue-900 ml-2" 
                         ${emp.payment_status === 'paid' ? 'disabled' : ''}>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,10 +216,13 @@ function displayEmployees(employees, summary) {
             </td>
         </tr>
     `).join('');
+    
+    updateFilterCounts();
 }
 
-function getPaymentMethodBadge(method, percentage) {
-    if (method === 'wps') {
+function getPaymentMethodBadge(method, wpsAmount, wpsPercentageApplied) {
+    if (method === 'wps' && wpsAmount > 0) {
+        const percentage = wpsPercentageApplied ? parseFloat(wpsPercentageApplied).toFixed(1) : '0';
         return `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
             WPS (${percentage}%)
         </span>`;
@@ -255,15 +289,33 @@ async function paySelectedEmployees() {
     }
 }
 
-function openPaymentMethodModal(employeeId) {
+function openPaymentMethodModal(employeeId, netSalary, wpsAmount, paymentMethod) {
     document.getElementById('employee_id').value = employeeId;
+    currentEmployeeNetSalary = parseFloat(netSalary);
+    
+    document.getElementById('payment_method').value = paymentMethod || 'monthly';
+    document.getElementById('wps_amount').value = wpsAmount > 0 ? parseFloat(wpsAmount).toFixed(2) : '';
+    
+    document.getElementById('displayNetSalary').textContent = currentEmployeeNetSalary.toFixed(2);
+    
+    if (paymentMethod === 'wps') {
+        document.getElementById('wpsAmountDiv').classList.remove('hidden');
+        document.getElementById('wps_amount').required = true;
+    } else {
+        document.getElementById('wpsAmountDiv').classList.add('hidden');
+        document.getElementById('wps_amount').required = false;
+    }
+    
     document.getElementById('paymentMethodModal').classList.remove('hidden');
     loadWpsSettings();
+    calculateMonthlyAmount();
 }
 
 function closePaymentMethodModal() {
     document.getElementById('paymentMethodModal').classList.add('hidden');
     document.getElementById('paymentMethodForm').reset();
+    document.getElementById('wpsAmountError').classList.add('hidden');
+    currentEmployeeNetSalary = 0;
 }
 
 async function loadWpsSettings() {
@@ -273,21 +325,52 @@ async function loadWpsSettings() {
         if (data.success) {
             maxWpsPercentage = data.wps_max_percentage;
             document.getElementById('maxWpsPercentage').textContent = maxWpsPercentage;
-            document.getElementById('wps_percentage').max = maxWpsPercentage;
+            updateMaxWpsAmount();
         }
     } catch (error) {
         console.error('Error loading WPS settings:', error);
     }
 }
 
+function updateMaxWpsAmount() {
+    const maxAmount = (currentEmployeeNetSalary * maxWpsPercentage) / 100;
+    document.getElementById('maxWpsAmount').textContent = maxAmount.toFixed(2);
+    document.getElementById('wps_amount').max = maxAmount;
+}
+
+function calculateMonthlyAmount() {
+    const wpsAmount = parseFloat(document.getElementById('wps_amount').value) || 0;
+    const monthlyAmount = currentEmployeeNetSalary - wpsAmount;
+    const maxAmount = (currentEmployeeNetSalary * maxWpsPercentage) / 100;
+    const errorDiv = document.getElementById('wpsAmountError');
+    
+    document.getElementById('calculatedMonthlyAmount').textContent = monthlyAmount.toFixed(2);
+    
+    if (wpsAmount > maxAmount) {
+        errorDiv.textContent = `مبلغ WPS يتجاوز الحد الأقصى المسموح به (${maxAmount.toFixed(2)} ريال)`;
+        errorDiv.classList.remove('hidden');
+    } else if (wpsAmount > currentEmployeeNetSalary) {
+        errorDiv.textContent = 'مبلغ WPS لا يمكن أن يتجاوز صافي الراتب';
+        errorDiv.classList.remove('hidden');
+    } else if (monthlyAmount < 0) {
+        errorDiv.textContent = 'المبلغ الشهري لا يمكن أن يكون سالباً';
+        errorDiv.classList.remove('hidden');
+    } else {
+        errorDiv.classList.add('hidden');
+    }
+}
+
 document.getElementById('payment_method')?.addEventListener('change', function() {
-    const wpsDiv = document.getElementById('wpsPercentageDiv');
+    const wpsDiv = document.getElementById('wpsAmountDiv');
     if (this.value === 'wps') {
         wpsDiv.classList.remove('hidden');
-        document.getElementById('wps_percentage').required = true;
+        document.getElementById('wps_amount').required = true;
+        updateMaxWpsAmount();
+        calculateMonthlyAmount();
     } else {
         wpsDiv.classList.add('hidden');
-        document.getElementById('wps_percentage').required = false;
+        document.getElementById('wps_amount').required = false;
+        document.getElementById('wpsAmountError').classList.add('hidden');
     }
 });
 
@@ -313,9 +396,11 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
             return;
         }
 
+        const wpsAmount = document.getElementById('wps_amount').value;
+        
         const requestBody = {
             payment_method: paymentMethod,
-            wps_percentage: wpsPercentage || null
+            wps_amount: wpsAmount || null
         };
 
         console.log('Payment Method Update: Request details', {
@@ -391,9 +476,50 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
     }
 });
 
+function filterEmployees(filterType) {
+    currentFilter = filterType;
+    const rows = document.querySelectorAll('.employee-row');
+    
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.filter-btn').classList.add('active');
+    
+    rows.forEach(row => {
+        const paymentMethod = row.dataset.paymentMethod;
+        const wpsAmount = parseFloat(row.dataset.wpsAmount);
+        
+        if (filterType === 'all') {
+            row.style.display = '';
+        } else if (filterType === 'wps') {
+            row.style.display = (paymentMethod === 'wps' && wpsAmount > 0) ? '' : 'none';
+        } else if (filterType === 'monthly') {
+            row.style.display = (paymentMethod === 'monthly' || wpsAmount === 0) ? '' : 'none';
+        }
+    });
+}
+
+function updateFilterCounts() {
+    const allCount = allEmployeesData.length;
+    const wpsCount = allEmployeesData.filter(emp => emp.payment_method === 'wps' && emp.wps_amount > 0).length;
+    const monthlyCount = allEmployeesData.filter(emp => emp.payment_method === 'monthly' || !emp.wps_amount || emp.wps_amount === 0).length;
+    
+    document.getElementById('countAll').textContent = allCount;
+    document.getElementById('countWps').textContent = wpsCount;
+    document.getElementById('countMonthly').textContent = monthlyCount;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     @if($invoice->isSalaryInvoice())
         loadSalaryEmployees({{ $invoice->id }});
     @endif
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        .filter-btn.active {
+            ring: 2px;
+            ring-offset: 2px;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+    `;
+    document.head.appendChild(style);
 });
 </script>

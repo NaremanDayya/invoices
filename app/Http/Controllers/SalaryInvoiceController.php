@@ -139,7 +139,7 @@ class SalaryInvoiceController extends Controller
         try {
             $validated = $request->validate([
                 'payment_method' => 'required|in:wps,monthly',
-                'wps_percentage' => 'required_if:payment_method,wps|nullable|numeric|min:0|max:100'
+                'wps_amount' => 'required_if:payment_method,wps|nullable|numeric|min:0'
             ]);
 
             \Log::info('Payment Method Update: Validation passed', [
@@ -149,7 +149,7 @@ class SalaryInvoiceController extends Controller
             $result = $this->importService->updateEmployeePaymentMethod(
                 $employee,
                 $request->input('payment_method'),
-                $request->input('wps_percentage')
+                $request->input('wps_amount')
             );
 
             \Log::info('Payment Method Update: Service result', [

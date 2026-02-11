@@ -182,6 +182,8 @@ class SalaryInvoiceImportService
         $employeeData['payment_method'] = 'monthly';
         $employeeData['payment_status'] = 'unpaid';
         $employeeData['paid_amount'] = 0;
+        $employeeData['wps_amount'] = 0;
+        $employeeData['monthly_amount'] = $employeeData['net_salary'] ?? 0;
 
         return $employeeData;
     }
@@ -228,40 +230,44 @@ class SalaryInvoiceImportService
         return (int) $value;
     }
 
-    public function updateEmployeePaymentMethod($employeeId, $paymentMethod, $wpsPercentage = null)
+    public function updateEmployeePaymentMethod($employeeId, $paymentMethod, $wpsAmount = null)
     {
         try {
+            DB::beginTransaction();
+            
             $employee = InvoiceEmployee::findOrFail($employeeId);
 
             if ($paymentMethod === 'wps') {
-                if (!$wpsPercentage) {
-                    throw new \Exception('يجب تحديد نسبة WPS');
+                if ($wpsAmount === null || $wpsAmount === '') {
+                    throw new \Exception('يجب تحديد مبلغ WPS');
                 }
 
-                $maxWpsPercentage = Setting::get('wps_max_percentage', 50);
-
-                if ($wpsPercentage > $maxWpsPercentage) {
-                    throw new \Exception("نسبة WPS لا يمكن أن تتجاوز {$maxWpsPercentage}%");
-                }
-
+                $wpsAmount = (float) $wpsAmount;
+                
                 $employee->payment_method = 'wps';
-                $employee->wps_percentage = $wpsPercentage;
-                $employee->wps_amount = ($employee->net_salary * $wpsPercentage) / 100;
+                $employee->wps_amount = $wpsAmount;
+                
+                $employee->validateWpsAmount();
+                $employee->calculateWpsAmount();
             } else {
                 $employee->payment_method = 'monthly';
-                $employee->wps_percentage = null;
-                $employee->wps_amount = null;
+                $employee->wps_amount = 0;
+                $employee->monthly_amount = $employee->net_salary;
+                $employee->wps_percentage_applied = null;
             }
 
             $employee->save();
+            
+            DB::commit();
 
             return [
                 'success' => true,
                 'message' => 'تم تحديث طريقة الدفع بنجاح',
-                'employee' => $employee
+                'employee' => $employee->fresh()
             ];
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return [
                 'success' => false,
                 'message' => $e->getMessage()

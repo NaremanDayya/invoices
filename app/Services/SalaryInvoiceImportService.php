@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\InvoiceEmployee;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -74,13 +75,13 @@ class SalaryInvoiceImportService
 
             for ($i = 1; $i < count($rows); $i++) {
                 $row = $rows[$i];
-                
+
                 if ($this->isEmptyRow($row)) {
                     continue;
                 }
 
                 $employeeData = $this->mapRowToEmployee($headers, $row, $invoice->id);
-                
+
                 try {
                     $this->validateEmployeeData($employeeData);
                 } catch (\Exception $e) {
@@ -90,9 +91,9 @@ class SalaryInvoiceImportService
                     ]);
                     continue;
                 }
-                
+
                 $employee = InvoiceEmployee::create($employeeData);
-                
+
                 $employees[] = $employee;
                 $totalSalaries += $employee->basic_salary;
                 $totalDeductions += ($employee->monthly_deductions + $employee->advance_deductions);
@@ -140,7 +141,7 @@ class SalaryInvoiceImportService
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return [
                 'success' => false,
                 'message' => 'فشل الاستيراد: ' . $e->getMessage()
@@ -151,7 +152,7 @@ class SalaryInvoiceImportService
     protected function validateHeaders($headers)
     {
         $missingHeaders = array_diff($this->expectedHeaders, $headers);
-        
+
         if (!empty($missingHeaders)) {
             throw new \Exception('الملف يفتقد العناوين التالية: ' . implode(', ', $missingHeaders));
         }
@@ -163,11 +164,11 @@ class SalaryInvoiceImportService
 
         foreach ($headers as $index => $header) {
             $header = trim($header);
-            
+
             if (isset($this->headerMapping[$header])) {
                 $field = $this->headerMapping[$header];
                 $value = isset($row[$index]) ? trim($row[$index]) : null;
-                
+
                 if (in_array($field, ['basic_salary', 'bonuses', 'monthly_deductions', 'advance_deductions', 'net_salary'])) {
                     $employeeData[$field] = $this->parseDecimal($value);
                 } elseif (in_array($field, ['work_days_count', 'absence_days_count'])) {
@@ -213,7 +214,7 @@ class SalaryInvoiceImportService
         if (is_null($value) || $value === '') {
             return 0;
         }
-        
+
         $value = str_replace(',', '', $value);
         return (float) $value;
     }
@@ -223,7 +224,7 @@ class SalaryInvoiceImportService
         if (is_null($value) || $value === '') {
             return 0;
         }
-        
+
         return (int) $value;
     }
 
@@ -231,14 +232,14 @@ class SalaryInvoiceImportService
     {
         try {
             $employee = InvoiceEmployee::findOrFail($employeeId);
-            
+
             if ($paymentMethod === 'wps') {
                 if (!$wpsPercentage) {
                     throw new \Exception('يجب تحديد نسبة WPS');
                 }
 
                 $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
-                
+
                 if ($wpsPercentage > $maxWpsPercentage) {
                     throw new \Exception("نسبة WPS لا يمكن أن تتجاوز {$maxWpsPercentage}%");
                 }
@@ -291,17 +292,17 @@ class SalaryInvoiceImportService
 
                 $paymentAmount = $employee->remaining_amount;
                 $employee->markAsPaid($paymentAmount);
-                
+
                 $totalPaid += $paymentAmount;
                 $paidEmployees[] = $employee;
             }
 
             $invoice = $employees->first()->invoice;
             $invoice->increment('paid_amount', $totalPaid);
-            
+
             $totalEmployees = $invoice->invoiceEmployees()->count();
             $paidEmployeesCount = $invoice->invoiceEmployees()->where('payment_status', 'paid')->count();
-            
+
             if ($paidEmployeesCount >= $totalEmployees) {
                 $invoice->update(['payment_status' => 'paid']);
             } elseif ($paidEmployeesCount > 0) {
@@ -321,7 +322,7 @@ class SalaryInvoiceImportService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return [
                 'success' => false,
                 'message' => 'فشل الدفع: ' . $e->getMessage()

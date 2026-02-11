@@ -206,9 +206,7 @@ class SalaryInvoiceController extends Controller
             $invoice = $employee->invoice;
             $employee->delete();
 
-            $invoice->update([
-                'employees_count' => $invoice->invoiceEmployees()->count()
-            ]);
+            $this->importService->recalculateInvoiceTotals($invoice);
 
             return response()->json([
                 'success' => true,
@@ -216,6 +214,51 @@ class SalaryInvoiceController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function clearAllEmployees($invoiceId)
+    {
+        try {
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            // Check if any employees have been paid
+            $paidCount = $invoice->invoiceEmployees()->where('payment_status', 'paid')->count();
+            if ($paidCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "لا يمكن حذف الموظفين. يوجد {$paidCount} موظف تم دفع رواتبهم"
+                ], 422);
+            }
+
+            // Delete all employees
+            $deletedCount = $invoice->invoiceEmployees()->delete();
+
+            // Reset invoice type to regular
+            $invoice->update([
+                'type' => 'regular',
+                'employees_count' => 0
+            ]);
+
+            \Log::info('Salary Import: All employees cleared', [
+                'invoice_id' => $invoiceId,
+                'deleted_count' => $deletedCount
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "تم حذف {$deletedCount} موظف بنجاح. يمكنك الآن إعادة الاستيراد"
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Salary Import: Error clearing employees', [
+                'invoice_id' => $invoiceId,
+                'error' => $e->getMessage()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ: ' . $e->getMessage()

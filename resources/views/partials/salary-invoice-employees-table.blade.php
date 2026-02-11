@@ -22,10 +22,10 @@
             </button>
         </div>
     </div>
-    
+
     <div class="flex justify-end items-center mb-4">
         <div class="flex gap-2">
-            <button onclick="loadSalaryEmployees({{ $invoice->id }})" 
+            <button onclick="loadSalaryEmployees({{ $invoice->id }})"
                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
                 <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -106,7 +106,7 @@
 
         <form id="paymentMethodForm" class="mt-4">
             <input type="hidden" id="employee_id" name="employee_id">
-            
+
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">طريقة الدفع</label>
                 <select id="payment_method" name="payment_method" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
@@ -117,8 +117,8 @@
 
             <div id="wpsAmountDiv" class="mb-4 hidden">
                 <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ WPS (ريال)</label>
-                <input type="number" id="wps_amount" name="wps_amount" 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md" 
+                <input type="number" id="wps_amount" name="wps_amount"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md"
                        min="0" step="0.01" oninput="calculateMonthlyAmount()">
                 <div class="mt-2 p-3 bg-blue-50 rounded-md">
                     <p class="text-xs text-blue-700 mb-1"><strong>صافي الراتب:</strong> <span id="displayNetSalary">0.00</span> ريال</p>
@@ -129,7 +129,7 @@
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="closePaymentMethodModal()" 
+                <button type="button" onclick="closePaymentMethodModal()"
                         class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
                     إلغاء
                 </button>
@@ -184,12 +184,12 @@ function displayEmployees(employees, summary) {
     document.getElementById('remainingUnpaid').textContent = parseFloat(summary.remaining_unpaid).toFixed(2) + ' ريال';
 
     allEmployeesData = employees;
-    
+
     tableBody.innerHTML = employees.map(emp => `
         <tr class="hover:bg-gray-50 employee-row" data-payment-method="${emp.payment_method}" data-wps-amount="${emp.wps_amount || 0}">
             <td class="px-3 py-4 whitespace-nowrap">
-                <input type="checkbox" class="employee-checkbox rounded border-gray-300" 
-                       value="${emp.id}" 
+                <input type="checkbox" class="employee-checkbox rounded border-gray-300"
+                       value="${emp.id}"
                        ${emp.payment_status === 'paid' ? 'disabled' : ''}
                        onchange="updateSelectedEmployees()">
             </td>
@@ -206,8 +206,8 @@ function displayEmployees(employees, summary) {
                 ${getPaymentStatusBadge(emp.payment_status)}
             </td>
             <td class="px-3 py-4 whitespace-nowrap text-sm">
-                <button onclick="openPaymentMethodModal(${emp.id}, ${emp.net_salary}, ${emp.wps_amount || 0}, '${emp.payment_method}')" 
-                        class="text-blue-600 hover:text-blue-900 ml-2" 
+                <button onclick="openPaymentMethodModal(${emp.id}, ${emp.net_salary}, ${emp.wps_amount || 0}, '${emp.payment_method}')"
+                        class="text-blue-600 hover:text-blue-900 ml-2"
                         ${emp.payment_status === 'paid' ? 'disabled' : ''}>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -216,7 +216,7 @@ function displayEmployees(employees, summary) {
             </td>
         </tr>
     `).join('');
-    
+
     updateFilterCounts();
 }
 
@@ -292,25 +292,33 @@ async function paySelectedEmployees() {
 function openPaymentMethodModal(employeeId, netSalary, wpsAmount, paymentMethod) {
     document.getElementById('employee_id').value = employeeId;
     currentEmployeeNetSalary = parseFloat(netSalary);
-    
-    document.getElementById('payment_method').value = paymentMethod || 'monthly';
-    document.getElementById('wps_amount').value = wpsAmount > 0 ? parseFloat(wpsAmount).toFixed(2) : '';
-    
-    document.getElementById('displayNetSalary').textContent = currentEmployeeNetSalary.toFixed(2);
-    
-    if (paymentMethod === 'wps') {
-        document.getElementById('wpsAmountDiv').classList.remove('hidden');
-        document.getElementById('wps_amount').required = true;
-    } else {
-        document.getElementById('wpsAmountDiv').classList.add('hidden');
-        document.getElementById('wps_amount').required = false;
-    }
-    
-    document.getElementById('paymentMethodModal').classList.remove('hidden');
-    loadWpsSettings();
-    calculateMonthlyAmount();
-}
 
+    document.getElementById('paymentMethodModal').classList.remove('hidden');
+    
+    setTimeout(() => {
+        const paymentMethodSelect = document.getElementById('payment_method');
+        paymentMethodSelect.value = paymentMethod || 'monthly';
+
+        document.getElementById('wps_amount').value = wpsAmount > 0 ? parseFloat(wpsAmount).toFixed(2) : '';
+        document.getElementById('displayNetSalary').textContent = currentEmployeeNetSalary.toFixed(2);
+
+        const wpsDiv = document.getElementById('wpsAmountDiv');
+        const wpsAmountInput = document.getElementById('wps_amount');
+        
+        if (paymentMethod === 'wps') {
+            console.log('Opening modal with WPS method - showing WPS div');
+            wpsDiv.classList.remove('hidden');
+            wpsAmountInput.required = true;
+        } else {
+            console.log('Opening modal with monthly method - hiding WPS div');
+            wpsDiv.classList.add('hidden');
+            wpsAmountInput.required = false;
+        }
+
+        loadWpsSettings();
+        calculateMonthlyAmount();
+    }, 50);
+}
 function closePaymentMethodModal() {
     document.getElementById('paymentMethodModal').classList.add('hidden');
     document.getElementById('paymentMethodForm').reset();
@@ -343,9 +351,9 @@ function calculateMonthlyAmount() {
     const monthlyAmount = currentEmployeeNetSalary - wpsAmount;
     const maxAmount = (currentEmployeeNetSalary * maxWpsPercentage) / 100;
     const errorDiv = document.getElementById('wpsAmountError');
-    
+
     document.getElementById('calculatedMonthlyAmount').textContent = monthlyAmount.toFixed(2);
-    
+
     if (wpsAmount > maxAmount) {
         errorDiv.textContent = `مبلغ WPS يتجاوز الحد الأقصى المسموح به (${maxAmount.toFixed(2)} ريال)`;
         errorDiv.classList.remove('hidden');
@@ -361,30 +369,39 @@ function calculateMonthlyAmount() {
 }
 
 document.getElementById('payment_method')?.addEventListener('change', function() {
+    console.log('Payment method changed to:', this.value);
     const wpsDiv = document.getElementById('wpsAmountDiv');
+    const wpsAmountInput = document.getElementById('wps_amount');
+
     if (this.value === 'wps') {
+        console.log('Showing WPS div for WPS payment method');
         wpsDiv.classList.remove('hidden');
-        document.getElementById('wps_amount').required = true;
-        updateMaxWpsAmount();
-        calculateMonthlyAmount();
+        wpsAmountInput.required = true;
+        
+        if (currentEmployeeNetSalary > 0) {
+            updateMaxWpsAmount();
+            calculateMonthlyAmount();
+        }
     } else {
+        console.log('Hiding WPS div for monthly payment method');
         wpsDiv.classList.add('hidden');
-        document.getElementById('wps_amount').required = false;
+        wpsAmountInput.required = false;
+        wpsAmountInput.value = '';
         document.getElementById('wpsAmountError').classList.add('hidden');
     }
 });
 
 document.getElementById('paymentMethodForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const employeeId = document.getElementById('employee_id').value;
     const paymentMethod = document.getElementById('payment_method').value;
-    const wpsPercentage = document.getElementById('wps_percentage').value;
+    const wpsAmount = document.getElementById('wps_amount').value;
 
     console.log('Payment Method Update: Starting request', {
         employeeId,
         paymentMethod,
-        wpsPercentage,
+        wpsAmount,
         url: `/salary-invoices/employees/${employeeId}/payment-method`
     });
 
@@ -396,11 +413,23 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
             return;
         }
 
-        const wpsAmount = document.getElementById('wps_amount').value;
-        
+        // Validate WPS amount if payment method is wps
+        if (paymentMethod === 'wps') {
+            if (!wpsAmount || parseFloat(wpsAmount) <= 0) {
+                alert('الرجاء إدخال مبلغ WPS');
+                return;
+            }
+
+            const maxAmount = parseFloat(document.getElementById('maxWpsAmount').textContent);
+            if (parseFloat(wpsAmount) > maxAmount) {
+                alert(`مبلغ WPS يتجاوز الحد الأقصى المسموح به (${maxAmount.toFixed(2)} ريال)`);
+                return;
+            }
+        }
+
         const requestBody = {
             payment_method: paymentMethod,
-            wps_amount: wpsAmount || null
+            wps_amount: paymentMethod === 'wps' ? parseFloat(wpsAmount) : null
         };
 
         console.log('Payment Method Update: Request details', {
@@ -425,8 +454,7 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
         console.log('Payment Method Update: Response received', {
             status: response.status,
             statusText: response.statusText,
-            ok: response.ok,
-            headers: Object.fromEntries(response.headers.entries())
+            ok: response.ok
         });
 
         // Handle non-JSON responses
@@ -452,8 +480,7 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
             loadSalaryEmployees({{ $invoice->id }});
         } else {
             console.warn('Payment Method Update: Failed', data);
-            
-            // Handle validation errors
+
             if (data.errors) {
                 const errorMessages = Object.values(data.errors).flat().join('\n');
                 alert(`خطأ في البيانات:\n${errorMessages}`);
@@ -467,7 +494,7 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
             stack: error.stack,
             name: error.name
         });
-        
+
         if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
             alert('خطأ في الاتصال: تعذر الوصول إلى الخادم. تحقق من اتصال الإنترنت.');
         } else {
@@ -475,18 +502,17 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
         }
     }
 });
-
 function filterEmployees(filterType) {
     currentFilter = filterType;
     const rows = document.querySelectorAll('.employee-row');
-    
+
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     event.target.closest('.filter-btn').classList.add('active');
-    
+
     rows.forEach(row => {
         const paymentMethod = row.dataset.paymentMethod;
         const wpsAmount = parseFloat(row.dataset.wpsAmount);
-        
+
         if (filterType === 'all') {
             row.style.display = '';
         } else if (filterType === 'wps') {
@@ -501,7 +527,7 @@ function updateFilterCounts() {
     const allCount = allEmployeesData.length;
     const wpsCount = allEmployeesData.filter(emp => emp.payment_method === 'wps' && emp.wps_amount > 0).length;
     const monthlyCount = allEmployeesData.filter(emp => emp.payment_method === 'monthly' || !emp.wps_amount || emp.wps_amount === 0).length;
-    
+
     document.getElementById('countAll').textContent = allCount;
     document.getElementById('countWps').textContent = wpsCount;
     document.getElementById('countMonthly').textContent = monthlyCount;
@@ -511,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
     @if($invoice->isSalaryInvoice())
         loadSalaryEmployees({{ $invoice->id }});
     @endif
-    
+
     const style = document.createElement('style');
     style.textContent = `
         .filter-btn.active {

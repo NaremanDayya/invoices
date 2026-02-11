@@ -127,6 +127,7 @@ class SalaryInvoiceController extends Controller
 
     public function updatePaymentMethod(Request $request, $employeeId)
     {
+        dd($request);
         $request->validate([
             'payment_method' => 'required|in:wps,monthly',
             'wps_percentage' => 'required_if:payment_method,wps|nullable|numeric|min:0|max:100'
@@ -387,7 +388,7 @@ class SalaryInvoiceController extends Controller
             }
 
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-            
+
             $fileName = 'salary_invoice_template_' . date('Y-m-d') . '.xlsx';
             $tempFile = tempnam(sys_get_temp_dir(), $fileName);
             $writer->save($tempFile);

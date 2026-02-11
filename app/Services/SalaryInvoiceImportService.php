@@ -238,7 +238,7 @@ class SalaryInvoiceImportService
                     throw new \Exception('يجب تحديد نسبة WPS');
                 }
 
-                $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
+                $maxWpsPercentage = Setting::get('wps_max_percentage', 50);
 
                 if ($wpsPercentage > $maxWpsPercentage) {
                     throw new \Exception("نسبة WPS لا يمكن أن تتجاوز {$maxWpsPercentage}%");

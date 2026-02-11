@@ -281,6 +281,7 @@
                                 $items->push((object)[
                                     'id' => $i,
                                     'number' => 'INV-00'.($i),
+                                    'type' => 'regular',
                                     'client' => (object)['name' => $i == 1 ? 'شركة النور للمقاولات' : ($i == 2 ? 'مؤسسة الفجر التجارية' : 'شركة البناء الحديث'), 'phone' => '966501234567+'],
                                     'base_price' => 150000,
                                     'tax_amount' => 22500,

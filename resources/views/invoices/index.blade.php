@@ -335,54 +335,31 @@
                     </span>
                         </td>
                         <td class="align-middle">
-
                             @php
                                 $details = collect($invoice->service_details_data ?? [])
                                     ->filter(fn ($d) => !empty($d['name']));
                             @endphp
 
                             @if($details->count())
-
-                                <div class="d-grid gap-1"
-                                     style="grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));">
-
+                                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
                                     @foreach($details as $detail)
-
                                         @php
                                             $cleanName = trim(str_replace('عدد', '', $detail['name']));
                                         @endphp
 
-                                        <div class="service-detail-card text-center">
-
-                                            <!-- Detail Name -->
-                                            <div class="service-detail-name">
+                                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 2px 8px; text-align: center; min-width: 55px;">
+                                            <div style="font-size: 0.7rem; color: #6c757d; line-height: 1.2; white-space: nowrap;">
                                                 {{ $cleanName }}
                                             </div>
-
-                                            <!-- Detail Value -->
-                                            @if(($detail['has_work_days'] ?? 0) == 1)
-                                                <div class="service-detail-value">
-                                                    {{ $detail['count'] ?? 0 }}
-                                                </div>
-                                                <div class="service-detail-sub">
-                                                    × {{ $detail['days'] ?? 0 }} يوم
-                                                </div>
-                                            @else
-                                                <div class="service-detail-value">
-                                                    {{ $detail['value'] ?? '—' }}
-                                                </div>
-                                            @endif
-
+                                            <div style="font-size: 0.85rem; font-weight: 500; line-height: 1.3;">
+                                                {{ $detail['value'] ?? ($detail['count'] ?? '—') }}
+                                            </div>
                                         </div>
-
                                     @endforeach
-
                                 </div>
-
                             @else
                                 <span class="text-muted">—</span>
                             @endif
-
                         </td>
 
                         <td>
@@ -516,11 +493,11 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                
+
                 <form id="paymentForm" method="POST">
                     @csrf
                     <input type="hidden" name="invoice_id" id="payment_invoice_id">
-                    
+
                     <div class="modal-body p-4">
                         <div class="alert alert-info border-0 mb-4">
                             <div class="d-flex align-items-start">

@@ -84,6 +84,69 @@ class SalaryInvoiceController extends Controller
         }
     }
 
+    public function showEmployees($invoiceId)
+    {
+        $invoice = Invoice::with(['invoiceEmployees' => function($query) {
+            $query->orderBy('id', 'desc');
+        }])->findOrFail($invoiceId);
+
+        if (!$invoice->isSalaryInvoice()) {
+            abort(404, 'هذه الفاتورة ليست فاتورة رواتب');
+        }
+
+        $filter = request('filter', 'all');
+        $search = request('search', '');
+        $employees = $invoice->invoiceEmployees;
+
+        // Apply search filter
+        if (!empty($search)) {
+            $employees = $employees->filter(function($emp) use ($search) {
+                return stripos($emp->employee_name, $search) !== false ||
+                       stripos($emp->project, $search) !== false ||
+                       stripos($emp->id, $search) !== false;
+            });
+        }
+
+        // Apply status/type filter
+        if ($filter !== 'all') {
+            $employees = $employees->filter(function($emp) use ($filter) {
+                switch($filter) {
+                    case 'paid':
+                        return $emp->payment_status === 'paid';
+                    case 'partially_paid':
+                        return $emp->payment_status === 'partially_paid';
+                    case 'unpaid':
+                        return $emp->payment_status === 'unpaid';
+                    case 'wps':
+                        return $emp->salary_type === 'wps';
+                    case 'monthly':
+                        return $emp->salary_type === 'monthly';
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        $summary = [
+            'total_employees' => $invoice->invoiceEmployees->count(),
+            'paid_employees' => $invoice->invoiceEmployees->where('payment_status', 'paid')->count(),
+            'partially_paid_employees' => $invoice->invoiceEmployees->where('payment_status', 'partially_paid')->count(),
+            'unpaid_employees' => $invoice->invoiceEmployees->where('payment_status', 'unpaid')->count(),
+            'wps_employees' => $invoice->invoiceEmployees->where('salary_type', 'wps')->count(),
+            'monthly_employees' => $invoice->invoiceEmployees->where('salary_type', 'monthly')->count(),
+            'total_salaries' => $invoice->invoiceEmployees->sum('total_salary'),
+            'total_paid' => $invoice->invoiceEmployees->sum('total_paid'),
+            'total_remaining' => $invoice->invoiceEmployees->sum('remaining_amount')
+        ];
+
+        // Get all salary invoices for filtering dropdown
+        $allSalaryInvoices = Invoice::where('type', 'salary_invoice')
+            ->orderBy('generation_date', 'desc')
+            ->get();
+
+        return view('salary-invoices.employees', compact('invoice', 'employees', 'summary', 'filter', 'search', 'allSalaryInvoices'));
+    }
+
     public function getEmployees($invoiceId)
     {
         try {
@@ -384,6 +447,7 @@ class SalaryInvoiceController extends Controller
                 'اسم الموظف',
                 'المشروع',
                 'الراتب الأساسي',
+                'نوع الراتب',
                 'المكافآت',
                 'خصومات الشهر',
                 'خصومات السلف',
@@ -404,6 +468,7 @@ class SalaryInvoiceController extends Controller
                 'أحمد محمد',
                 'مشروع أ',
                 '5000',
+                'شهري',
                 '500',
                 '100',
                 '200',

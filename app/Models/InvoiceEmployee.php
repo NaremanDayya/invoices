@@ -84,7 +84,7 @@ class InvoiceEmployee extends Pivot
 
     public function payments()
     {
-        return $this->hasMany(InvoiceEmployeePayment::class);
+        return $this->hasMany(InvoiceEmployeePayment::class, 'invoice_employee_id');
     }
 
     /**

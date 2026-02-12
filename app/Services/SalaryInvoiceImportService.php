@@ -17,6 +17,7 @@ class SalaryInvoiceImportService
         'اسم الموظف',
         'المشروع',
         'الراتب الأساسي',
+        'نوع الراتب',
         'المكافآت',
         'خصومات الشهر',
         'خصومات السلف',
@@ -33,6 +34,7 @@ class SalaryInvoiceImportService
         'اسم الموظف' => 'employee_name',
         'المشروع' => 'project',
         'الراتب الأساسي' => 'basic_salary',
+        'نوع الراتب' => 'salary_type',
         'المكافآت' => 'bonuses',
         'خصومات الشهر' => 'monthly_deductions',
         'خصومات السلف' => 'advance_deductions',
@@ -173,17 +175,35 @@ class SalaryInvoiceImportService
                     $employeeData[$field] = $this->parseDecimal($value);
                 } elseif (in_array($field, ['work_days_count', 'absence_days_count'])) {
                     $employeeData[$field] = $this->parseInt($value);
+                } elseif ($field === 'salary_type') {
+                    $employeeData[$field] = $this->parseSalaryType($value);
                 } else {
                     $employeeData[$field] = $value;
                 }
             }
         }
 
-        $employeeData['payment_method'] = 'monthly';
-        $employeeData['payment_status'] = 'unpaid';
+        $netSalary = $employeeData['net_salary'] ?? 0;
+        $salaryType = $employeeData['salary_type'] ?? 'monthly';
+
+        $employeeData['total_salary'] = $netSalary;
         $employeeData['paid_amount'] = 0;
-        $employeeData['wps_amount'] = 0;
-        $employeeData['monthly_amount'] = $employeeData['net_salary'] ?? 0;
+        $employeeData['total_paid'] = 0;
+        $employeeData['remaining_amount'] = $netSalary;
+        $employeeData['payment_method'] = $salaryType;
+        $employeeData['payment_status'] = 'unpaid';
+        
+        if ($salaryType === 'wps') {
+            $wpsMaxPercentage = Setting::get('wps_max_percentage', 70);
+            $maxWpsAmount = ($netSalary * $wpsMaxPercentage) / 100;
+            $employeeData['wps_amount'] = $maxWpsAmount;
+            $employeeData['monthly_amount'] = $netSalary - $maxWpsAmount;
+            $employeeData['wps_percentage_applied'] = $wpsMaxPercentage;
+        } else {
+            $employeeData['wps_amount'] = 0;
+            $employeeData['monthly_amount'] = $netSalary;
+            $employeeData['wps_percentage_applied'] = null;
+        }
 
         return $employeeData;
     }
@@ -228,6 +248,25 @@ class SalaryInvoiceImportService
         }
 
         return (int) $value;
+    }
+
+    protected function parseSalaryType($value)
+    {
+        if (is_null($value) || $value === '') {
+            return 'monthly';
+        }
+
+        $value = trim($value);
+        
+        if ($value === 'شهري' || strtolower($value) === 'monthly') {
+            return 'monthly';
+        }
+        
+        if ($value === 'حماية أجور' || $value === 'WPS' || strtolower($value) === 'wps') {
+            return 'wps';
+        }
+
+        return 'monthly';
     }
 
     public function updateEmployeePaymentMethod($employeeId, $paymentMethod, $wpsAmount = null)

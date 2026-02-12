@@ -5,26 +5,84 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Client;
 use App\Models\Invoice;
+use App\Models\InvoiceEmployee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $employees = Employee::with('client')->latest()->get();
-        $clients = Client::pluck('name', 'id'); // تغيير الترتيب
-        $invoices = Invoice::pluck('number', 'id'); // تغيير الترتيب
+        $invoiceId = $request->get('invoice_id');
+        $search = $request->get('search', '');
+        $filter = $request->get('filter', 'all');
 
+        // Build query for invoice employees
+        $query = InvoiceEmployee::with(['invoice.client', 'employee']);
+
+        // Apply invoice filter
+        if ($invoiceId) {
+            $query->where('invoice_id', $invoiceId);
+        }
+
+        // Get all employees
+        $allEmployees = $query->get();
+
+        // Apply search filter
+        if (!empty($search)) {
+            $allEmployees = $allEmployees->filter(function($emp) use ($search) {
+                return stripos($emp->employee_name, $search) !== false ||
+                       stripos($emp->project ?? '', $search) !== false ||
+                       stripos($emp->id, $search) !== false ||
+                       stripos($emp->invoice->number ?? '', $search) !== false;
+            });
+        }
+
+        // Apply status/type filter
+        if ($filter !== 'all') {
+            $allEmployees = $allEmployees->filter(function($emp) use ($filter) {
+                switch($filter) {
+                    case 'paid':
+                        return $emp->payment_status === 'paid';
+                    case 'partially_paid':
+                        return $emp->payment_status === 'partially_paid';
+                    case 'unpaid':
+                        return $emp->payment_status === 'unpaid';
+                    case 'wps':
+                        return $emp->salary_type === 'wps';
+                    case 'monthly':
+                        return $emp->salary_type === 'monthly';
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        $employees = $allEmployees;
+
+        // Get all invoices for dropdown (salary invoices only)
+        $invoices = Invoice::where('type', 'salary_invoice')
+            ->orderBy('generation_date', 'desc')
+            ->get();
+
+        // Calculate stats
+        $allInvoiceEmployees = InvoiceEmployee::all();
         $stats = [
-            'total' => Employee::count(),
-            'wage_protection' => Employee::where('file_type', 'حماية أجور')->count(),
-            'monthly_salary' => Employee::where('file_type', 'رواتب شهرية')->count(),
-            'inactive' => Employee::where('is_active', false)->count(),
+            'total' => $allInvoiceEmployees->count(),
+            'paid' => $allInvoiceEmployees->where('payment_status', 'paid')->count(),
+            'partially_paid' => $allInvoiceEmployees->where('payment_status', 'partially_paid')->count(),
+            'unpaid' => $allInvoiceEmployees->where('payment_status', 'unpaid')->count(),
+            'wps' => $allInvoiceEmployees->where('employee.file_type', 'حماية أجور')->count(),
+            'monthly' => $allInvoiceEmployees->where('employee.file_type', 'رواتب شهرية')->count(),
+            'total_salaries' => $allInvoiceEmployees->sum('total_salary'),
+            'total_paid' => $allInvoiceEmployees->sum('total_paid'),
+            'total_remaining' => $allInvoiceEmployees->sum('remaining_amount'),
         ];
 
-//         dd($clients);
-        return view('Employees.index', compact('employees', 'clients', 'invoices', 'stats'));
+        $clients = Client::pluck('name', 'id');
+        $selectedInvoice = $invoiceId ? Invoice::find($invoiceId) : null;
+
+        return view('Employees.index', compact('employees', 'clients', 'invoices', 'stats', 'search', 'filter', 'selectedInvoice'));
     }
 
     public function store(Request $request)

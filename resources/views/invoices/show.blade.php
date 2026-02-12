@@ -303,7 +303,16 @@
     @if($invoice->isSalaryInvoice())
         <div class="row mt-4">
             <div class="col-12">
-                @include('partials.salary-invoice-employees-table', ['invoice' => $invoice])
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-people-fill text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 mb-2">إدارة موظفي الرواتب</h5>
+                        <p class="text-muted mb-4">عرض ومعالجة دفعات موظفي هذه الفاتورة</p>
+                        <a href="{{ route('salary-invoices.employees.index', $invoice->id) }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i>عرض الموظفين والدفعات
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     @else

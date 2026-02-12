@@ -144,11 +144,11 @@
 @endsection
 
 @section('content')
-    <!-- Stats Section -->
+    <!-- Stats Cards -->
     <div class="stats-grid">
         <div class="stat-mini-card">
             <div class="stat-info">
-                <h3>{{ $stats['total'] ?? 15 }}</h3>
+                <h3>{{ $stats['total'] }}</h3>
                 <p>إجمالي الموظفين</p>
             </div>
             <div class="stat-icon-box" style="background: #e6fffa; color: #319795;">
@@ -157,48 +157,102 @@
         </div>
         <div class="stat-mini-card">
             <div class="stat-info">
-                <h3>{{ $stats['wage_protection'] ?? 8 }}</h3>
-                <p>حماية أجور</p>
+                <h3 class="text-success">{{ $stats['paid'] }}</h3>
+                <p>مدفوع</p>
             </div>
-            <div class="stat-icon-box" style="background: #ebf8ff; color: #3182ce;">
-                <i class="bi bi-shield-check"></i>
-            </div>
-        </div>
-        <div class="stat-mini-card">
-            <div class="stat-info">
-                <h3>{{ $stats['monthly_salary'] ?? 7 }}</h3>
-                <p>رواتب شهرية</p>
-            </div>
-            <div class="stat-icon-box" style="background: #fffaf0; color: #dd6b20;">
-                <i class="bi bi-calendar-check"></i>
+            <div class="stat-icon-box" style="background: #d1fae5; color: #065f46;">
+                <i class="bi bi-check-circle"></i>
             </div>
         </div>
         <div class="stat-mini-card">
             <div class="stat-info">
-                <h3 class="text-danger">{{ $stats['inactive'] ?? 0 }}</h3>
-                <p>غير نشطين</p>
+                <h3 class="text-warning">{{ $stats['partially_paid'] }}</h3>
+                <p>مدفوع جزئياً</p>
             </div>
-            <div class="stat-icon-box" style="background: #fff5f5; color: #e53e3e;">
-                <i class="bi bi-person-x-fill"></i>
+            <div class="stat-icon-box" style="background: #fef3c7; color: #d97706;">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+        </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3 class="text-danger">{{ $stats['unpaid'] }}</h3>
+                <p>غير مدفوع</p>
+            </div>
+            <div class="stat-icon-box" style="background: #fee2e2; color: #991b1b;">
+                <i class="bi bi-x-circle"></i>
             </div>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white rounded-xl border border-gray-100 p-3 mb-4 d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-3 flex-grow-1">
-            <div class="search-box ms-0" style="width: 300px; background: #fcfcfc; border: 1px solid #f0f0f0;">
-                <i class="bi bi-search text-muted"></i>
-                <input type="text" placeholder="بحث باسم الموظف أو رقم الملف..." id="searchInput" style="font-size: 0.85rem;">
-            </div>
-            <select class="form-select border-0 bg-light rounded-xl" id="fileTypeFilter" style="width: 150px; font-size: 0.85rem;">
-                <option value="">كل الأنواع</option>
-                <option>حماية أجور</option>
-                <option>رواتب شهرية</option>
-            </select>
+    <!-- Search and Invoice Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ route('employees.index') }}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">اختر فاتورة</label>
+                        <select class="form-select" name="invoice_id" onchange="this.form.submit()">
+                            <option value="">كل الفواتير</option>
+                            @foreach($invoices as $inv)
+                                <option value="{{ $inv->id }}" {{ request('invoice_id') == $inv->id ? 'selected' : '' }}>
+                                    فاتورة #{{ $inv->number }} - {{ $inv->generation_date }} - {{ $inv->client->name ?? 'بدون عميل' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">بحث</label>
+                        <input type="text"
+                               class="form-control"
+                               name="search"
+                               value="{{ $search ?? '' }}"
+                               placeholder="ابحث بالاسم، المشروع، أو رقم الفاتورة">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill">
+                                <i class="bi bi-search me-2"></i>بحث
+                            </button>
+                            <a href="{{ route('employees.index') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="d-flex gap-2">
-            @include('components.export-dropdown')
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="btn-group" role="group">
+                <a href="{{ route('employees.index', ['filter' => 'all', 'search' => $search ?? '', 'invoice_id' => request('invoice_id')]) }}"
+                   class="btn btn-sm {{ ($filter ?? 'all') === 'all' ? 'btn-primary' : 'btn-outline-primary' }}">
+                    الكل ({{ $stats['total'] }})
+                </a>
+                <a href="{{ route('employees.index', ['filter' => 'unpaid', 'search' => $search ?? '', 'invoice_id' => request('invoice_id')]) }}"
+                   class="btn btn-sm {{ ($filter ?? 'all') === 'unpaid' ? 'btn-danger' : 'btn-outline-danger' }}">
+                    غير مدفوع ({{ $stats['unpaid'] }})
+                </a>
+                <a href="{{ route('employees.index', ['filter' => 'partially_paid', 'search' => $search ?? '', 'invoice_id' => request('invoice_id')]) }}"
+                   class="btn btn-sm {{ ($filter ?? 'all') === 'partially_paid' ? 'btn-warning' : 'btn-outline-warning' }}">
+                    مدفوع جزئياً ({{ $stats['partially_paid'] }})
+                </a>
+                <a href="{{ route('employees.index', ['filter' => 'paid', 'search' => $search ?? '', 'invoice_id' => request('invoice_id')]) }}"
+                   class="btn btn-sm {{ ($filter ?? 'all') === 'paid' ? 'btn-success' : 'btn-outline-success' }}">
+                    مدفوع ({{ $stats['paid'] }})
+                </a>
+                <a href="{{ route('employees.index', ['filter' => 'wps', 'search' => $search ?? '', 'invoice_id' => request('invoice_id')]) }}"
+                   class="btn btn-sm {{ ($filter ?? 'all') === 'wps' ? 'btn-info' : 'btn-outline-info' }}">
+                    WPS ({{ $stats['wps'] }})
+                </a>
+                <a href="{{ route('employees.index', ['filter' => 'monthly', 'search' => $search ?? '', 'invoice_id' => request('invoice_id')]) }}"
+                   class="btn btn-sm {{ ($filter ?? 'all') === 'monthly' ? 'btn-secondary' : 'btn-outline-secondary' }}">
+                    شهري ({{ $stats['monthly'] }})
+                </a>
+            </div>
         </div>
     </div>
 
@@ -208,148 +262,82 @@
             <table class="custom-table" id="employees-table">
                 <thead>
                     <tr>
-                        <th>رقم الملف</th>
+                        <th>ID</th>
+                        <th>رقم الفاتورة</th>
+                        <th>العميل</th>
                         <th>اسم الموظف</th>
-                        <th>رقم الهاتف</th>
-                        <th>الراتب</th>
-                        <th>الخصومات</th>
-                        <th>صافي الراتب</th>
-                        <th class="text-center">أيام العمل</th>
-                        <th class="text-center">الغياب</th>
-                        <th class="text-center">الحساب البنكي</th>
+                        <th>المشروع</th>
+                        <th>إجمالي الراتب</th>
+                        <th>المدفوع</th>
+                        <th>المتبقي</th>
+                        <th>نوع الراتب</th>
+                        <th>حالة الدفع</th>
                         <th class="text-center">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $items = $employees->isEmpty() ? collect([]) : $employees;
-                        if($items->isEmpty()){
-                            for($i=1; $i<=7; $i++){
-                                $names = ['محمد أحمد الشمري', 'فهد عبدالله العتيبي', 'سعود محمد القحطاني', 'خالد إبراهيم الغامدي', 'عبدالرحمن سعد الحربي', 'أحمد فيصل الدوسري', 'يوسف عمر السبيعي'];
-                                $items->push((object)[
-                                    'id' => $i,
-                                    'invoice_number' => 'EMP-000'.($i),
-                                    'name' => $names[$i-1] ?? 'موظف جديد',
-                                    'phone_number' => '+96650000001'.($i-1),
-                                    'monthly_salary' => 7000 + ($i*100),
-                                    'total_deductions' => -330,
-                                    'net_salary' => 6670 + ($i*100),
-                                    'work_days' => 20 + rand(1, 5),
-                                    'absences' => rand(1, 4),
-                                    'iban' => 'SA820097942663253'.($i),
-                                ]);
-                            }
-                        }
-                    @endphp
-                    @foreach($items as $employee)
-                    <tr>
-                        <td><span class="emp-id">{{ $employee->invoice_number }}</span></td>
-                        <td>
-                            <div class="employee-info-cell">
-                                <div class="avatar-circle">
-                                    {{ mb_substr($employee->name, 0, 1) }}
+                    @if($employees->count() > 0)
+                        @foreach($employees as $employee)
+                        <tr>
+                            <td>{{ $employee->id }}</td>
+                            <td>
+                                <a href="{{ route('invoices.show', $employee->invoice_id) }}" class="text-primary fw-bold">
+                                    #{{ $employee->invoice->number ?? '-' }}
+                                </a>
+                            </td>
+                            <td>{{ $employee->invoice->client->name ?? '-' }}</td>
+                            <td>
+                                <div class="employee-info-cell">
+                                    <div class="avatar-circle">
+                                        {{ mb_substr($employee->employee_name, 0, 1) }}
+                                    </div>
+                                    <span class="fw-bold">{{ $employee->employee_name }}</span>
                                 </div>
-                                <span class="fw-bold">{{ $employee->name }}</span>
-                            </div>
-                        </td>
-                        <td class="text-muted" dir="ltr">{{ $employee->phone_number }} <i class="bi bi-telephone ms-1"></i></td>
-                        <td>{{ number_format($employee->monthly_salary, 0) }} ر.س</td>
-                        <td class="text-danger">{{ number_format($employee->total_deductions ?? 0, 0) }} ر.س</td>
-                        <td><span class="net-salary">{{ number_format($employee->net_salary ?? $employee->monthly_salary, 0) }} ر.س</span></td>
-                        <td class="text-center">
-                            <span class="indicator-circle indicator-green">{{ $employee->work_days ?? 21 }}</span>
-                        </td>
-                        <td class="text-center">
-                            <span class="indicator-circle indicator-red">{{ $employee->absences ?? 0 }}</span>
-                        </td>
-                        <td class="text-center">
-                            <i class="bi bi-hdd-network text-muted" title="{{ $employee->iban }}" style="cursor: pointer;"></i>
-                        </td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-1">
-                                <button class="btn-action edit-employee" data-id="{{ $employee->id }}"><i class="bi bi-pencil"></i></button>
-                                <button class="btn-action text-danger delete-employee" data-id="{{ $employee->id }}"><i class="bi bi-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
+                            </td>
+                            <td>{{ $employee->project ?? '-' }}</td>
+                            <td class="text-primary fw-bold">{{ number_format($employee->total_salary ?? $employee->net_salary, 2) }} ر.س</td>
+                            <td class="text-success fw-bold">{{ number_format($employee->total_paid ?? 0, 2) }} ر.س</td>
+                            <td class="text-danger fw-bold">{{ number_format($employee->remaining_amount ?? $employee->net_salary, 2) }} ر.س</td>
+                            <td>
+                                @if(($employee->salary_type ?? 'monthly') === 'wps')
+                                    <span class="badge bg-info">WPS</span>
+                                @else
+                                    <span class="badge bg-secondary">شهري</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($employee->payment_status === 'paid')
+                                    <span class="badge bg-success">مدفوع</span>
+                                @elseif($employee->payment_status === 'partially_paid')
+                                    <span class="badge bg-warning">مدفوع جزئياً</span>
+                                @else
+                                    <span class="badge bg-danger">غير مدفوع</span>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="{{ route('salary-invoices.employees.index', $employee->invoice_id) }}"
+                                       class="btn btn-sm btn-primary"
+                                       title="عرض تفاصيل الفاتورة">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="11" class="text-center py-5">
+                                <i class="bi bi-inbox fs-1 text-muted"></i>
+                                <p class="text-muted mt-3">لا يوجد موظفين</p>
+                            </td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
     </div>
-                        <tbody>
-                        @foreach($employees as $employee)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>
-                                    @php
-                                        $fileTypeColors = [
-                                            'حماية أجور' => ['bg' => '#d1fae5', 'color' => '#065f46', 'icon' => 'shield-alt'],
-                                            'رواتب شهرية' => ['bg' => '#dbeafe', 'color' => '#1e40af', 'icon' => 'calendar']
-                                        ];
-                                        $type = $fileTypeColors[$employee->file_type] ?? $fileTypeColors['رواتب شهرية'];
-                                    @endphp
-                                    <span class="badge rounded-pill" style="background: {{ $type['bg'] }}; color: {{ $type['color'] }};">
-                                        <i class="fas fa-{{ $type['icon'] }} me-1"></i>
-                                        {{ $employee->file_type }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="fw-bold">{{ $employee->client->name ?? 'غير معروف' }}</div>
-                                </td>
-                                <td>{{ $employee->invoice_number }}</td>
-                                <td>
-                                    <div class="fw-bold">{{ $employee->name }}</div>
-                                </td>
-                                <td>{{ $employee->phone_number }}</td>
-                                <td>
-                                    <span class="font-mono text-sm">{{ $employee->iban }}</span>
-                                </td>
-                                <td>{{ $employee->bank_name }}</td>
-                                <td>{{ $employee->account_holder_name }}</td>
-                                <td>{{ number_format($employee->monthly_salary, 2) }} ﷼</td>
-                                <td>{{ number_format($employee->wage_salary, 2) }} ﷼</td>
-                                <td>
-                                    <strong style="color: var(--primary);">
-                                        {{ number_format($employee->monthly_salary + $employee->wage_salary, 2) }} ﷼
-                                    </strong>
-                                </td>
-                                <td>
-                                    @php
-                                        $statusColors = [
-                                            'active' => ['bg' => '#d1fae5', 'color' => '#065f46', 'icon' => 'check-circle'],
-                                            'inactive' => ['bg' => '#fee2e2', 'color' => '#991b1b', 'icon' => 'times-circle']
-                                        ];
-                                        $status = $employee->is_active ? $statusColors['active'] : $statusColors['inactive'];
-                                    @endphp
-                                    <span class="badge rounded-pill" style="background: {{ $status['bg'] }}; color: {{ $status['color'] }};">
-                                        <i class="fas fa-{{ $status['icon'] }} me-1"></i>
-                                        {{ $employee->is_active ? 'نشط' : 'غير نشط' }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <button class="btn btn-sm edit-employee"
-                                                data-id="{{ $employee->id }}"
-                                                style="background: var(--primary); color: white;"
-                                                title="تعديل">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger delete-employee"
-                                                data-id="{{ $employee->id }}"
-                                                title="حذف">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Add/Edit Employee Modal -->
     <div class="modal fade" id="employeeModal" tabindex="-1" aria-hidden="true">

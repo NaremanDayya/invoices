@@ -42,10 +42,10 @@ Route::get('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'ge
 Route::get('/credit-notes/invoice/{invoice}/count', [CreditNoteController::class, 'getCreditNoteCount'])->name('credit-notes.count');
 
 // Salary Invoice Routes
+Route::get('/salary-invoices/{invoice}/employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'showEmployees'])->name('salary-invoices.employees.index');
+Route::get('/salary-invoices/{invoice}/employees-data', [\App\Http\Controllers\SalaryInvoiceController::class, 'getEmployees'])->name('salary-invoices.employees.data');
 Route::post('/salary-invoices/import', [\App\Http\Controllers\SalaryInvoiceController::class, 'importEmployees'])->name('salary-invoices.import');
-Route::get('/salary-invoices/{invoice}/employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'getEmployees'])->name('salary-invoices.employees');
 Route::put('/salary-invoices/employees/{employee}/payment-method', [\App\Http\Controllers\SalaryInvoiceController::class, 'updatePaymentMethod'])->name('salary-invoices.update-payment-method');
-Route::post('/salary-invoices/pay-employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'paySelectedEmployees'])->name('salary-invoices.pay-employees');
 Route::delete('/salary-invoices/employees/{employee}', [\App\Http\Controllers\SalaryInvoiceController::class, 'deleteEmployee'])->name('salary-invoices.delete-employee');
 Route::delete('/salary-invoices/{invoice}/clear-employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'clearAllEmployees'])->name('salary-invoices.clear-employees');
 Route::get('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'getWpsSettings'])->name('salary-invoices.wps-settings');

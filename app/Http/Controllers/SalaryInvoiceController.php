@@ -434,4 +434,89 @@ class SalaryInvoiceController extends Controller
             ], 500);
         }
     }
+
+    public function approve(Request $request, $invoiceId)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:1000'
+        ]);
+
+        try {
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            if (!$invoice->isSalaryInvoice()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'هذه الفاتورة ليست فاتورة رواتب'
+                ], 422);
+            }
+
+            if ($invoice->isApproved()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الفاتورة معتمدة بالفعل'
+                ], 422);
+            }
+
+            if ($invoice->invoiceEmployees()->count() === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا يمكن اعتماد فاتورة بدون موظفين'
+                ], 422);
+            }
+
+            $invoice->approve(auth()->id(), $request->notes);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم اعتماد الفاتورة بنجاح',
+                'invoice' => $invoice->fresh()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function reject(Request $request, $invoiceId)
+    {
+        $request->validate([
+            'notes' => 'required|string|max:1000'
+        ]);
+
+        try {
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            if (!$invoice->isSalaryInvoice()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'هذه الفاتورة ليست فاتورة رواتب'
+                ], 422);
+            }
+
+            if ($invoice->isRejected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الفاتورة مرفوضة بالفعل'
+                ], 422);
+            }
+
+            $invoice->reject(auth()->id(), $request->notes);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم رفض الفاتورة',
+                'invoice' => $invoice->fresh()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

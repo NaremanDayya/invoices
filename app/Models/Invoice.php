@@ -23,6 +23,10 @@ class Invoice extends Model
         'due_date',
         'allowed_late_pay_days',
         'approval_date',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
         'payment_date',
         'total_workers',
         'workers_days',
@@ -64,6 +68,7 @@ class Invoice extends Model
         'last_generation_date' => 'date',
         'due_date' => 'date',
         'approval_date' => 'date',
+        'approved_at' => 'datetime',
         'payment_date' => 'date',
         'cancelled_at' => 'datetime',
         'base_price' => 'decimal:2',
@@ -125,6 +130,11 @@ class Invoice extends Model
     public function invoiceEmployees()
     {
         return $this->hasMany(InvoiceEmployee::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function employees()
@@ -393,5 +403,54 @@ class Invoice extends Model
     public function getRemainingUnpaidSalariesAttribute()
     {
         return $this->invoiceEmployees()->sum('net_salary') - $this->total_paid_salaries;
+    }
+
+    public function isApproved()
+    {
+        return $this->approval_status === 'approved';
+    }
+
+    public function isPending()
+    {
+        return $this->approval_status === 'pending';
+    }
+
+    public function isRejected()
+    {
+        return $this->approval_status === 'rejected';
+    }
+
+    public function approve($userId, $notes = null)
+    {
+        $this->update([
+            'approval_status' => 'approved',
+            'approved_by' => $userId,
+            'approved_at' => now(),
+            'approval_notes' => $notes
+        ]);
+
+        return $this;
+    }
+
+    public function reject($userId, $notes = null)
+    {
+        $this->update([
+            'approval_status' => 'rejected',
+            'approved_by' => $userId,
+            'approved_at' => now(),
+            'approval_notes' => $notes
+        ]);
+
+        return $this;
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', 'approved');
+    }
+
+    public function scopePendingApproval($query)
+    {
+        return $query->where('approval_status', 'pending');
     }
 }

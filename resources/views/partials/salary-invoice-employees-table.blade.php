@@ -32,12 +32,12 @@
                 </svg>
                 تحديث
             </button>
-            <button onclick="paySelectedEmployees()" id="paySelectedBtn"
+            <button onclick="showPaymentModal()" id="processPaymentBtn"
                     class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
-                دفع المحدد
+                معالجة الدفعات
             </button>
         </div>
     </div>
@@ -79,11 +79,12 @@
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">ID</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم الموظف</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المشروع</th>
-                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">صافي الراتب</th>
-                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">مبلغ WPS</th>
-                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ الشهري</th>
-                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">طريقة الدفع</th>
-                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي الراتب</th>
+                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المدفوع</th>
+                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المتبقي</th>
+                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع الراتب</th>
+                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">حالة الدفع</th>
+                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">آخر دفعة</th>
                     <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
                 </tr>
             </thead>
@@ -186,7 +187,7 @@ function displayEmployees(employees, summary) {
     allEmployeesData = employees;
 
     tableBody.innerHTML = employees.map(emp => `
-        <tr class="hover:bg-gray-50 employee-row" data-payment-method="${emp.payment_method}" data-wps-amount="${emp.wps_amount || 0}">
+        <tr class="hover:bg-gray-50 employee-row" data-payment-method="${emp.salary_type || emp.payment_method}" data-wps-amount="${emp.wps_amount || 0}">
             <td class="px-3 py-4 whitespace-nowrap">
                 <input type="checkbox" class="employee-checkbox rounded border-gray-300"
                        value="${emp.id}"
@@ -194,23 +195,26 @@ function displayEmployees(employees, summary) {
                        onchange="updateSelectedEmployees()">
             </td>
             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">${emp.id}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${emp.employee_name || '-'}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-employee-name>${emp.employee_name || '-'}</td>
             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${emp.project || '-'}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">${parseFloat(emp.net_salary).toFixed(2)} ريال</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-purple-600">${parseFloat(emp.wps_amount || 0).toFixed(2)} ريال</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-green-600">${parseFloat(emp.monthly_amount || emp.net_salary).toFixed(2)} ريال</td>
-            <td class="px-3 py-4 whitespace-nowrap">
-                ${getPaymentMethodBadge(emp.payment_method, emp.wps_amount, emp.wps_percentage_applied)}
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-blue-600" data-total-salary>${parseFloat(emp.total_salary || emp.net_salary).toFixed(2)}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-green-600" data-total-paid>${parseFloat(emp.total_paid || 0).toFixed(2)}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-red-600" data-remaining>${parseFloat(emp.remaining_amount || emp.net_salary).toFixed(2)}</td>
+            <td class="px-3 py-4 whitespace-nowrap" data-salary-type>
+                ${getSalaryTypeBadge(emp.salary_type || emp.payment_method)}
             </td>
             <td class="px-3 py-4 whitespace-nowrap">
                 ${getPaymentStatusBadge(emp.payment_status)}
             </td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${emp.last_payment_date ? new Date(emp.last_payment_date).toLocaleDateString('ar-SA') : '-'}
+            </td>
             <td class="px-3 py-4 whitespace-nowrap text-sm">
-                <button onclick="openPaymentMethodModal(${emp.id}, ${emp.net_salary}, ${emp.wps_amount || 0}, '${emp.payment_method}')"
+                <button onclick="viewPaymentHistory(${emp.id})"
                         class="text-blue-600 hover:text-blue-900 ml-2"
-                        ${emp.payment_status === 'paid' ? 'disabled' : ''}>
+                        title="عرض سجل الدفعات">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                 </button>
             </td>
@@ -220,15 +224,14 @@ function displayEmployees(employees, summary) {
     updateFilterCounts();
 }
 
-function getPaymentMethodBadge(method, wpsAmount, wpsPercentageApplied) {
-    if (method === 'wps' && wpsAmount > 0) {
-        const percentage = wpsPercentageApplied ? parseFloat(wpsPercentageApplied).toFixed(1) : '0';
+function getSalaryTypeBadge(salaryType) {
+    if (salaryType === 'wps') {
         return `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-            WPS (${percentage}%)
+            WPS
         </span>`;
     }
     return `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-        راتب شهري
+        شهري
     </span>`;
 }
 
@@ -246,7 +249,70 @@ function updateSelectedEmployees() {
     document.querySelectorAll('.employee-checkbox:checked').forEach(cb => {
         selectedEmployees.add(parseInt(cb.value));
     });
-    document.getElementById('paySelectedBtn').disabled = selectedEmployees.size === 0;
+    document.getElementById('processPaymentBtn').disabled = selectedEmployees.size === 0;
+}
+
+async function viewPaymentHistory(employeeId) {
+    try {
+        const response = await fetch(`/salary-invoices/employees/${employeeId}/payment-history`);
+        const data = await response.json();
+        
+        if (data.success) {
+            let historyHtml = `
+                <div class="mb-4">
+                    <h6 class="font-bold">الموظف: ${data.employee.name}</h6>
+                    <div class="grid grid-cols-3 gap-2 mt-2 text-sm">
+                        <div><strong>إجمالي الراتب:</strong> ${parseFloat(data.employee.total_salary).toFixed(2)} ريال</div>
+                        <div><strong>المدفوع:</strong> ${parseFloat(data.employee.total_paid).toFixed(2)} ريال</div>
+                        <div><strong>المتبقي:</strong> ${parseFloat(data.employee.remaining_amount).toFixed(2)} ريال</div>
+                    </div>
+                </div>
+                <hr class="my-3">
+                <h6 class="font-bold mb-3">سجل الدفعات:</h6>
+            `;
+            
+            if (data.payments.length === 0) {
+                historyHtml += '<p class="text-gray-500 text-center py-4">لا توجد دفعات مسجلة</p>';
+            } else {
+                historyHtml += '<div class="space-y-2">';
+                data.payments.forEach(payment => {
+                    historyHtml += `
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="font-semibold text-green-600">${parseFloat(payment.payment_amount).toFixed(2)} ريال</span>
+                                    <span class="text-xs text-gray-500 mr-2">(${payment.payment_type === 'full' ? 'دفع كامل' : 'دفع جزئي'})</span>
+                                    <span class="text-xs px-2 py-1 rounded ${payment.payment_mode === 'wps' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'} mr-2">
+                                        ${payment.payment_mode === 'wps' ? 'WPS' : 'شهري'}
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    ${new Date(payment.payment_date).toLocaleDateString('ar-SA')}
+                                </div>
+                            </div>
+                            ${payment.notes ? `<div class="text-xs text-gray-600 mt-1">ملاحظات: ${payment.notes}</div>` : ''}
+                            ${payment.created_by ? `<div class="text-xs text-gray-500 mt-1">بواسطة: ${payment.created_by.name || 'غير معروف'}</div>` : ''}
+                        </div>
+                    `;
+                });
+                historyHtml += '</div>';
+            }
+            
+            Swal.fire({
+                title: 'سجل دفعات الموظف',
+                html: historyHtml,
+                width: '600px',
+                confirmButtonText: 'إغلاق'
+            });
+        }
+    } catch (error) {
+        console.error('Error loading payment history:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'خطأ',
+            text: 'حدث خطأ أثناء تحميل سجل الدفعات'
+        });
+    }
 }
 
 document.getElementById('selectAll')?.addEventListener('change', function() {

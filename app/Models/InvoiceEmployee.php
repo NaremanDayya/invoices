@@ -38,6 +38,11 @@ class InvoiceEmployee extends Pivot
         'payment_status',
         'payment_date',
         'paid_amount',
+        'total_salary',
+        'total_paid',
+        'remaining_amount',
+        'salary_type',
+        'last_payment_date',
         'notes'
     ];
 
@@ -55,7 +60,11 @@ class InvoiceEmployee extends Pivot
         'monthly_amount' => 'decimal:2',
         'wps_percentage_applied' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'total_salary' => 'decimal:2',
+        'total_paid' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
         'payment_date' => 'date',
+        'last_payment_date' => 'date',
         'deductions' => 'array'
     ];
 
@@ -71,6 +80,11 @@ class InvoiceEmployee extends Pivot
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(InvoiceEmployeePayment::class);
     }
 
     /**
@@ -177,9 +191,9 @@ class InvoiceEmployee extends Pivot
         return $this;
     }
 
-    public function getRemainingAmountAttribute()
+    public function getRemainingBalanceAttribute()
     {
-        return $this->net_salary - $this->paid_amount;
+        return max(0, $this->total_salary - $this->total_paid);
     }
 
     public function getIsFullyPaidAttribute()
@@ -197,6 +211,75 @@ class InvoiceEmployee extends Pivot
         return $this->payment_status === 'unpaid';
     }
 
+    public function canReceivePayment()
+    {
+        return $this->remaining_amount > 0 && $this->invoice->isApproved();
+    }
+
+    public function validatePaymentAmount($amount, $paymentMode = 'monthly')
+    {
+        if ($amount <= 0) {
+            throw new \Exception('مبلغ الدفع يجب أن يكون أكبر من صفر');
+        }
+
+        if ($amount > $this->remaining_amount) {
+            throw new \Exception('مبلغ الدفع لا يمكن أن يتجاوز المبلغ المتبقي (' . number_format($this->remaining_amount, 2) . ' ريال)');
+        }
+
+        if ($paymentMode === 'wps') {
+            $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
+            $maxWpsAmount = ($this->total_salary * $maxWpsPercentage) / 100;
+            
+            if ($amount > $maxWpsAmount) {
+                throw new \Exception("مبلغ WPS لا يمكن أن يتجاوز {$maxWpsPercentage}% من إجمالي الراتب (الحد الأقصى: " . number_format($maxWpsAmount, 2) . " ريال)");
+            }
+        }
+
+        return true;
+    }
+
+    public function recordPayment($amount, $paymentType, $paymentMode, $notes = null, $userId = null)
+    {
+        $this->validatePaymentAmount($amount, $paymentMode);
+
+        $payment = $this->payments()->create([
+            'invoice_id' => $this->invoice_id,
+            'payment_amount' => $amount,
+            'payment_type' => $paymentType,
+            'payment_mode' => $paymentMode,
+            'payment_date' => now(),
+            'created_by' => $userId,
+            'notes' => $notes
+        ]);
+
+        $this->total_paid += $amount;
+        $this->remaining_amount = $this->total_salary - $this->total_paid;
+        $this->last_payment_date = now();
+        
+        $this->updatePaymentStatus();
+        $this->save();
+
+        return $payment;
+    }
+
+    public function updatePaymentStatus()
+    {
+        if ($this->remaining_amount <= 0) {
+            $this->payment_status = 'paid';
+        } elseif ($this->total_paid > 0) {
+            $this->payment_status = 'partially_paid';
+        } else {
+            $this->payment_status = 'unpaid';
+        }
+    }
+
+    public function getMaxWpsPaymentAttribute()
+    {
+        $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
+        $maxByPercentage = ($this->total_salary * $maxWpsPercentage) / 100;
+        return min($maxByPercentage, $this->remaining_amount);
+    }
+
     /**
      * Boot method for automatic calculations
      */
@@ -208,6 +291,14 @@ class InvoiceEmployee extends Pivot
             if ($invoiceEmployee->basic_salary) {
                 $invoiceEmployee->calculateNetSalary();
                 $invoiceEmployee->calculateWpsAmount();
+                
+                if ($invoiceEmployee->isDirty('net_salary') && !$invoiceEmployee->isDirty('total_salary')) {
+                    $invoiceEmployee->total_salary = $invoiceEmployee->net_salary;
+                }
+                
+                if (!$invoiceEmployee->isDirty('remaining_amount')) {
+                    $invoiceEmployee->remaining_amount = $invoiceEmployee->total_salary - $invoiceEmployee->total_paid;
+                }
             } else {
                 $invoiceEmployee->calculateTotalAmount();
             }

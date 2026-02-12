@@ -52,6 +52,17 @@ Route::get('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoice
 Route::put('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'updateWpsSettings'])->name('salary-invoices.update-wps-settings');
 Route::get('/salary-invoices/download-template', [\App\Http\Controllers\SalaryInvoiceController::class, 'downloadTemplate'])->name('salary-invoices.download-template');
 
+// Salary Invoice Approval Routes
+Route::post('/salary-invoices/{invoice}/approve', [\App\Http\Controllers\SalaryInvoiceController::class, 'approve'])->name('salary-invoices.approve');
+Route::post('/salary-invoices/{invoice}/reject', [\App\Http\Controllers\SalaryInvoiceController::class, 'reject'])->name('salary-invoices.reject');
+
+// Salary Payment Routes
+Route::post('/salary-invoices/{invoice}/process-payments', [\App\Http\Controllers\SalaryPaymentController::class, 'processPayments'])->name('salary-payments.process');
+Route::get('/salary-invoices/{invoice}/payment-summary', [\App\Http\Controllers\SalaryPaymentController::class, 'getPaymentSummary'])->name('salary-payments.summary');
+Route::get('/salary-invoices/employees/{employee}/payment-details', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentDetails'])->name('salary-payments.employee-details');
+Route::post('/salary-invoices/employees/{employee}/calculate-breakdown', [\App\Http\Controllers\SalaryPaymentController::class, 'calculatePaymentBreakdown'])->name('salary-payments.calculate-breakdown');
+Route::get('/salary-invoices/employees/{employee}/payment-history', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentHistory'])->name('salary-payments.history');
+
 // Settings Routes
 Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
 Route::put('/settings/wps-percentage', [\App\Http\Controllers\SettingsController::class, 'updateWpsPercentage'])->name('settings.update-wps');

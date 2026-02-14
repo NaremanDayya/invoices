@@ -33,25 +33,26 @@
 
                         <div class="row g-3">
                             @foreach($permissions as $permission)
-                            <div class="col-md-6">
-                                <div class="form-check form-switch p-3 bg-white rounded-3 border">
-                                    <input 
-                                        class="form-check-input" 
-                                        type="checkbox" 
-                                        name="permissions[]" 
-                                        value="{{ $permission->id }}" 
-                                        id="permission_{{ $permission->id }}"
-                                        {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}
-                                    >
-                                    <label class="form-check-label fw-semibold" for="permission_{{ $permission->id }}">
-                                        {{ $permission->display_name_ar }}
-                                        @if($permission->description)
-                                        <br>
-                                        <small class="text-muted fw-normal">{{ $permission->description }}</small>
-                                        @endif
-                                    </label>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch p-3 bg-white rounded-3 border d-flex flex-row-reverse justify-content-end gap-3">
+                                        <input
+                                            class="form-check-input cursor-pointer"
+                                            type="checkbox"
+                                            name="permissions[]"
+                                            value="{{ $permission->id }}"
+                                            id="permission_{{ $permission->id }}"
+                                            {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}
+                                            style="float: none; margin-right: 0;"
+                                        >
+                                        <label class="form-check-label fw-semibold cursor-pointer" for="permission_{{ $permission->id }}" style="margin-right: 0;">
+                                            {{ $permission->display_name_ar }}
+                                            @if($permission->description)
+                                                <br>
+                                                <small class="text-muted fw-normal">{{ $permission->description }}</small>
+                                            @endif
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
                             @endforeach
                         </div>
                     </div>

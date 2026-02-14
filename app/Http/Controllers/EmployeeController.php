@@ -6,11 +6,18 @@ use App\Models\Employee;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceEmployee;
+use App\Services\ChatActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
+    protected $chatLogger;
+
+    public function __construct(ChatActivityLogger $chatLogger)
+    {
+        $this->chatLogger = $chatLogger;
+    }
     public function index(Request $request)
     {
         $invoiceId = $request->get('invoice_id');
@@ -160,6 +167,10 @@ class EmployeeController extends Controller
             DB::table('invoice_employees')->insert($invoiceEmployeeData);
 
             DB::commit();
+
+            // Log employee creation to chat
+            $invoice = Invoice::find($validated['invoice_id']);
+            $this->chatLogger->logEmployeeCreated($employee, $invoice);
 
             return response()->json([
                 'success' => true,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Models\InvoiceEmployee;
 use App\Models\Setting;
+use App\Services\ChatActivityLogger;
 use App\Services\SalaryInvoiceImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,10 +13,12 @@ use Illuminate\Support\Facades\Storage;
 class SalaryInvoiceController extends Controller
 {
     protected $importService;
+    protected $chatLogger;
 
-    public function __construct(SalaryInvoiceImportService $importService)
+    public function __construct(SalaryInvoiceImportService $importService, ChatActivityLogger $chatLogger)
     {
         $this->importService = $importService;
+        $this->chatLogger = $chatLogger;
     }
 
     public function importEmployees(Request $request)
@@ -58,6 +61,15 @@ class SalaryInvoiceController extends Controller
             ]);
 
             if ($result['success']) {
+                // Log employee import to chat
+                $employeesCount = $result['data']['employees_count'] ?? 0;
+                $summary = [
+                    'total_salaries' => $result['data']['total_salaries'] ?? 0,
+                    'wps_count' => $result['data']['wps_count'] ?? 0,
+                    'monthly_count' => $result['data']['monthly_count'] ?? 0,
+                ];
+                $this->chatLogger->logEmployeesImported($invoice, $employeesCount, $summary);
+
                 return response()->json([
                     'success' => true,
                     'message' => $result['message'],
@@ -532,6 +544,9 @@ class SalaryInvoiceController extends Controller
 
             $invoice->approve(auth()->id(), $request->notes);
 
+            // Log invoice approval to chat
+            $this->chatLogger->logInvoiceApproved($invoice->fresh(), $request->notes);
+
             return response()->json([
                 'success' => true,
                 'message' => 'تم اعتماد الفاتورة بنجاح',
@@ -570,6 +585,9 @@ class SalaryInvoiceController extends Controller
             }
 
             $invoice->reject(auth()->id(), $request->notes);
+
+            // Log invoice rejection to chat
+            $this->chatLogger->logInvoiceRejected($invoice->fresh(), $request->notes);
 
             return response()->json([
                 'success' => true,

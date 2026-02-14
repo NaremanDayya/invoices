@@ -3,10 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Services\ChatActivityLogger;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
+    protected $chatLogger;
+
+    public function __construct(ChatActivityLogger $chatLogger)
+    {
+        $this->chatLogger = $chatLogger;
+    }
     public function index()
     {
         $clients = Client::latest()->paginate(10);
@@ -36,7 +43,10 @@ class ClientController extends Controller
             $validated['logo'] = $logoPath;
         }
 
-        Client::create($validated);
+        $client = Client::create($validated);
+
+        // Log client creation to chat
+        $this->chatLogger->logClientCreated($client);
 
         return redirect()->route('clients.index')->with('success', 'تم إضافة العميل بنجاح');
     }
@@ -76,6 +86,18 @@ class ClientController extends Controller
             'grace_period_days' => 'nullable|integer|min:0',
         ]);
 
+        // Track changes for logging
+        $changes = [];
+        if ($client->name != $validated['name']) {
+            $changes['الاسم'] = ['old' => $client->name, 'new' => $validated['name']];
+        }
+        if ($client->phone != $validated['phone']) {
+            $changes['الهاتف'] = ['old' => $client->phone ?? '-', 'new' => $validated['phone'] ?? '-'];
+        }
+        if ($client->email != $validated['email']) {
+            $changes['البريد الإلكتروني'] = ['old' => $client->email ?? '-', 'new' => $validated['email'] ?? '-'];
+        }
+
         if ($request->hasFile('logo')) {
             if ($client->logo && \Storage::disk('public')->exists($client->logo)) {
                 \Storage::disk('public')->delete($client->logo);
@@ -85,6 +107,11 @@ class ClientController extends Controller
         }
 
         $client->update($validated);
+
+        // Log client update to chat
+        if (!empty($changes)) {
+            $this->chatLogger->logClientUpdated($client, $changes);
+        }
 
         return redirect()->route('clients.index')->with('success', 'تم تحديث بيانات العميل بنجاح');
     }

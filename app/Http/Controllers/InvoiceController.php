@@ -10,11 +10,18 @@ use App\Models\Client;
 use App\Models\Message;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\ChatActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
+    protected $chatLogger;
+
+    public function __construct(ChatActivityLogger $chatLogger)
+    {
+        $this->chatLogger = $chatLogger;
+    }
     public function index(Request $request)
     {
         $query = Invoice::with(['client', 'service', 'payments', 'creditNotes', 'invoiceEmployees']);
@@ -178,37 +185,11 @@ class InvoiceController extends Controller
             'payment_delay_days' => 0,
         ];
 
-        // Remove the dd() line and create the invoice
+        // Create the invoice
         $invoice = Invoice::create($invoiceData);
 
-        // Continue with your conversation and message creation...
-        $authenticatedUserId = Auth::id();
-
-        $conversation = $invoice->conversation()
-            ->where(function ($query) use ($authenticatedUserId) {
-                $query->where('sender_id', $authenticatedUserId)
-                    ->orWhere('receiver_id', $authenticatedUserId);
-            })->first();
-
-        if (!$conversation) {
-            $adminUserId = User::whereHas('roles', function ($q) {
-                $q->where('name', 'admin');
-            })->value('id');
-            $conversation = Conversation::create([
-                'sender_id' => $authenticatedUserId,
-                'receiver_id' => $adminUserId,
-                'client_id' => $invoice->client->id,
-                'invoice_id' => $invoice->id,
-            ]);
-        }
-
-        $message = "فاتورة خاصة بالعميل {$invoice->client->name}، بقيمة: {$totalAmount}";
-        Message::create([
-            'conversation_id' => $conversation->id,
-            'sender_id' => $authenticatedUserId,
-            'receiver_id' => $conversation->sender_id === $authenticatedUserId ? $conversation->receiver_id : $conversation->sender_id,
-            'message' => $message,
-        ]);
+        // Log invoice creation to chat
+        $this->chatLogger->logInvoiceCreated($invoice);
 
         return redirect()->route('invoices.index')
             ->with('success', 'تم إنشاء الفاتورة بنجاح!');
@@ -281,6 +262,15 @@ class InvoiceController extends Controller
         $taxAmount = ($subtotal * $validated['tax_rate']) / 100;
         $totalAmount = $subtotal + $taxAmount;
 
+        // Track changes for logging
+        $changes = [];
+        if ($invoice->total_price != $totalAmount) {
+            $changes['المبلغ الإجمالي'] = ['old' => number_format($invoice->total_price, 2), 'new' => number_format($totalAmount, 2)];
+        }
+        if ($invoice->invoice_status != $finalInvoiceStatus) {
+            $changes['حالة الفاتورة'] = ['old' => $invoice->invoice_status, 'new' => $finalInvoiceStatus];
+        }
+
         $invoice->update([
             'number' => $validated['number'],
             'client_id' => $validated['client_id'],
@@ -308,6 +298,11 @@ class InvoiceController extends Controller
             'invoice_status' => $finalInvoiceStatus,
             'notes' => $validated['notes'] ?? null,
         ]);
+
+        // Log invoice update to chat
+        if (!empty($changes)) {
+            $this->chatLogger->logInvoiceUpdated($invoice, $changes);
+        }
 
         return redirect()->route('invoices.index')
             ->with('success', 'تم تحديث الفاتورة بنجاح!');
@@ -356,6 +351,11 @@ class InvoiceController extends Controller
             $invoice->update([
                 'credit_notes_count' => $invoice->creditNotes()->count(),
                 'total_credit_notes' => $invoice->creditNotes()->sum('amount')
+            ]);
+
+            // Log credit note addition
+            $this->chatLogger->logInvoiceUpdated($invoice->fresh(), [
+                'إشعار دائن' => ['old' => '-', 'new' => number_format($request->credit_amount, 2) . ' ريال']
             ]);
 
             return response()->json([
@@ -493,6 +493,9 @@ class InvoiceController extends Controller
             } elseif ($newPaidAmount > 0) {
                 $invoice->update(['payment_status' => 'partially_paid']);
             }
+
+            // Log payment to chat
+            $this->chatLogger->logInvoicePayment($invoice->fresh(), $paymentAmount, $validated['payment_method']);
 
             return response()->json([
                 'success' => true,

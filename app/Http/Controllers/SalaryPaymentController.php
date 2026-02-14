@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\InvoiceEmployee;
+use App\Services\ChatActivityLogger;
 use App\Services\SalaryPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -11,10 +12,12 @@ use Illuminate\Support\Facades\Validator;
 class SalaryPaymentController extends Controller
 {
     protected $paymentService;
+    protected $chatLogger;
 
-    public function __construct(SalaryPaymentService $paymentService)
+    public function __construct(SalaryPaymentService $paymentService, ChatActivityLogger $chatLogger)
     {
         $this->paymentService = $paymentService;
+        $this->chatLogger = $chatLogger;
     }
 
     public function processPayments(Request $request, $invoiceId)
@@ -55,6 +58,11 @@ class SalaryPaymentController extends Controller
             );
 
             if ($result['success']) {
+                // Log bulk employee payments to chat
+                $paymentsCount = count($result['payments']);
+                $totalAmount = collect($result['payments'])->sum('amount');
+                $this->chatLogger->logBulkEmployeePayments($invoice, $paymentsCount, $totalAmount);
+
                 return response()->json([
                     'success' => true,
                     'message' => $result['message'],

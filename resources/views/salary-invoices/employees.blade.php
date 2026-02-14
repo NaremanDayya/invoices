@@ -373,78 +373,32 @@
     </div>
 </div>
 
-<!-- Single Payment Modal (Bootstrap 5) -->
+<!-- Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="paymentModalLabel">
-                    <i class="bi bi-cash-coin me-2"></i>معالجة دفع الراتب
+                    <i class="bi bi-cash-coin me-2"></i>معالجة دفع الموظف
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            
             <form id="paymentForm">
-                @csrf
                 <input type="hidden" id="employeeId" name="employee_id">
                 
                 <div class="modal-body">
-                    <!-- Employee Info -->
-                    <div class="alert alert-info">
-                        <h6 class="mb-2"><i class="bi bi-person-circle me-2"></i><strong id="modalEmployeeName"></strong></h6>
-                        <div class="row g-2 small">
-                            <div class="col-md-4">
-                                <strong>إجمالي الراتب:</strong> <span id="modalTotalSalary"></span> ريال
-                            </div>
-                            <div class="col-md-4">
-                                <strong>المدفوع:</strong> <span id="modalTotalPaid" class="text-success"></span> ريال
-                            </div>
-                            <div class="col-md-4">
-                                <strong>المتبقي:</strong> <span id="modalRemaining" class="text-danger"></span> ريال
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payment Type -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">نوع الدفع</label>
-                        <select class="form-select" id="paymentType" name="payment_type" required>
-                            <option value="full">دفع كامل</option>
-                            <option value="partial">دفع جزئي</option>
-                        </select>
-                    </div>
-
-                    <!-- Payment Mode -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">وضع الدفع</label>
-                        <select class="form-select" id="paymentMode" name="payment_mode" required>
-                            <option value="monthly">شهري</option>
-                            <option value="wps">WPS</option>
-                        </select>
-                    </div>
-
-                    <!-- Payment Amount (shown for partial) -->
-                    <div class="mb-3" id="amountSection" style="display: none;">
-                        <label class="form-label fw-bold">المبلغ</label>
-                        <input type="number" 
-                               class="form-control" 
-                               id="paymentAmount" 
-                               name="amount" 
-                               step="0.01" 
-                               min="0.01"
-                               placeholder="أدخل المبلغ">
-                        <div class="form-text">الحد الأقصى: <span id="maxAmount"></span> ريال</div>
-                        <div class="invalid-feedback" id="amountError"></div>
-                    </div>
+                    <!-- Employee Card -->
+                    <div id="singleEmployeeCard"></div>
 
                     <!-- WPS Warning -->
-                    <div class="alert alert-warning" id="wpsWarning" style="display: none;">
+                    <div class="alert alert-warning mt-3" id="wpsWarning" style="display: none;">
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         <strong>تحذير WPS:</strong> الحد الأقصى المسموح به هو <span id="wpsMaxPercentage">70</span>% من إجمالي الراتب
-                        (<span id="wpsMaxAmount"></span> ريال)
                     </div>
 
                     <!-- Notes -->
-                    <div class="mb-3">
+                    <div class="mb-3 mt-3">
                         <label class="form-label fw-bold">ملاحظات (اختياري)</label>
                         <textarea class="form-control" id="paymentNotes" name="notes" rows="3" placeholder="أضف ملاحظات إن وجدت"></textarea>
                     </div>
@@ -498,95 +452,151 @@ document.getElementById('paymentModal').addEventListener('show.bs.modal', functi
 
     // Populate modal
     document.getElementById('employeeId').value = currentEmployeeData.id;
-    document.getElementById('modalEmployeeName').textContent = currentEmployeeData.name;
-    document.getElementById('modalTotalSalary').textContent = formatNumber(currentEmployeeData.totalSalary);
-    document.getElementById('modalTotalPaid').textContent = formatNumber(currentEmployeeData.totalPaid);
-    document.getElementById('modalRemaining').textContent = formatNumber(currentEmployeeData.remaining);
-    document.getElementById('maxAmount').textContent = formatNumber(currentEmployeeData.remaining);
+    document.getElementById('wpsMaxPercentage').textContent = wpsMaxPercentage;
     
     // Reset form
     document.getElementById('paymentForm').reset();
     document.getElementById('employeeId').value = currentEmployeeData.id;
-    document.getElementById('amountSection').style.display = 'none';
     document.getElementById('wpsWarning').style.display = 'none';
     
-    updateWpsLimits();
+    renderSingleEmployeeCard();
 });
 
-// Payment type change
-document.getElementById('paymentType').addEventListener('change', function() {
-    const amountSection = document.getElementById('amountSection');
-    if (this.value === 'partial') {
-        amountSection.style.display = 'block';
-        document.getElementById('paymentAmount').required = true;
-    } else {
-        amountSection.style.display = 'none';
-        document.getElementById('paymentAmount').required = false;
-    }
-});
-
-// Payment mode change
-document.getElementById('paymentMode').addEventListener('change', function() {
-    const wpsWarning = document.getElementById('wpsWarning');
-    if (this.value === 'wps') {
-        wpsWarning.style.display = 'block';
-        updateWpsLimits();
-    } else {
-        wpsWarning.style.display = 'none';
-    }
-});
-
-// Update WPS limits
-function updateWpsLimits() {
-    const maxWpsAmount = (currentEmployeeData.totalSalary * wpsMaxPercentage) / 100;
-    const actualMax = Math.min(maxWpsAmount, currentEmployeeData.remaining);
-    document.getElementById('wpsMaxAmount').textContent = formatNumber(actualMax);
+// Render single employee card with payment options
+function renderSingleEmployeeCard() {
+    const container = document.getElementById('singleEmployeeCard');
+    const emp = currentEmployeeData;
+    const maxWpsAmount = (emp.totalSalary * wpsMaxPercentage) / 100;
+    const maxWpsForRemaining = Math.min(maxWpsAmount, emp.remaining);
+    
+    container.innerHTML = `
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <h6 class="mb-1 fw-bold">${emp.name}</h6>
+                        <small class="text-muted">
+                            <span class="badge bg-${emp.salaryType === 'wps' ? 'info' : 'secondary'}">${emp.salaryType === 'wps' ? 'WPS' : 'شهري'}</span>
+                        </small>
+                        <div class="mt-2 small">
+                            <div><strong>الإجمالي:</strong> ${formatNumber(emp.totalSalary)} ريال</div>
+                            <div class="text-success"><strong>المدفوع:</strong> ${formatNumber(emp.totalPaid)} ريال</div>
+                            <div class="text-danger"><strong>المتبقي:</strong> ${formatNumber(emp.remaining)} ريال</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">نوع الدفع</label>
+                        <select class="form-select" id="singlePaymentType">
+                            <option value="full">دفع كامل (${formatNumber(emp.remaining)} ريال)</option>
+                            <option value="partial">دفع جزئي</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">وضع الدفع</label>
+                        <select class="form-select" id="singlePaymentMode">
+                            <option value="monthly">شهري</option>
+                            <option value="wps">WPS</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="singleAmountSection" style="display: none;">
+                        <label class="form-label small fw-bold">المبلغ</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="singlePaymentAmount"
+                               step="0.01" 
+                               min="0.01" 
+                               max="${emp.remaining}"
+                               placeholder="أدخل المبلغ">
+                        <small class="text-muted">الحد الأقصى: ${formatNumber(emp.remaining)}</small>
+                        <div id="singleWpsLimit" style="display: none; margin-top: 4px;">
+                            <small class="text-warning">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                WPS: ${formatNumber(maxWpsForRemaining)} ريال
+                            </small>
+                        </div>
+                        <div class="invalid-feedback" id="singleAmountError"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    attachSingleEmployeeEventListeners();
 }
 
-// Amount validation
-document.getElementById('paymentAmount').addEventListener('input', function() {
-    const amount = parseFloat(this.value);
-    const paymentMode = document.getElementById('paymentMode').value;
-    const errorDiv = document.getElementById('amountError');
+// Attach event listeners to single employee payment controls
+function attachSingleEmployeeEventListeners() {
+    // Payment type change
+    document.getElementById('singlePaymentType').addEventListener('change', function() {
+        const amountSection = document.getElementById('singleAmountSection');
+        if (this.value === 'partial') {
+            amountSection.style.display = 'block';
+            document.getElementById('singlePaymentAmount').required = true;
+        } else {
+            amountSection.style.display = 'none';
+            document.getElementById('singlePaymentAmount').required = false;
+        }
+    });
     
-    if (isNaN(amount) || amount <= 0) {
-        this.classList.add('is-invalid');
-        errorDiv.textContent = 'المبلغ يجب أن يكون أكبر من صفر';
-        return;
-    }
-    
-    if (amount > currentEmployeeData.remaining) {
-        this.classList.add('is-invalid');
-        errorDiv.textContent = 'المبلغ يتجاوز المبلغ المتبقي';
-        return;
-    }
-    
-    if (paymentMode === 'wps') {
-        const maxWpsAmount = (currentEmployeeData.totalSalary * wpsMaxPercentage) / 100;
-        const actualMax = Math.min(maxWpsAmount, currentEmployeeData.remaining);
+    // Payment mode change
+    document.getElementById('singlePaymentMode').addEventListener('change', function() {
+        const wpsLimit = document.getElementById('singleWpsLimit');
+        const wpsWarning = document.getElementById('wpsWarning');
         
-        if (amount > actualMax) {
+        if (this.value === 'wps') {
+            wpsLimit.style.display = 'block';
+            wpsWarning.style.display = 'block';
+        } else {
+            wpsLimit.style.display = 'none';
+            wpsWarning.style.display = 'none';
+        }
+    });
+    
+    // Amount validation
+    document.getElementById('singlePaymentAmount').addEventListener('input', function() {
+        const amount = parseFloat(this.value);
+        const paymentMode = document.getElementById('singlePaymentMode').value;
+        const errorDiv = document.getElementById('singleAmountError');
+        
+        if (isNaN(amount) || amount <= 0) {
             this.classList.add('is-invalid');
-            errorDiv.textContent = `المبلغ يتجاوز الحد الأقصى لـ WPS (${formatNumber(actualMax)} ريال)`;
+            errorDiv.textContent = 'المبلغ يجب أن يكون أكبر من صفر';
             return;
         }
-    }
-    
-    this.classList.remove('is-invalid');
-    errorDiv.textContent = '';
-});
+        
+        if (amount > currentEmployeeData.remaining) {
+            this.classList.add('is-invalid');
+            errorDiv.textContent = 'المبلغ يتجاوز المبلغ المتبقي';
+            return;
+        }
+        
+        if (paymentMode === 'wps') {
+            const maxWpsAmount = (currentEmployeeData.totalSalary * wpsMaxPercentage) / 100;
+            const actualMax = Math.min(maxWpsAmount, currentEmployeeData.remaining);
+            
+            if (amount > actualMax) {
+                this.classList.add('is-invalid');
+                errorDiv.textContent = `المبلغ يتجاوز الحد الأقصى لـ WPS (${formatNumber(actualMax)} ريال)`;
+                return;
+            }
+        }
+        
+        this.classList.remove('is-invalid');
+        errorDiv.textContent = '';
+    });
+}
 
 // Form submission
 document.getElementById('paymentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const paymentType = document.getElementById('paymentType').value;
-    const paymentMode = document.getElementById('paymentMode').value;
+    const paymentType = document.getElementById('singlePaymentType').value;
+    const paymentMode = document.getElementById('singlePaymentMode').value;
     const notes = document.getElementById('paymentNotes').value;
     
     let amount = currentEmployeeData.remaining;
     if (paymentType === 'partial') {
-        amount = parseFloat(document.getElementById('paymentAmount').value);
+        amount = parseFloat(document.getElementById('singlePaymentAmount').value);
         
         if (isNaN(amount) || amount <= 0 || amount > currentEmployeeData.remaining) {
             Swal.fire({

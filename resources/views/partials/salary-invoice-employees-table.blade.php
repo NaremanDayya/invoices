@@ -486,7 +486,9 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
             console.warn('Payment Method Update: Failed', data);
 
             if (data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
+                const errorMessages = Object.values(data.errors)
+                    .map(err => Array.isArray(err) ? err.join(', ') : err)
+                    .join('\n');
                 alert(`خطأ في البيانات:\n${errorMessages}`);
             } else {
                 alert(data.message || 'فشل التحديث');

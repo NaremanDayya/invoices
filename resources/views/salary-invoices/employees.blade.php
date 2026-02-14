@@ -1012,7 +1012,9 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
             if (data.errors) {
                 errorMessage += '<br><br><div class="text-start small">';
                 Object.keys(data.errors).forEach(key => {
-                    errorMessage += `<strong>${key}:</strong> ${data.errors[key].join(', ')}<br>`;
+                    const errorValue = data.errors[key];
+                    const errorText = Array.isArray(errorValue) ? errorValue.join(', ') : errorValue;
+                    errorMessage += `<strong>${key}:</strong> ${errorText}<br>`;
                 });
                 errorMessage += '</div>';
             }

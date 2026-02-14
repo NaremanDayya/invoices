@@ -26,9 +26,15 @@ class ClientController extends Controller
             'phone' => 'nullable|string|max:20',
             'tax_number' => 'required|numeric|digits:15',
             'address' => 'nullable|string',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'default_payment_day' => 'nullable|integer|min:1|max:31',
             'grace_period_days' => 'nullable|integer|min:0',
         ]);
+
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('clients/logos', 'public');
+            $validated['logo'] = $logoPath;
+        }
 
         Client::create($validated);
 
@@ -65,9 +71,18 @@ class ClientController extends Controller
             'phone' => 'nullable|string|max:20',
             'tax_number' => 'required|numeric|digits:15',
             'address' => 'nullable|string',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'default_payment_day' => 'nullable|integer|min:1|max:31',
             'grace_period_days' => 'nullable|integer|min:0',
         ]);
+
+        if ($request->hasFile('logo')) {
+            if ($client->logo && \Storage::disk('public')->exists($client->logo)) {
+                \Storage::disk('public')->delete($client->logo);
+            }
+            $logoPath = $request->file('logo')->store('clients/logos', 'public');
+            $validated['logo'] = $logoPath;
+        }
 
         $client->update($validated);
 

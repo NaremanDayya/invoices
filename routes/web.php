@@ -36,9 +36,11 @@ Route::post('invoices/add-service', [InvoiceController::class, 'addService'])->n
 Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'addPayment'])->name('invoices.add-payment');
 
 // Credit Notes Routes
+Route::get('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'index'])->name('invoices.credit-notes.index');
+Route::get('/invoices/{invoice}/credit-notes/{creditNote}', [CreditNoteController::class, 'show'])->name('invoices.credit-notes.show');
 Route::post('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
 Route::delete('/credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
-Route::get('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'getInvoiceCreditNotes'])->name('credit-notes.invoice');
+Route::get('/invoices/{invoice}/credit-notes-data', [CreditNoteController::class, 'getInvoiceCreditNotes'])->name('credit-notes.invoice');
 Route::get('/credit-notes/invoice/{invoice}/count', [CreditNoteController::class, 'getCreditNoteCount'])->name('credit-notes.count');
 
 // Salary Invoice Routes
@@ -62,6 +64,7 @@ Route::get('/salary-invoices/{invoice}/payment-summary', [\App\Http\Controllers\
 Route::get('/salary-invoices/employees/{employee}/payment-details', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentDetails'])->name('salary-payments.employee-details');
 Route::post('/salary-invoices/employees/{employee}/calculate-breakdown', [\App\Http\Controllers\SalaryPaymentController::class, 'calculatePaymentBreakdown'])->name('salary-payments.calculate-breakdown');
 Route::get('/salary-invoices/employees/{employee}/payment-history', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentHistory'])->name('salary-payments.history');
+Route::get('/salary-invoices/{invoice}/employees/{employee}/payments', [\App\Http\Controllers\SalaryPaymentController::class, 'showEmployeePayments'])->name('salary-invoices.employees.payments');
 
 // Settings Routes
 Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');

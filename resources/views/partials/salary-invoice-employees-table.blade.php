@@ -210,13 +210,13 @@ function displayEmployees(employees, summary) {
                 ${emp.last_payment_date ? new Date(emp.last_payment_date).toLocaleDateString('ar-SA') : '-'}
             </td>
             <td class="px-3 py-4 whitespace-nowrap text-sm">
-                <button onclick="viewPaymentHistory(${emp.id})"
-                        class="text-blue-600 hover:text-blue-900 ml-2"
-                        title="عرض سجل الدفعات">
+                <a href="/salary-invoices/{{ $invoice->id }}/employees/${emp.id}/payments"
+                   class="text-blue-600 hover:text-blue-900 ml-2"
+                   title="عرض سجل الدفعات">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                     </svg>
-                </button>
+                </a>
             </td>
         </tr>
     `).join('');
@@ -252,68 +252,6 @@ function updateSelectedEmployees() {
     document.getElementById('processPaymentBtn').disabled = selectedEmployees.size === 0;
 }
 
-async function viewPaymentHistory(employeeId) {
-    try {
-        const response = await fetch(`/salary-invoices/employees/${employeeId}/payment-history`);
-        const data = await response.json();
-        
-        if (data.success) {
-            let historyHtml = `
-                <div class="mb-4">
-                    <h6 class="font-bold">الموظف: ${data.employee.name}</h6>
-                    <div class="grid grid-cols-3 gap-2 mt-2 text-sm">
-                        <div><strong>إجمالي الراتب:</strong> ${parseFloat(data.employee.total_salary).toFixed(2)} ريال</div>
-                        <div><strong>المدفوع:</strong> ${parseFloat(data.employee.total_paid).toFixed(2)} ريال</div>
-                        <div><strong>المتبقي:</strong> ${parseFloat(data.employee.remaining_amount).toFixed(2)} ريال</div>
-                    </div>
-                </div>
-                <hr class="my-3">
-                <h6 class="font-bold mb-3">سجل الدفعات:</h6>
-            `;
-            
-            if (data.payments.length === 0) {
-                historyHtml += '<p class="text-gray-500 text-center py-4">لا توجد دفعات مسجلة</p>';
-            } else {
-                historyHtml += '<div class="space-y-2">';
-                data.payments.forEach(payment => {
-                    historyHtml += `
-                        <div class="bg-gray-50 p-3 rounded">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <span class="font-semibold text-green-600">${parseFloat(payment.payment_amount).toFixed(2)} ريال</span>
-                                    <span class="text-xs text-gray-500 mr-2">(${payment.payment_type === 'full' ? 'دفع كامل' : 'دفع جزئي'})</span>
-                                    <span class="text-xs px-2 py-1 rounded ${payment.payment_mode === 'wps' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'} mr-2">
-                                        ${payment.payment_mode === 'wps' ? 'WPS' : 'شهري'}
-                                    </span>
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    ${new Date(payment.payment_date).toLocaleDateString('ar-SA')}
-                                </div>
-                            </div>
-                            ${payment.notes ? `<div class="text-xs text-gray-600 mt-1">ملاحظات: ${payment.notes}</div>` : ''}
-                            ${payment.created_by ? `<div class="text-xs text-gray-500 mt-1">بواسطة: ${payment.created_by.name || 'غير معروف'}</div>` : ''}
-                        </div>
-                    `;
-                });
-                historyHtml += '</div>';
-            }
-            
-            Swal.fire({
-                title: 'سجل دفعات الموظف',
-                html: historyHtml,
-                width: '600px',
-                confirmButtonText: 'إغلاق'
-            });
-        }
-    } catch (error) {
-        console.error('Error loading payment history:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'خطأ',
-            text: 'حدث خطأ أثناء تحميل سجل الدفعات'
-        });
-    }
-}
 
 document.getElementById('selectAll')?.addEventListener('change', function() {
     document.querySelectorAll('.employee-checkbox:not(:disabled)').forEach(cb => {

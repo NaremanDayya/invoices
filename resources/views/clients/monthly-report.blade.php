@@ -96,12 +96,19 @@
     <div class="report-card">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h4 class="fw-bold mb-2">{{ $client->name }}</h4>
-                <p class="text-muted mb-0">
-                    <i class="bi bi-calendar3 me-2"></i>
-                    الفترة: {{ \Carbon\Carbon::parse($period['start'])->locale('ar')->translatedFormat('d F Y') }} - 
-                    {{ \Carbon\Carbon::parse($period['end'])->locale('ar')->translatedFormat('d F Y') }}
-                </p>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    @if($client->logo)
+                        <img src="{{ asset('storage/' . $client->logo) }}" alt="{{ $client->name }}" class="rounded" style="width: 60px; height: 60px; object-fit: contain;">
+                    @endif
+                    <div>
+                        <h4 class="fw-bold mb-1">{{ $client->name }}</h4>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-calendar3 me-2"></i>
+                            الفترة: {{ \Carbon\Carbon::parse($period['start'])->locale('ar')->translatedFormat('d F Y') }} - 
+                            {{ \Carbon\Carbon::parse($period['end'])->locale('ar')->translatedFormat('d F Y') }}
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="col-md-6 text-end">
                 <form method="GET" action="{{ route('clients.monthly-report', $client) }}" class="d-inline-flex gap-2">
@@ -151,67 +158,78 @@
         </h5>
 
         @if($invoices->count() > 0)
-            @foreach($invoices as $invoice)
-                <div class="invoice-row">
-                    <div class="row align-items-center">
-                        <div class="col-md-2">
-                            <strong class="text-primary">{{ $invoice['number'] }}</strong>
-                            <div class="small text-muted">{{ $invoice['date'] }}</div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="small text-muted">المبلغ الإجمالي</div>
-                            <strong>{{ number_format($invoice['total_amount'], 2) }} ر.س</strong>
-                        </div>
-                        @if($invoice['credit_notes'] > 0)
-                            <div class="col-md-2">
-                                <div class="small text-muted">إشعارات دائنة</div>
-                                <strong class="text-warning">-{{ number_format($invoice['credit_notes'], 2) }} ر.س</strong>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="small text-muted">بعد الخصم</div>
-                                <strong>{{ number_format($invoice['total_after_credits'], 2) }} ر.س</strong>
-                            </div>
-                        @else
-                            <div class="col-md-4"></div>
-                        @endif
-                        <div class="col-md-2">
-                            <div class="small text-muted">المدفوع</div>
-                            <strong class="text-success">{{ number_format($invoice['paid_amount'], 2) }} ر.س</strong>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="small text-muted">المتبقي</div>
-                            <strong class="text-danger">{{ number_format($invoice['remaining_balance'], 2) }} ر.س</strong>
-                        </div>
-                        <div class="col-md-2 text-end">
-                            @php
-                                $statusClass = $invoice['payment_status'] === 'paid' ? 'paid' : 
-                                              ($invoice['payment_status'] === 'partially_paid' ? 'partially_paid' : 'pending');
-                                $statusLabel = $invoice['payment_status'] === 'paid' ? 'مدفوعة' : 
-                                              ($invoice['payment_status'] === 'partially_paid' ? 'مدفوعة جزئياً' : 'معلقة');
-                            @endphp
-                            <span class="payment-badge {{ $statusClass }}">{{ $statusLabel }}</span>
-                        </div>
-                    </div>
-
-                    @if(isset($invoice['payments']) && count($invoice['payments']) > 0)
-                        <div class="mt-3 ps-4">
-                            <div class="small fw-bold text-muted mb-2">
-                                <i class="bi bi-cash-stack me-1"></i>
-                                سجل الدفعات:
-                            </div>
-                            @foreach($invoice['payments'] as $payment)
-                                <div class="d-flex justify-content-between align-items-center mb-1 small">
-                                    <span>
-                                        <i class="bi bi-check-circle text-success me-1"></i>
-                                        {{ $payment['number'] }} - {{ $payment['date'] }}
-                                    </span>
-                                    <span class="fw-bold">{{ number_format($payment['amount'], 2) }} ر.س</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            @endforeach
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center">رقم الفاتورة</th>
+                            <th class="text-center">التاريخ</th>
+                            <th class="text-center">المبلغ الإجمالي</th>
+                            <th class="text-center">المدفوع</th>
+                            <th class="text-center">المتبقي</th>
+                            <th class="text-center">إشعارات دائنة</th>
+                            <th class="text-center">الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($invoices as $invoice)
+                        <tr>
+                            <td class="text-center">
+                                <strong class="text-primary">{{ $invoice['number'] }}</strong>
+                            </td>
+                            <td class="text-center">
+                                <i class="bi bi-calendar3 me-1 text-muted"></i>
+                                {{ $invoice['date'] }}
+                            </td>
+                            <td class="text-end">
+                                <strong>{{ number_format($invoice['total_amount'], 2) }}</strong> ر.س
+                            </td>
+                            <td class="text-end">
+                                <strong class="text-success">{{ number_format($invoice['paid_amount'], 2) }}</strong> ر.س
+                            </td>
+                            <td class="text-end">
+                                <strong class="{{ $invoice['remaining_balance'] > 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ number_format($invoice['remaining_balance'], 2) }}
+                                </strong> ر.س
+                            </td>
+                            <td class="text-end">
+                                @if($invoice['credit_notes'] > 0)
+                                    <strong class="text-warning">{{ number_format($invoice['credit_notes'], 2) }}</strong> ر.س
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                @php
+                                    $statusClass = $invoice['payment_status'] === 'paid' ? 'paid' : 
+                                                  ($invoice['payment_status'] === 'partially_paid' ? 'partially_paid' : 'pending');
+                                    $statusLabel = $invoice['payment_status'] === 'paid' ? 'مدفوعة' : 
+                                                  ($invoice['payment_status'] === 'partially_paid' ? 'مدفوعة جزئياً' : 'معلقة');
+                                @endphp
+                                <span class="payment-badge {{ $statusClass }}">{{ $statusLabel }}</span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr class="fw-bold">
+                            <td colspan="2" class="text-end">الإجماليات:</td>
+                            <td class="text-end">
+                                <strong class="fs-5 text-primary">{{ number_format($summary['total_invoiced'], 2) }}</strong> ر.س
+                            </td>
+                            <td class="text-end">
+                                <strong class="fs-5 text-success">{{ number_format($summary['total_paid'], 2) }}</strong> ر.س
+                            </td>
+                            <td class="text-end">
+                                <strong class="fs-5 {{ $summary['total_remaining'] > 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ number_format($summary['total_remaining'], 2) }}
+                                </strong> ر.س
+                            </td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         @else
             <div class="text-center py-5">
                 <i class="bi bi-inbox display-1 text-muted"></i>

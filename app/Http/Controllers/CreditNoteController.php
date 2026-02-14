@@ -158,4 +158,20 @@ class CreditNoteController extends Controller
             'total_credit_notes' => $invoice->total_credit_notes
         ]);
     }
+
+    public function index(Invoice $invoice)
+    {
+        $creditNotes = $invoice->creditNotes()->with('creator')->orderBy('created_at', 'desc')->get();
+        
+        return view('invoices.credit-notes.index', compact('invoice', 'creditNotes'));
+    }
+
+    public function show(Invoice $invoice, CreditNote $creditNote)
+    {
+        if ($creditNote->invoice_id !== $invoice->id) {
+            abort(404);
+        }
+
+        return view('invoices.credit-notes.show', compact('invoice', 'creditNote'));
+    }
 }

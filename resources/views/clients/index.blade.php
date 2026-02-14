@@ -96,9 +96,13 @@
                                 <tr>
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="bg-light rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                <i class="bi bi-person text-muted"></i>
-                                            </div>
+                                            @if($client->logo)
+                                                <img src="{{ asset('storage/' . $client->logo) }}" alt="{{ $client->name }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                            @else
+                                                <div class="bg-light rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-person text-muted"></i>
+                                                </div>
+                                            @endif
                                             <a href="{{ route('clients.show', $client) }}" class="fw-bold text-dark text-decoration-none hover-primary">{{ $client->name }}</a>
                                         </div>
                                     </td>
@@ -142,7 +146,7 @@
                                                 <h5 class="modal-title fw-bold">تعديل بيانات العميل</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
-                                            <form action="{{ route('clients.update', $client) }}" method="POST">
+                                            <form action="{{ route('clients.update', $client) }}" method="POST" enctype="multipart/form-data">
                                                 @csrf
                                                 @method('PUT')
                                                 <div class="modal-body p-4">
@@ -150,6 +154,16 @@
                                                         <div class="col-12">
                                                             <label class="form-label small fw-bold text-muted">اسم العميل</label>
                                                             <input type="text" name="name" class="form-control rounded-xl py-2 px-3" value="{{ $client->name }}" required>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <label class="form-label small fw-bold text-muted">شعار العميل</label>
+                                                            @if($client->logo)
+                                                                <div class="mb-2">
+                                                                    <img src="{{ asset('storage/' . $client->logo) }}" alt="{{ $client->name }}" class="rounded" style="max-width: 100px; max-height: 100px; object-fit: contain;">
+                                                                </div>
+                                                            @endif
+                                                            <input type="file" name="logo" class="form-control rounded-xl py-2 px-3" accept="image/*">
+                                                            <small class="text-muted">صيغ مدعومة: JPG, PNG, GIF, SVG (حد أقصى 2MB)</small>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <label class="form-label small fw-bold text-muted">يوم الدفع</label>
@@ -218,13 +232,18 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('clients.store') }}" method="POST">
+                <form action="{{ route('clients.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body p-4 bg-slate-50">
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label small fw-bold text-slate-600">اسم العميل <span class="text-danger">*</span></label>
                                 <input type="text" name="name" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required placeholder="أدخل اسم العميل">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-slate-600">شعار العميل</label>
+                                <input type="file" name="logo" class="form-control rounded-xl py-2 px-3 border-slate-200 shadow-sm" accept="image/*">
+                                <small class="text-muted">صيغ مدعومة: JPG, PNG, GIF, SVG (حد أقصى 2MB)</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-slate-600">يوم الدفع</label>

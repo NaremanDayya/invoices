@@ -18,6 +18,34 @@
 @endsection
 
 @section('content')
+    <!-- Client Header with Logo -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                <div class="d-flex align-items-center gap-3">
+                    @if($client->logo)
+                        <img src="{{ asset('storage/' . $client->logo) }}" alt="{{ $client->name }}" class="rounded" style="width: 80px; height: 80px; object-fit: contain; border: 2px solid #f0f0f0; padding: 8px;">
+                    @else
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-building fs-1 text-muted"></i>
+                        </div>
+                    @endif
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ $client->name }}</h3>
+                        <div class="d-flex gap-3 text-muted small">
+                            @if($client->email)
+                                <span><i class="bi bi-envelope me-1"></i>{{ $client->email }}</span>
+                            @endif
+                            @if($client->phone)
+                                <span><i class="bi bi-telephone me-1"></i>{{ $client->phone }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
         <!-- Client Stats Overview -->
         <div class="col-12">

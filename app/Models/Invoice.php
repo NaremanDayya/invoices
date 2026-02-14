@@ -198,6 +198,57 @@ class Invoice extends Model
         return $this->service->requires_hr_details ?? false;
     }
 
+    public function getResponsePeriodAttribute()
+    {
+        if (!$this->approved_at || !$this->isSalaryInvoice()) {
+            return null;
+        }
+
+        $firstPayment = $this->invoiceEmployees()
+            ->whereHas('payments')
+            ->with(['payments' => function($query) {
+                $query->orderBy('payment_date', 'asc');
+            }])
+            ->get()
+            ->flatMap(function($employee) {
+                return $employee->payments;
+            })
+            ->sortBy('payment_date')
+            ->first();
+
+        if (!$firstPayment) {
+            return null;
+        }
+
+        $approvalDate = Carbon::parse($this->approved_at);
+        $firstPaymentDate = Carbon::parse($firstPayment->payment_date);
+
+        return $approvalDate->diff($firstPaymentDate);
+    }
+
+    public function getResponsePeriodFormattedAttribute()
+    {
+        $diff = $this->response_period;
+        
+        if (!$diff) {
+            return '-';
+        }
+
+        $days = $diff->days;
+        $hours = $diff->h;
+
+        if ($days > 0) {
+            if ($hours > 0) {
+                return "{$days} يوم و {$hours} ساعة";
+            }
+            return "{$days} يوم";
+        } elseif ($hours > 0) {
+            return "{$hours} ساعة";
+        } else {
+            return "أقل من ساعة";
+        }
+    }
+
     public function getLateDaysAttribute()
     {
         if (!$this->last_generation_date || $this->payment_status === 'paid') {

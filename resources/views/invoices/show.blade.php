@@ -127,6 +127,17 @@
                     <span class="detail-label">حالة الفاتورة</span>
                     <span class="detail-value">{{ $invoice->invoice_status }}</span>
                 </div>
+                @if($invoice->isSalaryInvoice() && $invoice->approved_at)
+                <div class="detail-row">
+                    <span class="detail-label">فترة الاستجابة (اعتماد → أول دفعة)</span>
+                    <span class="detail-value">
+                        <span class="badge bg-info text-white">
+                            <i class="bi bi-clock-history me-1"></i>
+                            {{ $invoice->response_period_formatted }}
+                        </span>
+                    </span>
+                </div>
+                @endif
             </div>
 
             <!-- Workforce Details -->
@@ -187,20 +198,46 @@
             </div>
             @endif
 
-            <!-- Credit Notes -->
+            <!-- Credit Notes Table -->
             @if($invoice->creditNotes->count() > 0)
             <div class="detail-card">
                 <h5><i class="bi bi-file-earmark-text me-2"></i>الإشعارات الدائنة</h5>
-                @foreach($invoice->creditNotes as $creditNote)
-                <div class="credit-note-item">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold">{{ $creditNote->number }}</span>
-                        <span class="fw-bold text-warning">{{ number_format($creditNote->amount, 2) }} ر.س</span>
-                    </div>
-                    <div class="text-muted small">{{ $creditNote->description }}</div>
-                    <div class="text-muted small mt-1">{{ $creditNote->reason }}</div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>رقم الإشعار</th>
+                                <th>التاريخ</th>
+                                <th>المبلغ قبل الضريبة</th>
+                                <th>مبلغ الضريبة</th>
+                                <th>الإجمالي بعد الضريبة</th>
+                                <th>قيمة الفاتورة السابقة</th>
+                                <th>قيمة الفاتورة الجديدة</th>
+                                <th>أنشئ بواسطة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($invoice->creditNotes as $creditNote)
+                            <tr>
+                                <td><strong>{{ $creditNote->credit_note_number }}</strong></td>
+                                <td>{{ $creditNote->created_at->format('Y-m-d') }}</td>
+                                <td>{{ number_format($creditNote->new_values['base_price'] ?? 0, 2) }} ر.س</td>
+                                <td>{{ number_format($creditNote->new_values['tax_amount'] ?? 0, 2) }} ر.س</td>
+                                <td><strong>{{ number_format($creditNote->new_total, 2) }} ر.س</strong></td>
+                                <td>{{ number_format($creditNote->previous_total, 2) }} ر.س</td>
+                                <td class="text-success"><strong>{{ number_format($creditNote->new_total, 2) }} ر.س</strong></td>
+                                <td>{{ $creditNote->creator->name ?? '-' }}</td>
+                                <td>
+                                    <a href="{{ route('invoices.credit-notes.show', [$invoice, $creditNote]) }}" class="btn btn-sm btn-primary" title="عرض">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-                @endforeach
             </div>
             @endif
 

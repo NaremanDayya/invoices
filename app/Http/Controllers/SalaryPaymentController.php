@@ -179,4 +179,17 @@ class SalaryPaymentController extends Controller
             ], 500);
         }
     }
+
+    public function showEmployeePayments(Invoice $invoice, InvoiceEmployee $employee)
+    {
+        if ($employee->invoice_id !== $invoice->id) {
+            abort(404);
+        }
+
+        $employee->load(['payments' => function($query) {
+            $query->with('createdBy')->orderBy('payment_date', 'desc');
+        }, 'invoice.client']);
+
+        return view('salary-invoices.employee-payments', compact('invoice', 'employee'));
+    }
 }

@@ -268,6 +268,7 @@
                         <th class="text-center">أيام العمل</th>
                         <th class="text-center">أيام التأخير</th>
                         <th class="text-center">إشعارات دائنة</th>
+                        <th class="text-center">فترة الاستجابة</th>
                         <th>الحالة</th>
                         <th class="text-center">الإجراءات</th>
                     </tr>
@@ -324,9 +325,14 @@
                             </div>
                         </td>
                         <td>
-                            <div class="customer-info">
-                                <span class="name">{{ $invoice->client->name ?? '—' }}</span>
-                                <span class="phone text-muted" dir="ltr">{{ $invoice->client->phone ?? '' }}</span>
+                            <div class="customer-info d-flex align-items-center gap-2">
+                                @if($invoice->client && $invoice->client->logo)
+                                    <img src="{{ asset('storage/' . $invoice->client->logo) }}" alt="{{ $invoice->client->name }}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                @endif
+                                <div>
+                                    <span class="name">{{ $invoice->client->name ?? '—' }}</span>
+                                    <span class="phone text-muted" dir="ltr">{{ $invoice->client->phone ?? '' }}</span>
+                                </div>
                             </div>
                         </td>
                         <td class="align-middle">
@@ -399,7 +405,7 @@
                         </td>
                         <td class="text-center">
                             @if(isset($invoice->credit_notes_count) && $invoice->credit_notes_count > 0)
-                                <a href="{{ route('invoices.show', $invoice->id) }}#credit-notes" class="badge rounded-pill bg-warning text-dark px-2 text-decoration-none" style="cursor: pointer;" title="عرض الإشعارات الدائنة">
+                                <a href="{{ route('invoices.credit-notes.index', $invoice->id) }}" class="badge rounded-pill bg-warning text-dark px-2 text-decoration-none" style="cursor: pointer;" title="عرض الإشعارات الدائنة">
                                     <i class="bi bi-info-circle me-1"></i>
                                     {{ $invoice->credit_notes_count }}
                                 </a>
@@ -407,6 +413,16 @@
                                 <span class="badge rounded-pill bg-warning text-dark px-2">
                                     <i class="bi bi-info-circle me-1"></i>
                                     {{ number_format($invoice->price_difference, 0) }}
+                                </span>
+                            @else
+                                <span class="text-muted small">—</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            @if($invoice->type === 'salary_invoice' && $invoice->approved_at)
+                                <span class="badge bg-info text-white">
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    {{ $invoice->response_period_formatted }}
                                 </span>
                             @else
                                 <span class="text-muted small">—</span>

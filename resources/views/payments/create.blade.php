@@ -59,7 +59,7 @@
                                             data-client-email="{{ $invoice->client->email ?? '' }}"
                                             data-client-phone="{{ $invoice->client->phone ?? '' }}"
                                             data-client-address="{{ $invoice->client->address ?? '' }}">
-                                        #{{ $invoice->number }} - {{ $invoice->client->name }} - متبقي: {{ number_format($invoice->remaining_amount, 2) }} ر.س
+                                        #{{ $invoice->number }} - {{ $invoice->client->name }} - متبقي: {{ number_format($invoice->remaining_amount, 0) }} ر.س
                                     </option>
                                 @endforeach
                             </select>
@@ -232,7 +232,7 @@
                 const workDays = parseInt(opt.dataset.workDays) || 0;
                 
                 // Auto-fill amount with remaining
-                amountInput.value = remaining.toFixed(2);
+                amountInput.value = remaining.toFixed(0);
                 amountInput.max = remaining;
                 
                 // Set payment date to last day of invoice month
@@ -245,10 +245,10 @@
                 }
                 
                 // Update displays
-                invTotalDisplay.textContent = total.toFixed(2) + ' ر.س';
-                invPaidDisplay.textContent = paid.toFixed(2) + ' ر.س';
-                invRemainingDisplay.textContent = remaining.toFixed(2) + ' ر.س';
-                paidDisplay.textContent = remaining.toFixed(2) + ' ر.س';
+                invTotalDisplay.textContent = total.toFixed(0) + ' ر.س';
+                invPaidDisplay.textContent = paid.toFixed(0) + ' ر.س';
+                invRemainingDisplay.textContent = remaining.toFixed(0) + ' ر.س';
+                paidDisplay.textContent = remaining.toFixed(0) + ' ر.س';
                 
                 // Show invoice limits
                 document.getElementById('employees_limit').textContent = 'الحد الأقصى: ' + totalWorkforce + ' موظف';
@@ -299,11 +299,11 @@
                 const max = parseFloat(this.max) || Infinity;
                 
                 if (paid > max) {
-                    this.value = max.toFixed(2);
-                    paidDisplay.textContent = max.toFixed(2) + ' ر.س';
+                    this.value = max.toFixed(0);
+                    paidDisplay.textContent = max.toFixed(0) + ' ر.س';
                     alert('المبلغ المدفوع لا يمكن أن يتجاوز المبلغ المتبقي');
                 } else {
-                    paidDisplay.textContent = paid.toFixed(2) + ' ر.س';
+                    paidDisplay.textContent = paid.toFixed(0) + ' ر.س';
                 }
             });
             

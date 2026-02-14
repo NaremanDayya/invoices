@@ -425,8 +425,8 @@ document.getElementById('processPaymentBtn').addEventListener('click', async fun
 // Utility function
 function formatNumber(num) {
     return new Intl.NumberFormat('ar-SA', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
     }).format(num);
 }
 

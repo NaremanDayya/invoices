@@ -1037,8 +1037,8 @@
                         const taxAmount = (subtotal * taxRate) / 100;
                         const total = subtotal + taxAmount;
 
-                        taxDisplay.value = taxAmount.toFixed(2);
-                        totalDisplay.value = total.toFixed(2);
+                        taxDisplay.value = taxAmount.toFixed(0);
+                        totalDisplay.value = total.toFixed(0);
                     }// Inline create: Clients
                     document.addEventListener('DOMContentLoaded', function() {
                         const addClientForm = document.getElementById('addClientForm');
@@ -1200,8 +1200,8 @@
                         const taxAmount = (subtotal * taxRate) / 100;
                         const total = subtotal + taxAmount;
 
-                        if (taxAmountDisplay) taxAmountDisplay.value = taxAmount.toFixed(2);
-                        if (totalAmountDisplay) totalAmountDisplay.value = total.toFixed(2);
+                        if (taxAmountDisplay) taxAmountDisplay.value = taxAmount.toFixed(0);
+                        if (totalAmountDisplay) totalAmountDisplay.value = total.toFixed(0);
                     }
 
                     // Event listeners for workforce inputs
@@ -1796,8 +1796,8 @@
             const taxAmount = (subtotal * taxRate) / 100;
             const total = subtotal + taxAmount;
 
-            if(taxDisplay) taxDisplay.value = taxAmount.toFixed(2);
-            if(totalDisplay) totalDisplay.value = total.toFixed(2);
+            if(taxDisplay) taxDisplay.value = taxAmount.toFixed(0);
+            if(totalDisplay) totalDisplay.value = total.toFixed(0);
         }
 
         // Event listeners for workforce inputs
@@ -1890,7 +1890,7 @@
         document.getElementById('payment_amount')?.addEventListener('input', function() {
             const amount = parseFloat(this.value) || 0;
             if (amount > currentPaymentData.remainingAmount) {
-                this.value = currentPaymentData.remainingAmount.toFixed(2);
+                this.value = currentPaymentData.remainingAmount.toFixed(0);
             }
             updatePaymentStatus(parseFloat(this.value) || 0);
         });
@@ -2064,9 +2064,9 @@
                     invoice.number || '',
                     invoice.client?.name || '',
                     invoice.generation_date || '',
-                    parseFloat(invoice.total_price || 0).toFixed(2) + ' SAR',
-                    parseFloat(invoice.paid_amount || 0).toFixed(2) + ' SAR',
-                    parseFloat(invoice.remaining_amount || 0).toFixed(2) + ' SAR',
+                    parseFloat(invoice.total_price || 0).toFixed(0) + ' SAR',
+                    parseFloat(invoice.paid_amount || 0).toFixed(0) + ' SAR',
+                    parseFloat(invoice.remaining_amount || 0).toFixed(0) + ' SAR',
                     statusMap[invoice.payment_status] || invoice.payment_status
                 ];
             });
@@ -2117,11 +2117,11 @@
                 'تاريخ الاستحقاق': invoice.last_generation_date || '',
                 'إجمالي العمالة': (invoice.total_workers || 0) + (invoice.total_supervisors || 0) + (invoice.total_managers || 0) + (invoice.total_users || 0),
                 'أيام العمل': invoice.work_days || 0,
-                'المبلغ الأساسي': parseFloat(invoice.base_price || 0).toFixed(2),
-                'الضريبة': parseFloat(invoice.tax_amount || 0).toFixed(2),
-                'المبلغ الإجمالي': parseFloat(invoice.total_price || 0).toFixed(2),
-                'المبلغ المدفوع': parseFloat(invoice.paid_amount || 0).toFixed(2),
-                'المبلغ المتبقي': parseFloat(invoice.remaining_amount || 0).toFixed(2),
+                'المبلغ الأساسي': parseFloat(invoice.base_price || 0).toFixed(0),
+                'الضريبة': parseFloat(invoice.tax_amount || 0).toFixed(0),
+                'المبلغ الإجمالي': parseFloat(invoice.total_price || 0).toFixed(0),
+                'المبلغ المدفوع': parseFloat(invoice.paid_amount || 0).toFixed(0),
+                'المبلغ المتبقي': parseFloat(invoice.remaining_amount || 0).toFixed(0),
                 'حالة السداد': statusMap[invoice.payment_status] || invoice.payment_status,
                 'حالة الفاتورة': invoice.invoice_status || ''
             }));

@@ -86,15 +86,15 @@
                                                     <div class="row g-2">
                                                         <div class="col-6">
                                                             <small class="text-muted d-block">المبلغ الأساسي</small>
-                                                            <strong>{{ number_format($creditNote->previous_values['base_price'] ?? 0, 2) }} ر.س</strong>
+                                                            <strong>{{ number_format($creditNote->previous_values['base_price'] ?? 0, 0) }} ر.س</strong>
                                                         </div>
                                                         <div class="col-6">
                                                             <small class="text-muted d-block">الضريبة</small>
-                                                            <strong>{{ number_format($creditNote->previous_values['tax_amount'] ?? 0, 2) }} ر.س</strong>
+                                                            <strong>{{ number_format($creditNote->previous_values['tax_amount'] ?? 0, 0) }} ر.س</strong>
                                                         </div>
                                                         <div class="col-6">
                                                             <small class="text-muted d-block">الإجمالي</small>
-                                                            <strong class="text-danger">{{ number_format($creditNote->previous_total, 2) }} ر.س</strong>
+                                                            <strong class="text-danger">{{ number_format($creditNote->previous_total, 0) }} ر.س</strong>
                                                         </div>
                                                         <div class="col-6">
                                                             <small class="text-muted d-block">نسبة الضريبة</small>
@@ -127,15 +127,15 @@
                                                     <div class="row g-2">
                                                         <div class="col-6">
                                                             <small class="text-muted d-block">المبلغ الأساسي</small>
-                                                            <strong>{{ number_format($creditNote->new_values['base_price'] ?? 0, 2) }} ر.س</strong>
+                                                            <strong>{{ number_format($creditNote->new_values['base_price'] ?? 0, 0) }} ر.س</strong>
                                                         </div>
                                                         <div class="col-6">
                                                             <small class="text-muted d-block">الضريبة</small>
-                                                            <strong>{{ number_format($creditNote->new_values['tax_amount'] ?? 0, 2) }} ر.س</strong>
+                                                            <strong>{{ number_format($creditNote->new_values['tax_amount'] ?? 0, 0) }} ر.س</strong>
                                                         </div>
                                                         <div class="col-6">
                                                             <small class="text-muted d-block">الإجمالي</small>
-                                                            <strong class="text-success">{{ number_format($creditNote->new_total, 2) }} ر.س</strong>
+                                                            <strong class="text-success">{{ number_format($creditNote->new_total, 0) }} ر.س</strong>
                                                         </div>
                                                         <div class="col-6">
                                                             <small class="text-muted d-block">نسبة الضريبة</small>
@@ -164,7 +164,7 @@
                                                 <div>
                                                     <strong>فرق المبلغ:</strong>
                                                     <span class="badge bg-warning text-dark ms-2">
-                                                        {{ number_format($creditNote->amount_difference, 2) }} ر.س
+                                                        {{ number_format($creditNote->amount_difference, 0) }} ر.س
                                                     </span>
                                                 </div>
                                             </div>

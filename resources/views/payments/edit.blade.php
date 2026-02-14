@@ -58,7 +58,7 @@
                                             data-client-email="{{ $invoice->client->email ?? '' }}"
                                             data-client-phone="{{ $invoice->client->phone ?? '' }}"
                                             data-client-address="{{ $invoice->client->address ?? '' }}">
-                                        #{{ $invoice->number }} - {{ $invoice->client->name }} - متبقي: {{ number_format($invoice->remaining_amount, 2) }} ر.س
+                                        #{{ $invoice->number }} - {{ $invoice->client->name }} - متبقي: {{ number_format($invoice->remaining_amount, 0) }} ر.س
                                     </option>
                                 @endforeach
                             </select>
@@ -167,19 +167,19 @@
                         <div class="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-slate-800 rounded-xl p-6 border border-blue-100 dark:border-blue-800/30 space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold text-slate-500">إجمالي الفاتورة</span>
-                                <span class="font-mono font-bold text-lg text-slate-800 dark:text-white" id="invoice_total_display">{{ number_format($payment->invoice->total_price ?? 0, 2) }} ر.س</span>
+                                <span class="font-mono font-bold text-lg text-slate-800 dark:text-white" id="invoice_total_display">{{ number_format($payment->invoice->total_price ?? 0, 0) }} ر.س</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-bold text-blue-600">المبلغ المدفوع سابقاً</span>
-                                <span class="font-mono font-bold text-lg text-blue-600" id="invoice_paid_display">{{ number_format($payment->invoice->paid_amount ?? 0, 2) }} ر.س</span>
+                                <span class="font-mono font-bold text-lg text-blue-600" id="invoice_paid_display">{{ number_format($payment->invoice->paid_amount ?? 0, 0) }} ر.س</span>
                             </div>
                             <div class="flex items-center justify-between pt-3 border-t border-blue-200">
                                 <span class="text-sm font-bold text-orange-600">المبلغ المتبقي</span>
-                                <span class="font-mono font-bold text-xl text-orange-600" id="invoice_remaining_display">{{ number_format($payment->invoice->remaining_amount ?? 0, 2) }} ر.س</span>
+                                <span class="font-mono font-bold text-xl text-orange-600" id="invoice_remaining_display">{{ number_format($payment->invoice->remaining_amount ?? 0, 0) }} ر.س</span>
                             </div>
                             <div class="flex items-center justify-between pt-3 border-t-2 border-green-200">
                                 <span class="text-sm font-bold text-green-600">المبلغ الحالي للدفع</span>
-                                <span class="font-mono font-bold text-2xl text-green-600" id="paid_amount_display">{{ number_format($payment->amount, 2) }} ر.س</span>
+                                <span class="font-mono font-bold text-2xl text-green-600" id="paid_amount_display">{{ number_format($payment->amount, 0) }} ر.س</span>
                             </div>
                         </div>
                     </div>
@@ -229,9 +229,9 @@
                 amountInput.max = remaining;
                 
                 // Update displays
-                invTotalDisplay.textContent = total.toFixed(2) + ' ر.س';
-                invPaidDisplay.textContent = paid.toFixed(2) + ' ر.س';
-                invRemainingDisplay.textContent = remaining.toFixed(2) + ' ر.س';
+                invTotalDisplay.textContent = total.toFixed(0) + ' ر.س';
+                invPaidDisplay.textContent = paid.toFixed(0) + ' ر.س';
+                invRemainingDisplay.textContent = remaining.toFixed(0) + ' ر.س';
                 
                 // Fill Client Info
                 clientName.value = opt.dataset.clientName || '';
@@ -257,11 +257,11 @@
                 const max = parseFloat(this.max) || Infinity;
                 
                 if (paid > max) {
-                    this.value = max.toFixed(2);
-                    paidDisplay.textContent = max.toFixed(2) + ' ر.س';
+                    this.value = max.toFixed(0);
+                    paidDisplay.textContent = max.toFixed(0) + ' ر.س';
                     alert('المبلغ المدفوع لا يمكن أن يتجاوز المبلغ المتبقي');
                 } else {
-                    paidDisplay.textContent = paid.toFixed(2) + ' ر.س';
+                    paidDisplay.textContent = paid.toFixed(0) + ' ر.س';
                 }
             });
             

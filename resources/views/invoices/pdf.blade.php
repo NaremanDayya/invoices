@@ -137,9 +137,9 @@
                     <td>{{ $invoice->number }}</td>
                     <td>{{ $invoice->client->name ?? '-' }}</td>
                     <td>{{ $invoice->generation_date }}</td>
-                    <td>{{ number_format($invoice->total_price, 2) }} ر.س</td>
-                    <td>{{ number_format($invoice->paid_amount, 2) }} ر.س</td>
-                    <td>{{ number_format($invoice->remaining_amount, 2) }} ر.س</td>
+                    <td>{{ number_format($invoice->total_price, 0) }} ر.س</td>
+                    <td>{{ number_format($invoice->paid_amount, 0) }} ر.س</td>
+                    <td>{{ number_format($invoice->remaining_amount, 0) }} ر.س</td>
                     <td class="{{ $statusClass }}">{{ $statusLabel }}</td>
                 </tr>
             @endforeach
@@ -147,9 +147,9 @@
         <tfoot>
             <tr style="background-color: #e9ecef; font-weight: bold;">
                 <td colspan="3">الإجمالي</td>
-                <td>{{ number_format($totalAmount, 2) }} ر.س</td>
-                <td>{{ number_format($totalPaid, 2) }} ر.س</td>
-                <td>{{ number_format($totalRemaining, 2) }} ر.س</td>
+                <td>{{ number_format($totalAmount, 0) }} ر.س</td>
+                <td>{{ number_format($totalPaid, 0) }} ر.س</td>
+                <td>{{ number_format($totalRemaining, 0) }} ر.س</td>
                 <td>-</td>
             </tr>
         </tfoot>

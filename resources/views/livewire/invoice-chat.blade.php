@@ -43,7 +43,7 @@
                     </div>
                     <div class="summary-item">
                         <span class="label">المبلغ</span>
-                        <span class="value">{{ number_format($invoice->total_price, 2) }} ر.س</span>
+                        <span class="value">{{ number_format($invoice->total_price, 0) }} ر.س</span>
                     </div>
 
                     <div class="summary-item">
@@ -101,7 +101,7 @@
                                     <div class="invoice-meta">
                                         <span class="date">{{ $clientInvoice->created_at->translatedFormat('d M') }}</span>
                                         <span class="dot">•</span>
-                                        <span class="amount">{{ number_format($clientInvoice->total_price, 2) }} ر.س</span>
+                                        <span class="amount">{{ number_format($clientInvoice->total_price, 0) }} ر.س</span>
                                     </div>
                                 </div>
                                 <div class="invoice-item-icon">

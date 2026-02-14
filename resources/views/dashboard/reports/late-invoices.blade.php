@@ -17,7 +17,7 @@
             <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm d-flex justify-content-between align-items-center">
                 <div>
                     <p class="text-muted small mb-1">إجمالي المبالغ المتأخرة</p>
-                    <h3 class="fw-bold mb-0 text-danger">{{ number_format($invoices->sum('total_price'), 2) }} ر.س</h3>
+                    <h3 class="fw-bold mb-0 text-danger">{{ number_format($invoices->sum('total_price'), 0) }} ر.س</h3>
                 </div>
                 <div class="bg-danger-soft p-3 rounded-circle">
                     <i class="bi bi-alarm text-danger fs-3"></i>
@@ -54,7 +54,7 @@
                                     <td class="px-4 py-3 text-center">
                                         <span class="badge bg-danger rounded-pill px-3">{{ $delay }} يوم</span>
                                     </td>
-                                    <td class="px-4 py-3 text-center fw-bold">{{ number_format($invoice->total_price, 2) }}</td>
+                                    <td class="px-4 py-3 text-center fw-bold">{{ number_format($invoice->total_price, 0) }}</td>
                                     <td class="px-4 py-3 text-center">
                                         <span class="badge bg-light text-danger border border-danger-subtle px-3">{{ $invoice->payment_status }}</span>
                                     </td>

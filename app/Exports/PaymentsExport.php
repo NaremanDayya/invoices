@@ -60,7 +60,7 @@ class PaymentsExport implements FromCollection, WithHeadings, WithMapping, WithS
             $payment->invoice->number ?? '',
             $payment->invoice->client->name ?? '',
             $payment->payment_date,
-            number_format($payment->amount, 2),
+            number_format($payment->amount, 0),
             $methodMap[$payment->payment_method] ?? $payment->payment_method,
             $statusMap[$payment->status] ?? $payment->status,
             $payment->reference_number ?? '',

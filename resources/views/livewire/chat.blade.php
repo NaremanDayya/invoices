@@ -55,7 +55,7 @@
                     </div>
                     <div class="summary-item">
                         <span class="label">Amount</span>
-                        <span class="value">${{ number_format($invoice->total_amount, 2) }}</span>
+                        <span class="value">${{ number_format($invoice->total_amount, 0) }}</span>
                     </div>
 
                     <div class="summary-item">
@@ -94,7 +94,7 @@
                                 <div class="invoice-item-details">
                                     <div class="invoice-number">{{ $clientInvoice->number }}</div>
                                     <div class="invoice-meta">
-                                        <span class="amount">${{ number_format($clientInvoice->total_price, 2) }}</span>
+                                        <span class="amount">${{ number_format($clientInvoice->total_price, 0) }}</span>
                                         <span class="dot">•</span>
                                         <span class="date">{{ $clientInvoice->created_at->format('M d') }}</span>
                                     </div>

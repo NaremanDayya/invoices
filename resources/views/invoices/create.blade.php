@@ -393,9 +393,9 @@
                  const tax = subtotal * (taxRate / 100);
                  const total = subtotal + tax + diff;
                  
-                 document.getElementById('subtotal_display').textContent = subtotal.toFixed(2);
-                 document.getElementById('tax_amount_display').textContent = tax.toFixed(2);
-                 document.getElementById('total_amount_display').textContent = total.toFixed(2) + ' ﷼';
+                 document.getElementById('subtotal_display').textContent = subtotal.toFixed(0);
+                 document.getElementById('tax_amount_display').textContent = tax.toFixed(0);
+                 document.getElementById('total_amount_display').textContent = total.toFixed(0) + ' ﷼';
              };
              
              // Attach listeners

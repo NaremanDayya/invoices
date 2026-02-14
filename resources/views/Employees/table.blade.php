@@ -849,7 +849,7 @@
                 const insuranceAmount = parseFloat(document.getElementById('insuranceAmount').value) || 0;
 
                 const grossSalary = basicSalary + insuranceAmount;
-                document.getElementById('grossSalary').value = grossSalary.toFixed(2);
+                document.getElementById('grossSalary').value = grossSalary.toFixed(0);
 
                 calculateFinalSalary();
             };
@@ -862,7 +862,7 @@
                 // Assuming 30 days in a month
                 const dailyRate = basicSalary / 30;
                 const absenceDeduction = absenceDays * dailyRate;
-                document.getElementById('absenceDeduction').value = absenceDeduction.toFixed(2);
+                document.getElementById('absenceDeduction').value = absenceDeduction.toFixed(0);
 
                 calculateFinalSalary();
             };
@@ -874,7 +874,7 @@
                 const otherDeductions = parseFloat(document.getElementById('otherDeductions').value) || 0;
 
                 const finalSalary = grossSalary - absenceDeduction - otherDeductions;
-                document.getElementById('finalSalary').value = finalSalary.toFixed(2);
+                document.getElementById('finalSalary').value = finalSalary.toFixed(0);
             };
 
             // Auto-generate IBAN based on bank selection

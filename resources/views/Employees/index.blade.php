@@ -295,9 +295,9 @@
                                 </div>
                             </td>
                             <td>{{ $employee->project ?? '-' }}</td>
-                            <td class="text-primary fw-bold">{{ number_format($employee->total_salary ?? $employee->net_salary, 2) }} ر.س</td>
-                            <td class="text-success fw-bold">{{ number_format($employee->total_paid ?? 0, 2) }} ر.س</td>
-                            <td class="text-danger fw-bold">{{ number_format($employee->remaining_amount ?? $employee->net_salary, 2) }} ر.س</td>
+                            <td class="text-primary fw-bold">{{ number_format($employee->total_salary ?? $employee->net_salary, 0) }} ر.س</td>
+                            <td class="text-success fw-bold">{{ number_format($employee->total_paid ?? 0, 0) }} ر.س</td>
+                            <td class="text-danger fw-bold">{{ number_format($employee->remaining_amount ?? $employee->net_salary, 0) }} ر.س</td>
                             <td>
                                 @if(($employee->salary_type ?? 'monthly') === 'wps')
                                     <span class="badge bg-info">WPS</span>
@@ -574,7 +574,7 @@
 
                     // إذا كان نوع الملف "حماية أجور"، يمكننا اقتراح قيمة لراتب الحماية
                     if (fileType === 'حماية أجور' && !$('#wage_salary').val()) {
-                        $('#wage_salary').val(workDaysSalary.toFixed(2));
+                        $('#wage_salary').val(workDaysSalary.toFixed(0));
                     }
 
                     // تحديث الراتب الإجمالي
@@ -588,7 +588,7 @@
                 const wageSalary = parseFloat($('#wage_salary').val()) || 0;
                 const totalSalary = monthlySalary + wageSalary;
 
-                $('#total_salary').val(totalSalary.toFixed(2));
+                $('#total_salary').val(totalSalary.toFixed(0));
             }
 
             function validateWageSalary() {
@@ -602,7 +602,7 @@
                 const saveBtn = $('#saveBtn');
 
                 if (wageSalary > maxWageSalary) {
-                    message.text(`راتب حماية الأجور (${wageSalary.toFixed(2)}) يتجاوز 50% من إجمالي الراتب (الحد الأقصى: ${maxWageSalary.toFixed(2)})`);
+                    message.text(`راتب حماية الأجور (${wageSalary.toFixed(0)}) يتجاوز 50% من إجمالي الراتب (الحد الأقصى: ${maxWageSalary.toFixed(0)})`);
                     alert.show();
                     saveBtn.prop('disabled', true);
                     $('#wage_salary').addClass('is-invalid');

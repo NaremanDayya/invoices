@@ -116,7 +116,7 @@
                             <!-- المبلغ الإجمالي -->
                             <span class="badge bg-light text-dark border-0 shadow-sm py-1 px-2">
                                 <i class="bi bi-cash-coin ms-1 text-primary"></i>
-                                <span class="fw-bold">{{ number_format($totalAmount, 2) }}</span> ر.س
+                                <span class="fw-bold">{{ number_format($totalAmount, 0) }}</span> ر.س
                             </span>
 
                             <!-- عدد الفواتير -->
@@ -129,7 +129,7 @@
                             @if($hasPending)
                                 <span class="badge bg-warning-subtle text-warning-emphasis border-0 shadow-sm py-1 px-2">
                                     <i class="bi bi-clock-history ms-1"></i>
-                                    {{ number_format($pendingAmount, 2) }} معلق
+                                    {{ number_format($pendingAmount, 0) }} معلق
                                 </span>
                             @else
                                 <span class="badge bg-success-subtle text-success-emphasis border-0 shadow-sm py-1 px-2">

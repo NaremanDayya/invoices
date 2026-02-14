@@ -110,7 +110,7 @@ class PaymentsController extends Controller
 
         if ($validated['amount'] > $invoice->remaining_amount) {
             return back()->withInput()->withErrors([
-                'amount' => 'المبلغ المدفوع أكبر من المبلغ المتبقي (' . number_format($invoice->remaining_amount, 2) . ' ر.س)'
+                'amount' => 'المبلغ المدفوع أكبر من المبلغ المتبقي (' . number_format($invoice->remaining_amount, 0) . ' ر.س)'
             ]);
         }
 
@@ -260,7 +260,7 @@ class PaymentsController extends Controller
             $availableAmount = $invoice->total_price - $invoice->paid_amount;
             if ($newAmount > $availableAmount) {
                 return back()->withInput()->withErrors([
-                    'amount' => 'المبلغ المدفوع أكبر من المبلغ المتبقي (' . number_format($availableAmount, 2) . ' ر.س)'
+                    'amount' => 'المبلغ المدفوع أكبر من المبلغ المتبقي (' . number_format($availableAmount, 0) . ' ر.س)'
                 ]);
             }
             $invoice->increment('paid_amount', $newAmount);

@@ -191,17 +191,17 @@
                     <div class="col-md-4 mb-2">
                         <label class="form-label">المبلغ قبل الضريبة (ر.س)</label>
                         <input type="text" id="subtotal_display" class="form-control bg-light fw-bold" 
-                               value="{{ number_format($invoice->base_price, 2) }}" readonly>
+                               value="{{ number_format($invoice->base_price, 0) }}" readonly>
                     </div>
                     <div class="col-md-4 mb-2">
                         <label class="form-label">قيمة الضريبة (ر.س)</label>
                         <input type="text" id="tax_amount_display" class="form-control bg-light fw-bold" 
-                               value="{{ number_format($invoice->tax_amount, 2) }}" readonly>
+                               value="{{ number_format($invoice->tax_amount, 0) }}" readonly>
                     </div>
                     <div class="col-md-4 mb-2">
                         <label class="form-label">المبلغ الإجمالي (ر.س)</label>
                         <input type="text" id="total_amount_display" class="form-control bg-light fw-bold text-success" 
-                               value="{{ number_format($invoice->total_price, 2) }}" readonly>
+                               value="{{ number_format($invoice->total_price, 0) }}" readonly>
                     </div>
                 </div>
             </div>
@@ -428,9 +428,9 @@
         const taxAmount = (subtotal * taxRate) / 100;
         const total = subtotal + taxAmount + amountDiff;
 
-        subtotalDisplay.value = subtotal.toFixed(2);
-        taxDisplay.value = taxAmount.toFixed(2);
-        totalDisplay.value = total.toFixed(2);
+        subtotalDisplay.value = subtotal.toFixed(0);
+        taxDisplay.value = taxAmount.toFixed(0);
+        totalDisplay.value = total.toFixed(0);
     }
 
     // Event listeners

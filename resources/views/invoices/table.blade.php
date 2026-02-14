@@ -851,7 +851,7 @@
                 const rate = parseFloat(document.getElementById('dailyRate').value) || 0;
 
                 const subtotal = workers * days * rate;
-                document.getElementById('subtotal').value = subtotal.toFixed(2);
+                document.getElementById('subtotal').value = subtotal.toFixed(0);
 
                 calculateTaxAndTotal();
             };
@@ -864,8 +864,8 @@
                 const taxAmount = (subtotal * taxRate) / 100;
                 const totalAmount = subtotal + taxAmount;
 
-                document.getElementById('taxAmount').value = taxAmount.toFixed(2);
-                document.getElementById('totalAmount').value = totalAmount.toFixed(2);
+                document.getElementById('taxAmount').value = taxAmount.toFixed(0);
+                document.getElementById('totalAmount').value = totalAmount.toFixed(0);
             };
 
             // Set today's date as default for invoice date

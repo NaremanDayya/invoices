@@ -94,7 +94,7 @@ class InvoiceMessageService
     private function formatInvoiceMessage(Invoice $invoice): string
     {
         $serviceName = $invoice->service->name ?? 'غير محدد';
-        $totalPrice = number_format($invoice->total_price, 2);
+        $totalPrice = number_format($invoice->total_price, 0);
         $dueDate = $invoice->due_date?->format('Y-m-d') ?? 'غير محدد';
 
         return "📄 تم إنشاء فاتورة جديدة\n\n" .

@@ -19,7 +19,7 @@
                 <div class="col-md-4">
                     <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                         <p class="text-muted small mb-1">إجمالي مبلغ الفواتير</p>
-                        <h3 class="fw-bold mb-0 text-primary-accent">{{ number_format($invoices->sum('total_price'), 2) }} ر.س</h3>
+                        <h3 class="fw-bold mb-0 text-primary-accent">{{ number_format($invoices->sum('total_price'), 0) }} ر.س</h3>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -59,9 +59,9 @@
                                     <td class="px-4 py-3 text-center text-muted small">
                                         {{ $invoice->generation_date ? \Carbon\Carbon::parse($invoice->generation_date)->format('Y-m-d') : '—' }}
                                     </td>
-                                    <td class="px-4 py-3 text-center">{{ number_format($invoice->base_price, 2) }}</td>
-                                    <td class="px-4 py-3 text-center text-muted small">{{ number_format($invoice->tax_amount, 2) }}</td>
-                                    <td class="px-4 py-3 text-center fw-bold text-success">{{ number_format($invoice->total_price, 2) }}</td>
+                                    <td class="px-4 py-3 text-center">{{ number_format($invoice->base_price, 0) }}</td>
+                                    <td class="px-4 py-3 text-center text-muted small">{{ number_format($invoice->tax_amount, 0) }}</td>
+                                    <td class="px-4 py-3 text-center fw-bold text-success">{{ number_format($invoice->total_price, 0) }}</td>
                                     <td class="px-4 py-3 text-center">
                                         <span class="badge rounded-pill bg-{{ $invoice->payment_status == 'paid' ? 'success' : 'warning' }} px-3">
                                             {{ $invoice->payment_status == 'paid' ? 'مدفوعة' : 'معلقة' }}

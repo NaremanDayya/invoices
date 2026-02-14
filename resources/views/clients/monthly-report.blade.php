@@ -130,21 +130,21 @@
         <div class="col-md-3">
             <div class="stat-box">
                 <p>إجمالي المبلغ</p>
-                <h3>{{ number_format($summary['total_invoiced'], 2) }}</h3>
+                <h3>{{ number_format($summary['total_invoiced'], 0) }}</h3>
                 <p>ر.س</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stat-box success">
                 <p>المبلغ المدفوع</p>
-                <h3>{{ number_format($summary['total_paid'], 2) }}</h3>
+                <h3>{{ number_format($summary['total_paid'], 0) }}</h3>
                 <p>ر.س</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stat-box warning">
                 <p>المبلغ المتبقي</p>
-                <h3>{{ number_format($summary['total_remaining'], 2) }}</h3>
+                <h3>{{ number_format($summary['total_remaining'], 0) }}</h3>
                 <p>ر.س</p>
             </div>
         </div>
@@ -182,19 +182,19 @@
                                 {{ $invoice['date'] }}
                             </td>
                             <td class="text-end">
-                                <strong>{{ number_format($invoice['total_amount'], 2) }}</strong> ر.س
+                                <strong>{{ number_format($invoice['total_amount'], 0) }}</strong> ر.س
                             </td>
                             <td class="text-end">
-                                <strong class="text-success">{{ number_format($invoice['paid_amount'], 2) }}</strong> ر.س
+                                <strong class="text-success">{{ number_format($invoice['paid_amount'], 0) }}</strong> ر.س
                             </td>
                             <td class="text-end">
                                 <strong class="{{ $invoice['remaining_balance'] > 0 ? 'text-danger' : 'text-success' }}">
-                                    {{ number_format($invoice['remaining_balance'], 2) }}
+                                    {{ number_format($invoice['remaining_balance'], 0) }}
                                 </strong> ر.س
                             </td>
                             <td class="text-end">
                                 @if($invoice['credit_notes'] > 0)
-                                    <strong class="text-warning">{{ number_format($invoice['credit_notes'], 2) }}</strong> ر.س
+                                    <strong class="text-warning">{{ number_format($invoice['credit_notes'], 0) }}</strong> ر.س
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -215,14 +215,14 @@
                         <tr class="fw-bold">
                             <td colspan="2" class="text-end">الإجماليات:</td>
                             <td class="text-end">
-                                <strong class="fs-5 text-primary">{{ number_format($summary['total_invoiced'], 2) }}</strong> ر.س
+                                <strong class="fs-5 text-primary">{{ number_format($summary['total_invoiced'], 0) }}</strong> ر.س
                             </td>
                             <td class="text-end">
-                                <strong class="fs-5 text-success">{{ number_format($summary['total_paid'], 2) }}</strong> ر.س
+                                <strong class="fs-5 text-success">{{ number_format($summary['total_paid'], 0) }}</strong> ر.س
                             </td>
                             <td class="text-end">
                                 <strong class="fs-5 {{ $summary['total_remaining'] > 0 ? 'text-danger' : 'text-success' }}">
-                                    {{ number_format($summary['total_remaining'], 2) }}
+                                    {{ number_format($summary['total_remaining'], 0) }}
                                 </strong> ر.س
                             </td>
                             <td colspan="2"></td>

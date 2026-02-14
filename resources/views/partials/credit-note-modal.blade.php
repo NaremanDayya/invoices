@@ -220,7 +220,7 @@ function calculateCreditAmounts() {
     
     // Auto-fill new base price if credit is entered
     if (creditBeforeTax > 0) {
-        document.getElementById('cn_new_base_price').value = newBasePrice.toFixed(2);
+        document.getElementById('cn_new_base_price').value = newBasePrice.toFixed(0);
     }
 }
 

@@ -190,7 +190,7 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <span class="text-muted">{{ $payment->payment_date->format('Y-m-d') }}</span>
-                        <span class="fw-bold">{{ number_format($payment->amount, 2) }} ر.س</span>
+                        <span class="fw-bold">{{ number_format($payment->amount, 0) }} ر.س</span>
                     </div>
                     <div class="text-muted small mt-1">{{ $payment->payment_method }}</div>
                 </div>
@@ -222,11 +222,11 @@
                             <tr>
                                 <td><strong>{{ $creditNote->credit_note_number }}</strong></td>
                                 <td>{{ $creditNote->created_at->format('Y-m-d') }}</td>
-                                <td>{{ number_format($creditNote->new_values['base_price'] ?? 0, 2) }} ر.س</td>
-                                <td>{{ number_format($creditNote->new_values['tax_amount'] ?? 0, 2) }} ر.س</td>
-                                <td><strong>{{ number_format($creditNote->new_total, 2) }} ر.س</strong></td>
-                                <td>{{ number_format($creditNote->previous_total, 2) }} ر.س</td>
-                                <td class="text-success"><strong>{{ number_format($creditNote->new_total, 2) }} ر.س</strong></td>
+                                <td>{{ number_format($creditNote->new_values['base_price'] ?? 0, 0) }} ر.س</td>
+                                <td>{{ number_format($creditNote->new_values['tax_amount'] ?? 0, 0) }} ر.س</td>
+                                <td><strong>{{ number_format($creditNote->new_total, 0) }} ر.س</strong></td>
+                                <td>{{ number_format($creditNote->previous_total, 0) }} ر.س</td>
+                                <td class="text-success"><strong>{{ number_format($creditNote->new_total, 0) }} ر.س</strong></td>
                                 <td>{{ $creditNote->creator->name ?? '-' }}</td>
                                 <td>
                                     <a href="{{ route('invoices.credit-notes.show', [$invoice, $creditNote]) }}" class="btn btn-sm btn-primary" title="عرض">
@@ -257,34 +257,34 @@
                 <h5><i class="bi bi-calculator me-2"></i>الملخص المالي</h5>
                 <div class="detail-row">
                     <span class="detail-label">المبلغ الأساسي</span>
-                    <span class="detail-value">{{ number_format($invoice->base_price, 2) }} ر.س</span>
+                    <span class="detail-value">{{ number_format($invoice->base_price, 0) }} ر.س</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">الضريبة ({{ $invoice->tax_rate }}%)</span>
-                    <span class="detail-value">{{ number_format($invoice->tax_amount, 2) }} ر.س</span>
+                    <span class="detail-value">{{ number_format($invoice->tax_amount, 0) }} ر.س</span>
                 </div>
                 @if($invoice->amount_difference != 0)
                 <div class="detail-row">
                     <span class="detail-label">فرق المبلغ</span>
                     <span class="detail-value {{ $invoice->amount_difference > 0 ? 'text-success' : 'text-danger' }}">
-                        {{ $invoice->amount_difference > 0 ? '+' : '' }}{{ number_format($invoice->amount_difference, 2) }} ر.س
+                        {{ $invoice->amount_difference > 0 ? '+' : '' }}{{ number_format($invoice->amount_difference, 0) }} ر.س
                     </span>
                 </div>
                 @endif
                 <div class="detail-row" style="border-top: 2px solid #edf2f7; padding-top: 16px; margin-top: 8px;">
                     <span class="detail-label fw-bold">الإجمالي</span>
                     <span class="detail-value fw-bold" style="font-size: 1.25rem; color: #10a37f;">
-                        {{ number_format($invoice->total_price, 2) }} ر.س
+                        {{ number_format($invoice->total_price, 0) }} ر.س
                     </span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">المبلغ المدفوع</span>
-                    <span class="detail-value text-success">{{ number_format($invoice->paid_amount, 2) }} ر.س</span>
+                    <span class="detail-value text-success">{{ number_format($invoice->paid_amount, 0) }} ر.س</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">المبلغ المتبقي</span>
                     <span class="detail-value {{ $invoice->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">
-                        {{ number_format($invoice->remaining_amount, 2) }} ر.س
+                        {{ number_format($invoice->remaining_amount, 0) }} ر.س
                     </span>
                 </div>
             </div>

@@ -389,7 +389,7 @@
                     payment.invoice?.number || '',
                     payment.invoice?.client?.name || '',
                     payment.payment_date || '',
-                    parseFloat(payment.amount || 0).toFixed(2) + ' SAR',
+                    parseFloat(payment.amount || 0).toFixed(0) + ' SAR',
                     methodMap[payment.payment_method] || payment.payment_method,
                     statusMap[payment.status] || payment.status
                 ];
@@ -444,7 +444,7 @@
                 'رقم الفاتورة': payment.invoice?.number || '',
                 'العميل': payment.invoice?.client?.name || '',
                 'تاريخ الدفع': payment.payment_date || '',
-                'المبلغ': parseFloat(payment.amount || 0).toFixed(2),
+                'المبلغ': parseFloat(payment.amount || 0).toFixed(0),
                 'طريقة الدفع': methodMap[payment.payment_method] || payment.payment_method,
                 'الحالة': statusMap[payment.status] || payment.status,
                 'رقم المرجع': payment.reference_number || '',

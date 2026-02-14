@@ -16,7 +16,7 @@
         <div class="col-12">
             <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 <p class="text-muted small mb-1">إجمالي الفروقات (علينا)</p>
-                <h3 class="fw-bold mb-0 text-danger">{{ number_format($invoices->sum('price_difference'), 2) }} ر.س</h3>
+                <h3 class="fw-bold mb-0 text-danger">{{ number_format($invoices->sum('price_difference'), 0) }} ر.س</h3>
             </div>
         </div>
 
@@ -38,8 +38,8 @@
                                 <tr>
                                     <td class="px-4 py-3 fw-bold">{{ $invoice->number }}</td>
                                     <td class="px-4 py-3">{{ $invoice->client->name ?? '—' }}</td>
-                                    <td class="px-4 py-3 text-center text-muted">{{ number_format($invoice->total_price, 2) }}</td>
-                                    <td class="px-4 py-3 text-center fw-bold text-danger">{{ number_format($invoice->price_difference, 2) }}</td>
+                                    <td class="px-4 py-3 text-center text-muted">{{ number_format($invoice->total_price, 0) }}</td>
+                                    <td class="px-4 py-3 text-center fw-bold text-danger">{{ number_format($invoice->price_difference, 0) }}</td>
                                     <td class="px-4 py-3 text-center text-muted small">{{ $invoice->updated_at->format('Y-m-d') }}</td>
                                 </tr>
                             @empty

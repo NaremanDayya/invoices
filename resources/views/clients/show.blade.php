@@ -63,7 +63,7 @@
                 <div class="col-md-3">
                     <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm h-100">
                         <p class="text-muted small mb-1">المبالغ المستحقة</p>
-                        <h3 class="fw-bold mb-0 text-danger">{{ number_format($stats['total_amount'] - $stats['paid_amount'], 2) }} ر.س</h3>
+                        <h3 class="fw-bold mb-0 text-danger">{{ number_format($stats['total_amount'] - $stats['paid_amount'], 0) }} ر.س</h3>
                         <div class="mt-2 small text-danger">
                             <i class="bi bi-exclamation-circle-fill me-1"></i>
                             {{ $stats['pending_invoices'] }} فواتير معلقة
@@ -115,7 +115,7 @@
                                 <tr>
                                     <td class="px-4 py-3 fw-bold">{{ $invoice->number }}</td>
                                     <td class="px-4 py-3 text-center text-muted small">{{ $invoice->generation_date }}</td>
-                                    <td class="px-4 py-3 text-center fw-bold">{{ number_format($invoice->total_price, 2) }} ر.س</td>
+                                    <td class="px-4 py-3 text-center fw-bold">{{ number_format($invoice->total_price, 0) }} ر.س</td>
                                     <td class="px-4 py-3 text-center">
                                         @php
                                             $statusClass = [

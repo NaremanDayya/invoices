@@ -43,7 +43,7 @@
                                     <td class="px-4 py-3 font-monospace fw-bold">{{ $invoice->number }}</td>
                                     <td class="px-4 py-3">{{ $invoice->client->name ?? '—' }}</td>
                                     <td class="px-4 py-3 text-center text-muted small">{{ $invoice->updated_at->format('Y-m-d') }}</td>
-                                    <td class="px-4 py-3 text-center fw-bold">{{ number_format($invoice->total_price, 2) }}</td>
+                                    <td class="px-4 py-3 text-center fw-bold">{{ number_format($invoice->total_price, 0) }}</td>
                                     <td class="px-4 py-3 text-center">
                                         <span class="text-muted small">{{ $invoice->notes ?? 'لا يوجد ملاحظات' }}</span>
                                     </td>

@@ -132,15 +132,15 @@
             <div class="row text-center">
                 <div class="col-md-4">
                     <h6 class="text-muted mb-2">إجمالي الرواتب</h6>
-                    <h4 class="mb-0 text-primary">{{ number_format($summary['total_salaries'], 2) }} ريال</h4>
+                    <h4 class="mb-0 text-primary">{{ number_format($summary['total_salaries'], 0) }} ريال</h4>
                 </div>
                 <div class="col-md-4">
                     <h6 class="text-muted mb-2">المبلغ المدفوع</h6>
-                    <h4 class="mb-0 text-success">{{ number_format($summary['total_paid'], 2) }} ريال</h4>
+                    <h4 class="mb-0 text-success">{{ number_format($summary['total_paid'], 0) }} ريال</h4>
                 </div>
                 <div class="col-md-4">
                     <h6 class="text-muted mb-2">المبلغ المتبقي</h6>
-                    <h4 class="mb-0 text-danger">{{ number_format($summary['total_remaining'], 2) }} ريال</h4>
+                    <h4 class="mb-0 text-danger">{{ number_format($summary['total_remaining'], 0) }} ريال</h4>
                 </div>
             </div>
         </div>
@@ -277,9 +277,9 @@
                                     <td>{{ $employee->id }}</td>
                                     <td class="fw-bold">{{ $employee->employee_name }}</td>
                                     <td>{{ $employee->project ?? '-' }}</td>
-                                    <td class="text-primary fw-bold">{{ number_format($employee->total_salary ?? $employee->net_salary, 2) }}</td>
-                                    <td class="text-success fw-bold">{{ number_format($employee->total_paid ?? 0, 2) }}</td>
-                                    <td class="text-danger fw-bold">{{ number_format($employee->remaining_amount ?? $employee->net_salary, 2) }}</td>
+                                    <td class="text-primary fw-bold">{{ number_format($employee->total_salary ?? $employee->net_salary, 0) }}</td>
+                                    <td class="text-success fw-bold">{{ number_format($employee->total_paid ?? 0, 0) }}</td>
+                                    <td class="text-danger fw-bold">{{ number_format($employee->remaining_amount ?? $employee->net_salary, 0) }}</td>
                                     <td>
                                         @if(($employee->salary_type ?? 'monthly') === 'wps')
                                             <span class="badge bg-info">WPS</span>
@@ -1149,8 +1149,8 @@ async function approveInvoice() {
 // Utility function
 function formatNumber(num) {
     return new Intl.NumberFormat('ar-SA', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
     }).format(num);
 }
 

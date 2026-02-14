@@ -181,8 +181,8 @@ function displayEmployees(employees, summary) {
 
     document.getElementById('totalEmployees').textContent = summary.total_employees;
     document.getElementById('paidEmployees').textContent = summary.paid_employees;
-    document.getElementById('totalNetSalaries').textContent = parseFloat(summary.total_net_salaries).toFixed(2) + ' ريال';
-    document.getElementById('remainingUnpaid').textContent = parseFloat(summary.remaining_unpaid).toFixed(2) + ' ريال';
+    document.getElementById('totalNetSalaries').textContent = parseFloat(summary.total_net_salaries).toFixed(0) + ' ريال';
+    document.getElementById('remainingUnpaid').textContent = parseFloat(summary.remaining_unpaid).toFixed(0) + ' ريال';
 
     allEmployeesData = employees;
 
@@ -197,9 +197,9 @@ function displayEmployees(employees, summary) {
             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">${emp.id}</td>
             <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-employee-name>${emp.employee_name || '-'}</td>
             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${emp.project || '-'}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-blue-600" data-total-salary>${parseFloat(emp.total_salary || emp.net_salary).toFixed(2)}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-green-600" data-total-paid>${parseFloat(emp.total_paid || 0).toFixed(2)}</td>
-            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-red-600" data-remaining>${parseFloat(emp.remaining_amount || emp.net_salary).toFixed(2)}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-blue-600" data-total-salary>${parseFloat(emp.total_salary || emp.net_salary).toFixed(0)}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-green-600" data-total-paid>${parseFloat(emp.total_paid || 0).toFixed(0)}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-red-600" data-remaining>${parseFloat(emp.remaining_amount || emp.net_salary).toFixed(0)}</td>
             <td class="px-3 py-4 whitespace-nowrap" data-salary-type>
                 ${getSalaryTypeBadge(emp.salary_type || emp.payment_method)}
             </td>
@@ -303,8 +303,8 @@ function openPaymentMethodModal(employeeId, netSalary, wpsAmount, paymentMethod)
         const paymentMethodSelect = document.getElementById('payment_method');
         paymentMethodSelect.value = paymentMethod || 'monthly';
 
-        document.getElementById('wps_amount').value = wpsAmount > 0 ? parseFloat(wpsAmount).toFixed(2) : '';
-        document.getElementById('displayNetSalary').textContent = currentEmployeeNetSalary.toFixed(2);
+        document.getElementById('wps_amount').value = wpsAmount > 0 ? parseFloat(wpsAmount).toFixed(0) : '';
+        document.getElementById('displayNetSalary').textContent = currentEmployeeNetSalary.toFixed(0);
 
         const wpsDiv = document.getElementById('wpsAmountDiv');
         const wpsAmountInput = document.getElementById('wps_amount');
@@ -346,7 +346,7 @@ async function loadWpsSettings() {
 
 function updateMaxWpsAmount() {
     const maxAmount = (currentEmployeeNetSalary * maxWpsPercentage) / 100;
-    document.getElementById('maxWpsAmount').textContent = maxAmount.toFixed(2);
+    document.getElementById('maxWpsAmount').textContent = maxAmount.toFixed(0);
     document.getElementById('wps_amount').max = maxAmount;
 }
 
@@ -356,10 +356,10 @@ function calculateMonthlyAmount() {
     const maxAmount = (currentEmployeeNetSalary * maxWpsPercentage) / 100;
     const errorDiv = document.getElementById('wpsAmountError');
 
-    document.getElementById('calculatedMonthlyAmount').textContent = monthlyAmount.toFixed(2);
+    document.getElementById('calculatedMonthlyAmount').textContent = monthlyAmount.toFixed(0);
 
     if (wpsAmount > maxAmount) {
-        errorDiv.textContent = `مبلغ WPS يتجاوز الحد الأقصى المسموح به (${maxAmount.toFixed(2)} ريال)`;
+        errorDiv.textContent = `مبلغ WPS يتجاوز الحد الأقصى المسموح به (${maxAmount.toFixed(0)} ريال)`;
         errorDiv.classList.remove('hidden');
     } else if (wpsAmount > currentEmployeeNetSalary) {
         errorDiv.textContent = 'مبلغ WPS لا يمكن أن يتجاوز صافي الراتب';
@@ -426,7 +426,7 @@ document.getElementById('paymentMethodForm')?.addEventListener('submit', async f
 
             const maxAmount = parseFloat(document.getElementById('maxWpsAmount').textContent);
             if (parseFloat(wpsAmount) > maxAmount) {
-                alert(`مبلغ WPS يتجاوز الحد الأقصى المسموح به (${maxAmount.toFixed(2)} ريال)`);
+                alert(`مبلغ WPS يتجاوز الحد الأقصى المسموح به (${maxAmount.toFixed(0)} ريال)`);
                 return;
             }
         }

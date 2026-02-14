@@ -223,7 +223,7 @@ class InvoiceEmployee extends Pivot
         }
 
         if ($amount > $this->remaining_amount) {
-            throw new \Exception('مبلغ الدفع لا يمكن أن يتجاوز المبلغ المتبقي (' . number_format($this->remaining_amount, 2) . ' ريال)');
+            throw new \Exception('مبلغ الدفع لا يمكن أن يتجاوز المبلغ المتبقي (' . number_format($this->remaining_amount, 0) . ' ريال)');
         }
 
         if ($paymentMode === 'wps') {
@@ -231,7 +231,7 @@ class InvoiceEmployee extends Pivot
             $maxWpsAmount = ($this->total_salary * $maxWpsPercentage) / 100;
             
             if ($amount > $maxWpsAmount) {
-                throw new \Exception("مبلغ WPS لا يمكن أن يتجاوز {$maxWpsPercentage}% من إجمالي الراتب (الحد الأقصى: " . number_format($maxWpsAmount, 2) . " ريال)");
+                throw new \Exception("مبلغ WPS لا يمكن أن يتجاوز {$maxWpsPercentage}% من إجمالي الراتب (الحد الأقصى: " . number_format($maxWpsAmount, 0) . " ريال)");
             }
         }
 

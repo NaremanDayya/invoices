@@ -947,11 +947,11 @@
                 const rate = parseFloat(document.getElementById('dailyRate').value) || 0;
 
                 const calculatedAmount = employees * days * rate;
-                document.getElementById('calculatedAmount').value = calculatedAmount.toFixed(2);
+                document.getElementById('calculatedAmount').value = calculatedAmount.toFixed(0);
 
                 // Auto-fill total amount if calculated amount is available
                 if (calculatedAmount > 0 && !document.getElementById('totalAmount').value) {
-                    document.getElementById('totalAmount').value = calculatedAmount.toFixed(2);
+                    document.getElementById('totalAmount').value = calculatedAmount.toFixed(0);
                 }
 
                 calculateNetAmount();
@@ -963,7 +963,7 @@
                 const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
 
                 const netAmount = totalAmount - discount;
-                document.getElementById('netAmount').value = netAmount.toFixed(2);
+                document.getElementById('netAmount').value = netAmount.toFixed(0);
             };
 
             // Event listeners for calculations

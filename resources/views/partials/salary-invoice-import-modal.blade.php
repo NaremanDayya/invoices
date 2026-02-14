@@ -134,9 +134,9 @@ function submitImportForm() {
                                 <h6 class="fw-bold mb-2">${data.message}</h6>
                                 <div class="small">
                                     <p class="mb-1">عدد الموظفين: ${data.data.employees_count}</p>
-                                    <p class="mb-1">إجمالي الرواتب: ${parseFloat(data.data.total_salaries).toFixed(2)} ريال</p>
-                                    <p class="mb-1">إجمالي الخصومات: ${parseFloat(data.data.total_deductions).toFixed(2)} ريال</p>
-                                    <p class="mb-0">صافي الرواتب: ${parseFloat(data.data.total_net_salaries).toFixed(2)} ريال</p>
+                                    <p class="mb-1">إجمالي الرواتب: ${parseFloat(data.data.total_salaries).toFixed(0)} ريال</p>
+                                    <p class="mb-1">إجمالي الخصومات: ${parseFloat(data.data.total_deductions).toFixed(0)} ريال</p>
+                                    <p class="mb-0">صافي الرواتب: ${parseFloat(data.data.total_net_salaries).toFixed(0)} ريال</p>
                                 </div>
                             </div>
                         </div>

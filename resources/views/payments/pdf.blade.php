@@ -130,7 +130,7 @@
                     <td>{{ $payment->invoice->number ?? '-' }}</td>
                     <td>{{ $payment->invoice->client->name ?? '-' }}</td>
                     <td>{{ $payment->payment_date }}</td>
-                    <td>{{ number_format($payment->amount, 2) }} ر.س</td>
+                    <td>{{ number_format($payment->amount, 0) }} ر.س</td>
                     <td>{{ $methodMap[$payment->payment_method] ?? $payment->payment_method }}</td>
                     <td class="{{ $statusClass }}">{{ $statusLabel }}</td>
                 </tr>
@@ -139,7 +139,7 @@
         <tfoot>
             <tr style="background-color: #e9ecef; font-weight: bold;">
                 <td colspan="4">الإجمالي</td>
-                <td>{{ number_format($totalAmount, 2) }} ر.س</td>
+                <td>{{ number_format($totalAmount, 0) }} ر.س</td>
                 <td colspan="2">-</td>
             </tr>
         </tfoot>

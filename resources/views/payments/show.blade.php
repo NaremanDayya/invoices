@@ -55,7 +55,7 @@
                             <div class="info-item">
                                 <label class="text-muted small mb-1">المبلغ المدفوع</label>
                                 <p class="fw-bold mb-0 text-success fs-4">
-                                    {{ number_format($payment->amount, 2) }} ر.س
+                                    {{ number_format($payment->amount, 0) }} ر.س
                                 </p>
                             </div>
                         </div>
@@ -172,19 +172,19 @@
                         <div class="col-md-6">
                             <div class="info-item">
                                 <label class="text-muted small mb-1">إجمالي الفاتورة</label>
-                                <p class="fw-bold mb-0">{{ number_format($payment->invoice->total_price, 2) }} ر.س</p>
+                                <p class="fw-bold mb-0">{{ number_format($payment->invoice->total_price, 0) }} ر.س</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-item">
                                 <label class="text-muted small mb-1">المبلغ المدفوع</label>
-                                <p class="fw-bold mb-0 text-success">{{ number_format($payment->invoice->paid_amount, 2) }} ر.س</p>
+                                <p class="fw-bold mb-0 text-success">{{ number_format($payment->invoice->paid_amount, 0) }} ر.س</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-item">
                                 <label class="text-muted small mb-1">المبلغ المتبقي</label>
-                                <p class="fw-bold mb-0 text-warning">{{ number_format($payment->invoice->remaining_amount, 2) }} ر.س</p>
+                                <p class="fw-bold mb-0 text-warning">{{ number_format($payment->invoice->remaining_amount, 0) }} ر.س</p>
                             </div>
                         </div>
                     </div>

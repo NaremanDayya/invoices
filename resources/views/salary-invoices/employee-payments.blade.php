@@ -151,7 +151,7 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
-                                        <strong class="text-success fs-5">{{ number_format($payment->payment_amount, 2) }} ر.س</strong>
+                                        <strong class="text-success fs-5">{{ number_format($payment->payment_amount, 0) }} ر.س</strong>
                                     </td>
                                     <td class="px-4 py-3" data-payment-mode="{{ $payment->payment_mode }}">
                                         @if($payment->payment_mode === 'wps')
@@ -182,7 +182,7 @@
                                 <tr>
                                     <td colspan="2" class="px-4 py-3 text-end"><strong>إجمالي المدفوع:</strong></td>
                                     <td class="px-4 py-3">
-                                        <strong class="text-success fs-5">{{ number_format($employee->payments->sum('payment_amount'), 2) }} ر.س</strong>
+                                        <strong class="text-success fs-5">{{ number_format($employee->payments->sum('payment_amount'), 0) }} ر.س</strong>
                                     </td>
                                     <td colspan="3"></td>
                                 </tr>
@@ -211,11 +211,11 @@
             <div class="card-body p-3">
                 <div class="mb-3 pb-3 border-bottom">
                     <small class="text-muted d-block mb-1">إجمالي الراتب</small>
-                    <strong class="fs-4 text-primary">{{ number_format($employee->total_salary ?? $employee->net_salary, 2) }} ر.س</strong>
+                    <strong class="fs-4 text-primary">{{ number_format($employee->total_salary ?? $employee->net_salary, 0) }} ر.س</strong>
                 </div>
                 <div class="mb-3 pb-3 border-bottom">
                     <small class="text-muted d-block mb-1">المبلغ المدفوع</small>
-                    <strong class="fs-4 text-success">{{ number_format($employee->total_paid ?? 0, 2) }} ر.س</strong>
+                    <strong class="fs-4 text-success">{{ number_format($employee->total_paid ?? 0, 0) }} ر.س</strong>
                     <div class="progress mt-2" style="height: 8px;">
                         @php
                             $totalSalary = $employee->total_salary ?? $employee->net_salary;
@@ -228,7 +228,7 @@
                 <div class="mb-3">
                     <small class="text-muted d-block mb-1">المبلغ المتبقي</small>
                     <strong class="fs-4 {{ $employee->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">
-                        {{ number_format($employee->remaining_amount ?? ($employee->total_salary - $employee->total_paid), 2) }} ر.س
+                        {{ number_format($employee->remaining_amount ?? ($employee->total_salary - $employee->total_paid), 0) }} ر.س
                     </strong>
                 </div>
                 <div class="alert alert-{{ $employee->payment_status === 'paid' ? 'success' : ($employee->payment_status === 'partially_paid' ? 'warning' : 'danger') }} border-0 mb-0">
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const totalCell = document.querySelector('tfoot td:nth-child(2) strong');
         if (totalCell && visibleRows.length < tableRows.length) {
-            totalCell.textContent = `${number_format(total, 2)} ر.س (${visibleRows.length} من ${tableRows.length})`;
+            totalCell.textContent = `${number_format(total, 0)} ر.س (${visibleRows.length} من ${tableRows.length})`;
         }
     }
     
@@ -396,7 +396,7 @@ function exportToPDF() {
 }
 
 function number_format(number, decimals) {
-    return number.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return number.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 </script>
 @endpush

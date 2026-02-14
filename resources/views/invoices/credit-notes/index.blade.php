@@ -36,7 +36,7 @@
             <div class="col-md-3">
                 <div class="mb-3">
                     <small class="text-muted d-block">المبلغ الإجمالي</small>
-                    <strong class="text-primary">{{ number_format($invoice->total_price, 2) }} ر.س</strong>
+                    <strong class="text-primary">{{ number_format($invoice->total_price, 0) }} ر.س</strong>
                 </div>
             </div>
             <div class="col-md-3">
@@ -48,7 +48,7 @@
             <div class="col-md-3">
                 <div class="mb-3">
                     <small class="text-muted d-block">إجمالي الخصومات</small>
-                    <strong class="text-danger">{{ number_format($creditNotes->sum('amount_difference'), 2) }} ر.س</strong>
+                    <strong class="text-danger">{{ number_format($creditNotes->sum('amount_difference'), 0) }} ر.س</strong>
                 </div>
             </div>
         </div>
@@ -96,23 +96,23 @@
                                 <small class="text-muted">{{ $creditNote->created_at->format('h:i A') }}</small>
                             </td>
                             <td class="px-4 py-3">
-                                <strong>{{ number_format($creditNote->previous_values['base_price'] ?? 0, 2) }}</strong> ر.س
+                                <strong>{{ number_format($creditNote->previous_values['base_price'] ?? 0, 0) }}</strong> ر.س
                                 <br>
-                                <small class="text-muted">→ {{ number_format($creditNote->new_values['base_price'] ?? 0, 2) }} ر.س</small>
+                                <small class="text-muted">→ {{ number_format($creditNote->new_values['base_price'] ?? 0, 0) }} ر.س</small>
                             </td>
                             <td class="px-4 py-3">
-                                <strong>{{ number_format($creditNote->previous_values['tax_amount'] ?? 0, 2) }}</strong> ر.س
+                                <strong>{{ number_format($creditNote->previous_values['tax_amount'] ?? 0, 0) }}</strong> ر.س
                                 <br>
-                                <small class="text-muted">→ {{ number_format($creditNote->new_values['tax_amount'] ?? 0, 2) }} ر.س</small>
+                                <small class="text-muted">→ {{ number_format($creditNote->new_values['tax_amount'] ?? 0, 0) }} ر.س</small>
                             </td>
                             <td class="px-4 py-3">
-                                <strong class="text-warning">{{ number_format($creditNote->amount_difference, 2) }} ر.س</strong>
+                                <strong class="text-warning">{{ number_format($creditNote->amount_difference, 0) }} ر.س</strong>
                             </td>
                             <td class="px-4 py-3">
-                                <strong class="text-danger">{{ number_format($creditNote->previous_total, 2) }} ر.س</strong>
+                                <strong class="text-danger">{{ number_format($creditNote->previous_total, 0) }} ر.س</strong>
                             </td>
                             <td class="px-4 py-3">
-                                <strong class="text-success">{{ number_format($creditNote->new_total, 2) }} ر.س</strong>
+                                <strong class="text-success">{{ number_format($creditNote->new_total, 0) }} ر.س</strong>
                             </td>
                             <td class="px-4 py-3">
                                 <i class="bi bi-person-fill me-1 text-muted"></i>
@@ -132,7 +132,7 @@
                         <tr>
                             <td colspan="4" class="px-4 py-3 text-end"><strong>الإجمالي:</strong></td>
                             <td class="px-4 py-3">
-                                <strong class="text-warning fs-5">{{ number_format($creditNotes->sum('amount_difference'), 2) }} ر.س</strong>
+                                <strong class="text-warning fs-5">{{ number_format($creditNotes->sum('amount_difference'), 0) }} ر.س</strong>
                             </td>
                             <td colspan="4"></td>
                         </tr>

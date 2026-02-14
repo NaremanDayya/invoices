@@ -1008,17 +1008,46 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
             // Show detailed error message
             let errorMessage = data.message || 'حدث خطأ أثناء معالجة الدفعات';
             
-            // If there are validation errors, show them
+            // If there are errors, show them
             if (data.errors) {
-                errorMessage += '<br><br><div class="text-start small">';
-                Object.keys(data.errors).forEach(key => {
-                    const errorValue = data.errors[key];
-                    const errorText = Array.isArray(errorValue) ? errorValue.join(', ') : errorValue;
-                    errorMessage += `<strong>${key}:</strong> ${errorText}<br>`;
-                });
+                errorMessage += '<br><br><div class="text-start small bg-light p-3 rounded">';
+                
+                // Check if errors is an array (from payment service)
+                if (Array.isArray(data.errors)) {
+                    errorMessage += '<strong>تفاصيل الأخطاء:</strong><br>';
+                    data.errors.forEach((error, index) => {
+                        if (typeof error === 'object' && error.employee_id && error.error) {
+                            errorMessage += `<div class="mt-2">`;
+                            errorMessage += `<strong>موظف #${error.employee_id}:</strong> ${error.error}`;
+                            errorMessage += `</div>`;
+                        } else {
+                            errorMessage += `<div class="mt-2">${JSON.stringify(error)}</div>`;
+                        }
+                    });
+                } 
+                // Check if errors is an object (validation errors)
+                else if (typeof data.errors === 'object') {
+                    errorMessage += '<strong>أخطاء التحقق:</strong><br>';
+                    Object.keys(data.errors).forEach(key => {
+                        const errorValue = data.errors[key];
+                        let errorText;
+                        
+                        if (Array.isArray(errorValue)) {
+                            errorText = errorValue.join(', ');
+                        } else if (typeof errorValue === 'object' && errorValue !== null) {
+                            errorText = JSON.stringify(errorValue);
+                        } else {
+                            errorText = String(errorValue);
+                        }
+                        
+                        errorMessage += `<div class="mt-2"><strong>${key}:</strong> ${errorText}</div>`;
+                    });
+                }
+                
                 errorMessage += '</div>';
             }
             
+            // Log full error details for debugging
             console.error('Batch Payment Error:', data);
             
             Swal.fire({

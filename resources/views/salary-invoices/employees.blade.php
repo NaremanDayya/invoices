@@ -314,12 +314,11 @@
                                                     <i class="bi bi-cash-coin"></i>
                                                 </button>
                                             @endif
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-info"
-                                                    onclick="viewPaymentHistory({{ $employee->id }})"
-                                                    title="سجل الدفعات">
+                                            <a href="{{ route('salary-invoices.employees.payments', [$invoice->id, $employee->id]) }}" 
+                                               class="btn btn-sm btn-info"
+                                               title="سجل الدفعات">
                                                 <i class="bi bi-clock-history"></i>
-                                            </button>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -1079,67 +1078,6 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
         this.innerHTML = '<i class="bi bi-check-circle me-2"></i>تأكيد معالجة الدفعات';
     }
 });
-
-// View payment history
-async function viewPaymentHistory(employeeId) {
-    try {
-        const response = await fetch(`/salary-invoices/employees/${employeeId}/payment-history`);
-        const data = await response.json();
-        
-        if (data.success) {
-            let historyHtml = `
-                <div class="mb-3">
-                    <h6 class="fw-bold">الموظف: ${data.employee.name}</h6>
-                    <div class="row g-2 small">
-                        <div class="col-4"><strong>إجمالي الراتب:</strong> ${formatNumber(data.employee.total_salary)} ريال</div>
-                        <div class="col-4"><strong>المدفوع:</strong> ${formatNumber(data.employee.total_paid)} ريال</div>
-                        <div class="col-4"><strong>المتبقي:</strong> ${formatNumber(data.employee.remaining_amount)} ريال</div>
-                    </div>
-                </div>
-                <hr>
-                <h6 class="fw-bold mb-3">سجل الدفعات:</h6>
-            `;
-            
-            if (data.payments.length === 0) {
-                historyHtml += '<p class="text-muted text-center py-4">لا توجد دفعات مسجلة</p>';
-            } else {
-                historyHtml += '<div class="list-group">';
-                data.payments.forEach(payment => {
-                    historyHtml += `
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h6 class="mb-1 text-success">${formatNumber(payment.payment_amount)} ريال</h6>
-                                    <small class="text-muted">
-                                        ${payment.payment_type === 'full' ? 'دفع كامل' : 'دفع جزئي'} - 
-                                        ${payment.payment_mode === 'wps' ? 'WPS' : 'شهري'}
-                                    </small>
-                                    ${payment.notes ? `<p class="mb-0 mt-1 small">${payment.notes}</p>` : ''}
-                                </div>
-                                <small class="text-muted">${new Date(payment.payment_date).toLocaleDateString('ar-SA')}</small>
-                            </div>
-                        </div>
-                    `;
-                });
-                historyHtml += '</div>';
-            }
-            
-            Swal.fire({
-                title: 'سجل دفعات الموظف',
-                html: historyHtml,
-                width: '600px',
-                confirmButtonText: 'إغلاق'
-            });
-        }
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'خطأ',
-            text: 'حدث خطأ أثناء تحميل سجل الدفعات',
-            confirmButtonText: 'حسناً'
-        });
-    }
-}
 
 // Approve invoice
 async function approveInvoice() {

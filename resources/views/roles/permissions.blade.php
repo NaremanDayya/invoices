@@ -20,7 +20,7 @@
                 <tr>
                     <th class="fw-bold">#</th>
                     <th class="fw-bold">اسم الصلاحية (عربي)</th>
-                    <th class="fw-bold">الاسم التقني (إنجليزي)</th>
+{{--                    <th class="fw-bold">الاسم التقني (إنجليزي)</th>--}}
                     <th class="fw-bold">الوصف</th>
                     <th class="fw-bold text-center">الأدوار المرتبطة</th>
                 </tr>
@@ -35,9 +35,9 @@
                             <span class="fw-semibold">{{ $permission->display_name_ar }}</span>
                         </div>
                     </td>
-                    <td>
-                        <code class="bg-light px-2 py-1 rounded">{{ $permission->name }}</code>
-                    </td>
+{{--                    <td>--}}
+{{--                        <code class="bg-light px-2 py-1 rounded">{{ $permission->name }}</code>--}}
+{{--                    </td>--}}
                     <td>
                         <small class="text-muted">{{ $permission->description ?? 'لا يوجد وصف' }}</small>
                     </td>
@@ -58,7 +58,7 @@
             <div>
                 <h6 class="alert-heading fw-bold mb-2">ملاحظة هامة</h6>
                 <p class="mb-0 small">
-                    الصلاحيات المذكورة أعلاه هي الصلاحيات الأساسية في النظام. 
+                    الصلاحيات المذكورة أعلاه هي الصلاحيات الأساسية في النظام.
                     دور <strong>المدير</strong> يمتلك جميع هذه الصلاحيات تلقائياً ولا يمكن تعديلها.
                     يمكنك تخصيص الصلاحيات للأدوار الأخرى حسب الحاجة.
                 </p>

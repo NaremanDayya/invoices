@@ -34,17 +34,17 @@
                         <div class="row g-3">
                             @foreach($permissions as $permission)
                                 <div class="col-md-6">
-                                    <div class="form-check form-switch p-3 bg-white rounded-3 border d-flex flex-row-reverse justify-content-end gap-3">
+                                    <div class="form-check p-3 bg-white rounded-3 border d-flex align-items-center" style="gap: 12px;">
                                         <input
-                                            class="form-check-input cursor-pointer"
+                                            class="form-check-input mt-0"
                                             type="checkbox"
                                             name="permissions[]"
                                             value="{{ $permission->id }}"
                                             id="permission_{{ $permission->id }}"
                                             {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}
-                                            style="float: none; margin-right: 0;"
+                                            style="position: static; margin: 0;"
                                         >
-                                        <label class="form-check-label fw-semibold cursor-pointer" for="permission_{{ $permission->id }}" style="margin-right: 0;">
+                                        <label class="form-check-label fw-semibold flex-grow-1" for="permission_{{ $permission->id }}" style="margin-right: 0;">
                                             {{ $permission->display_name_ar }}
                                             @if($permission->description)
                                                 <br>
@@ -54,8 +54,7 @@
                                     </div>
                                 </div>
                             @endforeach
-                        </div>
-                    </div>
+                        </div>                    </div>
                 </div>
             </div>
         </div>

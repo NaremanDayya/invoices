@@ -462,6 +462,14 @@
                     <span>التقارير</span>
                 </a>
             </div>
+            @if(Auth::user()->hasPermission('give_permissions_to_roles'))
+            <div class="nav-item">
+                <a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span>الأدوار والصلاحيات</span>
+                </a>
+            </div>
+            @endif
             <div class="nav-item">
                 <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
                     <i class="bi bi-sliders"></i>
@@ -475,7 +483,7 @@
                 <img src="{{ asset(Auth::user()->personal_image ?? 'assets/img/default-avatar.png') }}" alt="User" class="user-avatar-sm">
                 <div class="user-info-text">
                     <span class="user-name">{{ Auth::user()->name }}</span>
-                    <span class="user-role">مدير النظام</span>
+                    <span class="user-role">{{ Auth::user()->getRoleName() ?? 'مستخدم' }}</span>
                 </div>
                 <form method="POST" action="{{ route('logout') }}" class="ms-auto">
                     @csrf

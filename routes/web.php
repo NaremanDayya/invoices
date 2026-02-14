@@ -29,42 +29,84 @@ Route::get('/dashboard/reports/managers', [DashboardController::class, 'managers
 Route::get('/dashboard/reports/financial-for-us', [DashboardController::class, 'financialForUsReport'])->name('dashboard.reports.financial-for-us');
 Route::get('/dashboard/reports/financial-against-us', [DashboardController::class, 'financialAgainstUsReport'])->name('dashboard.reports.financial-against-us');
 Route::get('/dashboard/reports/work-days', [DashboardController::class, 'workDaysReport'])->name('dashboard.reports.work-days');
-Route::resource('invoices', InvoiceController::class);
-Route::resource('payments', PaymentsController::class);
-Route::post('invoices/add-client', [InvoiceController::class, 'addClient'])->name('invoices.add-client');
+Route::middleware(['auth'])->group(function () {
+    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::middleware(['permission:add_invoices'])->group(function () {
+        Route::get('invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
+        Route::post('invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+        Route::get('invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+        Route::put('invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
+        Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+    });
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('payments', [PaymentsController::class, 'index'])->name('payments.index');
+    Route::get('payments/{payment}', [PaymentsController::class, 'show'])->name('payments.show');
+    Route::middleware(['permission:add_invoice_payment'])->group(function () {
+        Route::get('payments/create', [PaymentsController::class, 'create'])->name('payments.create');
+        Route::post('payments', [PaymentsController::class, 'store'])->name('payments.store');
+    });
+});
+
+Route::middleware(['auth', 'permission:add_clients'])->group(function () {
+    Route::post('invoices/add-client', [InvoiceController::class, 'addClient'])->name('invoices.add-client');
+});
+
 Route::post('invoices/add-service', [InvoiceController::class, 'addService'])->name('invoices.add-service');
-Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'addPayment'])->name('invoices.add-payment');
+
+Route::middleware(['auth', 'permission:add_invoice_payment'])->group(function () {
+    Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'addPayment'])->name('invoices.add-payment');
+});
 
 // Credit Notes Routes
-Route::get('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'index'])->name('invoices.credit-notes.index');
-Route::get('/invoices/{invoice}/credit-notes/{creditNote}', [CreditNoteController::class, 'show'])->name('invoices.credit-notes.show');
-Route::post('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
-Route::delete('/credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
-Route::get('/invoices/{invoice}/credit-notes-data', [CreditNoteController::class, 'getInvoiceCreditNotes'])->name('credit-notes.invoice');
-Route::get('/credit-notes/invoice/{invoice}/count', [CreditNoteController::class, 'getCreditNoteCount'])->name('credit-notes.count');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'index'])->name('invoices.credit-notes.index');
+    Route::get('/invoices/{invoice}/credit-notes/{creditNote}', [CreditNoteController::class, 'show'])->name('invoices.credit-notes.show');
+    Route::get('/invoices/{invoice}/credit-notes-data', [CreditNoteController::class, 'getInvoiceCreditNotes'])->name('credit-notes.invoice');
+    Route::get('/credit-notes/invoice/{invoice}/count', [CreditNoteController::class, 'getCreditNoteCount'])->name('credit-notes.count');
+    
+    Route::middleware(['permission:add_credit_note'])->group(function () {
+        Route::post('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
+        Route::delete('/credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
+    });
+});
 
 // Salary Invoice Routes
-Route::get('/salary-invoices/{invoice}/employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'showEmployees'])->name('salary-invoices.employees.index');
-Route::get('/salary-invoices/{invoice}/employees-data', [\App\Http\Controllers\SalaryInvoiceController::class, 'getEmployees'])->name('salary-invoices.employees.data');
-Route::post('/salary-invoices/import', [\App\Http\Controllers\SalaryInvoiceController::class, 'importEmployees'])->name('salary-invoices.import');
-Route::put('/salary-invoices/employees/{employee}/payment-method', [\App\Http\Controllers\SalaryInvoiceController::class, 'updatePaymentMethod'])->name('salary-invoices.update-payment-method');
-Route::delete('/salary-invoices/employees/{employee}', [\App\Http\Controllers\SalaryInvoiceController::class, 'deleteEmployee'])->name('salary-invoices.delete-employee');
-Route::delete('/salary-invoices/{invoice}/clear-employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'clearAllEmployees'])->name('salary-invoices.clear-employees');
-Route::get('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'getWpsSettings'])->name('salary-invoices.wps-settings');
-Route::put('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'updateWpsSettings'])->name('salary-invoices.update-wps-settings');
-Route::get('/salary-invoices/download-template', [\App\Http\Controllers\SalaryInvoiceController::class, 'downloadTemplate'])->name('salary-invoices.download-template');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/salary-invoices/{invoice}/employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'showEmployees'])->name('salary-invoices.employees.index');
+    Route::get('/salary-invoices/{invoice}/employees-data', [\App\Http\Controllers\SalaryInvoiceController::class, 'getEmployees'])->name('salary-invoices.employees.data');
+    Route::get('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'getWpsSettings'])->name('salary-invoices.wps-settings');
+    Route::put('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'updateWpsSettings'])->name('salary-invoices.update-wps-settings');
+    Route::get('/salary-invoices/download-template', [\App\Http\Controllers\SalaryInvoiceController::class, 'downloadTemplate'])->name('salary-invoices.download-template');
+    
+    Route::middleware(['permission:import_invoice_employees'])->group(function () {
+        Route::post('/salary-invoices/import', [\App\Http\Controllers\SalaryInvoiceController::class, 'importEmployees'])->name('salary-invoices.import');
+        Route::put('/salary-invoices/employees/{employee}/payment-method', [\App\Http\Controllers\SalaryInvoiceController::class, 'updatePaymentMethod'])->name('salary-invoices.update-payment-method');
+        Route::delete('/salary-invoices/employees/{employee}', [\App\Http\Controllers\SalaryInvoiceController::class, 'deleteEmployee'])->name('salary-invoices.delete-employee');
+        Route::delete('/salary-invoices/{invoice}/clear-employees', [\App\Http\Controllers\SalaryInvoiceController::class, 'clearAllEmployees'])->name('salary-invoices.clear-employees');
+    });
+});
 
 // Salary Invoice Approval Routes
-Route::post('/salary-invoices/{invoice}/approve', [\App\Http\Controllers\SalaryInvoiceController::class, 'approve'])->name('salary-invoices.approve');
-Route::post('/salary-invoices/{invoice}/reject', [\App\Http\Controllers\SalaryInvoiceController::class, 'reject'])->name('salary-invoices.reject');
+Route::middleware(['auth', 'permission:approve_invoice_employees'])->group(function () {
+    Route::post('/salary-invoices/{invoice}/approve', [\App\Http\Controllers\SalaryInvoiceController::class, 'approve'])->name('salary-invoices.approve');
+    Route::post('/salary-invoices/{invoice}/reject', [\App\Http\Controllers\SalaryInvoiceController::class, 'reject'])->name('salary-invoices.reject');
+});
 
 // Salary Payment Routes
-Route::post('/salary-invoices/{invoice}/process-payments', [\App\Http\Controllers\SalaryPaymentController::class, 'processPayments'])->name('salary-payments.process');
-Route::get('/salary-invoices/{invoice}/payment-summary', [\App\Http\Controllers\SalaryPaymentController::class, 'getPaymentSummary'])->name('salary-payments.summary');
-Route::get('/salary-invoices/employees/{employee}/payment-details', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentDetails'])->name('salary-payments.employee-details');
-Route::post('/salary-invoices/employees/{employee}/calculate-breakdown', [\App\Http\Controllers\SalaryPaymentController::class, 'calculatePaymentBreakdown'])->name('salary-payments.calculate-breakdown');
-Route::get('/salary-invoices/employees/{employee}/payment-history', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentHistory'])->name('salary-payments.history');
-Route::get('/salary-invoices/{invoice}/employees/{employee}/payments', [\App\Http\Controllers\SalaryPaymentController::class, 'showEmployeePayments'])->name('salary-invoices.employees.payments');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/salary-invoices/{invoice}/payment-summary', [\App\Http\Controllers\SalaryPaymentController::class, 'getPaymentSummary'])->name('salary-payments.summary');
+    Route::get('/salary-invoices/employees/{employee}/payment-details', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentDetails'])->name('salary-payments.employee-details');
+    Route::get('/salary-invoices/employees/{employee}/payment-history', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentHistory'])->name('salary-payments.history');
+    Route::get('/salary-invoices/{invoice}/employees/{employee}/payments', [\App\Http\Controllers\SalaryPaymentController::class, 'showEmployeePayments'])->name('salary-invoices.employees.payments');
+    
+    Route::middleware(['permission:add_invoice_employee_payment'])->group(function () {
+        Route::post('/salary-invoices/{invoice}/process-payments', [\App\Http\Controllers\SalaryPaymentController::class, 'processPayments'])->name('salary-payments.process');
+        Route::post('/salary-invoices/employees/{employee}/calculate-breakdown', [\App\Http\Controllers\SalaryPaymentController::class, 'calculatePaymentBreakdown'])->name('salary-payments.calculate-breakdown');
+    });
+});
 
 // Settings Routes
 Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
@@ -105,10 +147,29 @@ Route::middleware('auth')->group(function () {
     Route::get('/chat/unread-count', [ChatController::class, 'unreadConversationsCount']);
     Route::post('/chat/send-image', [ChatController::class, 'sendImage'])->name('chat.send-image');
 });
-Route::resource('clients', \App\Http\Controllers\ClientController::class);
-Route::get('clients/{client}/monthly-report', [\App\Http\Controllers\ClientController::class, 'monthlyReport'])->name('clients.monthly-report');
-Route::get('clients/{client}/monthly-report/export', [\App\Http\Controllers\ClientController::class, 'exportMonthlyReport'])->name('clients.monthly-report.export');
+Route::middleware(['auth'])->group(function () {
+    Route::get('clients', [\App\Http\Controllers\ClientController::class, 'index'])->name('clients.index');
+    Route::get('clients/{client}', [\App\Http\Controllers\ClientController::class, 'show'])->name('clients.show');
+    Route::get('clients/{client}/monthly-report', [\App\Http\Controllers\ClientController::class, 'monthlyReport'])->name('clients.monthly-report');
+    Route::get('clients/{client}/monthly-report/export', [\App\Http\Controllers\ClientController::class, 'exportMonthlyReport'])->name('clients.monthly-report.export');
+    
+    Route::middleware(['permission:add_clients'])->group(function () {
+        Route::get('clients/create', [\App\Http\Controllers\ClientController::class, 'create'])->name('clients.create');
+        Route::post('clients', [\App\Http\Controllers\ClientController::class, 'store'])->name('clients.store');
+        Route::get('clients/{client}/edit', [\App\Http\Controllers\ClientController::class, 'edit'])->name('clients.edit');
+        Route::put('clients/{client}', [\App\Http\Controllers\ClientController::class, 'update'])->name('clients.update');
+        Route::delete('clients/{client}', [\App\Http\Controllers\ClientController::class, 'destroy'])->name('clients.destroy');
+    });
+});
 Route::resource('services', \App\Http\Controllers\ServiceController::class);
 Route::resource('invoice-statuses', \App\Http\Controllers\InvoiceStatusController::class);
 Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'getNotifications']);
+
+Route::middleware(['auth', 'permission:give_permissions_to_roles'])->group(function () {
+    Route::get('/roles', [\App\Http\Controllers\RolePermissionController::class, 'index'])->name('roles.index');
+    Route::get('/roles/{role}/edit', [\App\Http\Controllers\RolePermissionController::class, 'edit'])->name('roles.edit');
+    Route::put('/roles/{role}/permissions', [\App\Http\Controllers\RolePermissionController::class, 'updatePermissions'])->name('roles.update-permissions');
+    Route::get('/permissions', [\App\Http\Controllers\RolePermissionController::class, 'permissions'])->name('roles.permissions');
+});
+
 require __DIR__.'/auth.php';

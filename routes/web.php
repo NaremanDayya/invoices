@@ -172,4 +172,10 @@ Route::middleware(['auth', 'permission:give_permissions_to_roles'])->group(funct
     Route::get('/permissions', [\App\Http\Controllers\RolePermissionController::class, 'permissions'])->name('roles.permissions');
 });
 
+// Projects Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects.index');
+    Route::get('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
+});
+
 require __DIR__.'/auth.php';

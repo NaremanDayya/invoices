@@ -70,11 +70,12 @@
                         <tr>
                             <th class="px-4 py-3">رقم الإشعار</th>
                             <th class="px-4 py-3">التاريخ</th>
-                            <th class="px-4 py-3">المبلغ قبل الضريبة</th>
-                            <th class="px-4 py-3">مبلغ الضريبة</th>
+                            <th class="px-4 py-3">الإجمالي الأصلي</th>
+                            <th class="px-4 py-3">مبلغ الضريبة الأصلي</th>
+                            <th class="px-4 py-3">الإجمالي قبل تعديل الضريبة</th>
                             <th class="px-4 py-3">الإجمالي بعد الضريبة</th>
-                            <th class="px-4 py-3">قيمة الفاتورة السابقة</th>
-                            <th class="px-4 py-3">قيمة الفاتورة الجديدة</th>
+                            <th class="px-4 py-3">مبلغ الإشعار الدائن</th>
+                            <th class="px-4 py-3">السبب</th>
                             <th class="px-4 py-3">أنشئ بواسطة</th>
                             <th class="px-4 py-3 text-center">إجراءات</th>
                         </tr>
@@ -83,7 +84,7 @@
                         @foreach($creditNotes as $creditNote)
                         <tr>
                             <td class="px-4 py-3">
-                                <strong class="text-primary">{{ $creditNote->credit_note_number }}</strong>
+                                <strong class="text-primary">{{ $creditNote->number ?? $creditNote->credit_note_number }}</strong>
                                 <br>
                                 <span class="badge bg-{{ $creditNote->type === 'internal' ? 'primary' : 'success' }} badge-sm">
                                     {{ $creditNote->type === 'internal' ? 'داخلي' : 'للعميل' }}
@@ -95,24 +96,23 @@
                                 <br>
                                 <small class="text-muted">{{ $creditNote->created_at->format('h:i A') }}</small>
                             </td>
-                            <td class="px-4 py-3">
-                                <strong>{{ number_format($creditNote->previous_values['base_price'] ?? 0, 0) }}</strong> ر.س
-                                <br>
-                                <small class="text-muted">→ {{ number_format($creditNote->new_values['base_price'] ?? 0, 0) }} ر.س</small>
+                            <td class="px-4 py-3 text-center">
+                                <strong class="text-danger">{{ number_format($creditNote->previous_total ?? 0, 0) }}</strong> ر.س
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 text-center">
                                 <strong>{{ number_format($creditNote->previous_values['tax_amount'] ?? 0, 0) }}</strong> ر.س
-                                <br>
-                                <small class="text-muted">→ {{ number_format($creditNote->new_values['tax_amount'] ?? 0, 0) }} ر.س</small>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <strong>{{ number_format($creditNote->previous_values['base_price'] ?? 0, 0) }}</strong> ر.س
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <strong class="text-success">{{ number_format($creditNote->new_total ?? 0, 0) }}</strong> ر.س
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <strong class="text-warning">{{ number_format($creditNote->amount ?? $creditNote->amount_difference ?? 0, 0) }}</strong> ر.س
                             </td>
                             <td class="px-4 py-3">
-                                <strong class="text-warning">{{ number_format($creditNote->amount_difference, 0) }} ر.س</strong>
-                            </td>
-                            <td class="px-4 py-3">
-                                <strong class="text-danger">{{ number_format($creditNote->previous_total, 0) }} ر.س</strong>
-                            </td>
-                            <td class="px-4 py-3">
-                                <strong class="text-success">{{ number_format($creditNote->new_total, 0) }} ر.س</strong>
+                                <small class="text-muted">{{ Str::limit($creditNote->reason ?? '-', 50) }}</small>
                             </td>
                             <td class="px-4 py-3">
                                 <i class="bi bi-person-fill me-1 text-muted"></i>

@@ -110,7 +110,13 @@
                                     <td class="px-4 py-3" dir="ltr text-end">{{ $client->phone ?? '—' }}</td>
                                     <td class="px-4 py-3 text-muted small">{{ Str::limit($client->address, 50) ?? '—' }}</td>
                                     <td class="px-4 py-3 text-center">
-                                        <span class="badge bg-light text-dark rounded-pill px-3">{{ $client->invoices_count ?? 0 }}</span>
+                                        <a href="{{ route('invoices.index', ['client_id' => $client->id]) }}" 
+                                           class="badge bg-primary text-white rounded-pill px-3 text-decoration-none"
+                                           style="cursor: pointer;"
+                                           title="عرض فواتير {{ $client->name }}">
+                                            <i class="bi bi-file-earmark-text me-1"></i>
+                                            {{ $client->invoices_count ?? 0 }}
+                                        </a>
                                     </td>
                                     <td class="px-4 py-3 text-end">
                                         <div class="d-flex justify-content-end gap-2">

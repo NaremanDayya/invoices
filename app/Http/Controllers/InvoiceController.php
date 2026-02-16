@@ -62,6 +62,7 @@ class InvoiceController extends Controller
         $stats = [
             'total' => Invoice::count(),
             'paid' => Invoice::where('payment_status', 'paid')->count(),
+            'partially_paid' => Invoice::where('payment_status', 'partially_paid')->count(),
             'pending' => Invoice::where('payment_status', 'pending')->count(),
             'late' => Invoice::where('payment_status', 'late')->count(),
             'cancelled' => Invoice::where('is_cancelled', true)->count(),

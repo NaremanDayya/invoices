@@ -228,10 +228,15 @@ class InvoiceEmployee extends Pivot
 
         if ($paymentMode === 'wps') {
             $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
-            $maxWpsAmount = ($this->total_salary * $maxWpsPercentage) / 100;
+            // IMPORTANT: Calculate against TOTAL salary, not remaining
+            $totalSalary = $this->total_salary ?? $this->net_salary;
+            $maxWpsAmount = ($totalSalary * $maxWpsPercentage) / 100;
             
-            if ($amount > $maxWpsAmount) {
-                throw new \Exception("مبلغ WPS لا يمكن أن يتجاوز {$maxWpsPercentage}% من إجمالي الراتب (الحد الأقصى: " . number_format($maxWpsAmount, 0) . " ريال)");
+            // Check total WPS payments (already paid + current payment)
+            $totalWpsPayments = $this->payments()->where('payment_mode', 'wps')->sum('payment_amount') + $amount;
+            
+            if ($totalWpsPayments > $maxWpsAmount) {
+                throw new \Exception("إجمالي مدفوعات WPS ({$totalWpsPayments} ريال) لا يمكن أن يتجاوز {$maxWpsPercentage}% من إجمالي الراتب (الحد الأقصى: " . number_format($maxWpsAmount, 0) . " ريال)");
             }
         }
 

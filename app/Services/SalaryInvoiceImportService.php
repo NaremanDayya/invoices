@@ -109,6 +109,18 @@ class SalaryInvoiceImportService
                 throw new \Exception('لم يتم العثور على بيانات موظفين صالحة في الملف');
             }
 
+            // Validate total work days against invoice work days
+            $totalEmployeeWorkDays = 0;
+            foreach ($employees as $employee) {
+                $totalEmployeeWorkDays += ($employee->work_days_count ?? 0);
+            }
+
+            $invoiceWorkDays = $invoice->work_days ?? 0;
+            
+            if ($invoiceWorkDays > 0 && $totalEmployeeWorkDays > $invoiceWorkDays) {
+                throw new \Exception("إجمالي أيام عمل الموظفين ({$totalEmployeeWorkDays}) يتجاوز أيام عمل الفاتورة ({$invoiceWorkDays}). يجب أن يكون إجمالي أيام عمل الموظفين مساوياً أو أقل من أيام عمل الفاتورة.");
+            }
+
             $invoice->update([
                 'type' => 'salary_invoice',
                 'base_price' => $totalSalaries,

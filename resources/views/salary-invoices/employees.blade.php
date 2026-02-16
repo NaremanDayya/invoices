@@ -249,7 +249,10 @@
                                 <th>ID</th>
                                 <th>اسم الموظف</th>
                                 <th>المشروع</th>
-                                <th>إجمالي الراتب</th>
+                                <th>أيام العمل</th>
+                                <th>الراتب الإجمالي</th>
+                                <th>الخصومات</th>
+                                <th>صافي الراتب</th>
                                 <th>المدفوع</th>
                                 <th>المتبقي</th>
                                 <th>نوع الراتب</th>
@@ -277,9 +280,12 @@
                                     <td>{{ $employee->id }}</td>
                                     <td class="fw-bold">{{ $employee->employee_name }}</td>
                                     <td>{{ $employee->project ?? '-' }}</td>
-                                    <td class="text-primary fw-bold">{{ number_format($employee->total_salary ?? $employee->net_salary, 0) }}</td>
-                                    <td class="text-success fw-bold">{{ number_format($employee->total_paid ?? 0, 0) }}</td>
-                                    <td class="text-danger fw-bold">{{ number_format($employee->remaining_amount ?? $employee->net_salary, 0) }}</td>
+                                    <td class="text-center">{{ $employee->work_days ?? '-' }}</td>
+                                    <td class="text-primary fw-bold">{{ number_format($employee->basic_salary ?? 0, 0) }} ر.س</td>
+                                    <td class="text-warning fw-bold">{{ number_format(($employee->monthly_deductions ?? 0) + ($employee->advance_deductions ?? 0), 0) }} ر.س</td>
+                                    <td class="text-success fw-bold">{{ number_format($employee->net_salary ?? $employee->total_salary ?? 0, 0) }} ر.س</td>
+                                    <td class="text-info fw-bold">{{ number_format($employee->total_paid ?? 0, 0) }} ر.س</td>
+                                    <td class="text-danger fw-bold">{{ number_format($employee->remaining_amount ?? $employee->net_salary, 0) }} ر.س</td>
                                     <td>
                                         @if(($employee->salary_type ?? 'monthly') === 'wps')
                                             <span class="badge bg-info">WPS</span>

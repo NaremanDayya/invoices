@@ -118,7 +118,7 @@ async function loadWpsSettings() {
 // Show payment modal
 function showPaymentModal() {
     const checkboxes = document.querySelectorAll('.employee-checkbox:checked');
-    
+
     if (checkboxes.length === 0) {
         Swal.fire({
             icon: 'warning',
@@ -145,20 +145,24 @@ function showPaymentModal() {
 
     document.getElementById('selectedCount').textContent = selectedEmployees.length;
     renderSelectedEmployees();
-    
+
     const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
     modal.show();
 }
 
+// Render selected employees in modal
 // Render selected employees in modal
 function renderSelectedEmployees() {
     const container = document.getElementById('selectedEmployeesList');
     container.innerHTML = '';
 
     selectedEmployees.forEach((employee, index) => {
+        // Get current WPS paid amount from server (you might need to fetch this)
+        // For now, we'll use the value from the checkbox data
+        const currentWpsPaid = employee.wps_paid || 0;
         const maxWpsAmount = (employee.total_salary * wpsMaxPercentage) / 100;
-        const remainingWpsAllowance = maxWpsAmount - employee.wps_paid;
-        const maxWpsForRemaining = Math.min(remainingWpsAllowance, employee.remaining_amount);
+        const remainingWpsAllowed = maxWpsAmount - currentWpsPaid;
+        const maxWpsForRemaining = Math.min(remainingWpsAllowed, employee.remaining_amount);
 
         const card = document.createElement('div');
         card.className = 'employee-payment-card';
@@ -169,7 +173,7 @@ function renderSelectedEmployees() {
                     ${employee.salary_type === 'wps' ? 'WPS' : 'شهري'}
                 </span>
             </h6>
-            
+
             <div class="payment-info">
                 <span class="label">إجمالي الراتب:</span>
                 <span class="value">${formatNumber(employee.total_salary)} ريال</span>
@@ -177,6 +181,18 @@ function renderSelectedEmployees() {
             <div class="payment-info">
                 <span class="label">المبلغ المتبقي:</span>
                 <span class="value text-danger">${formatNumber(employee.remaining_amount)} ريال</span>
+            </div>
+            <div class="payment-info">
+                <span class="label">المدفوع عبر WPS سابقاً:</span>
+                <span class="value text-info">${formatNumber(currentWpsPaid)} ريال</span>
+            </div>
+            <div class="payment-info">
+                <span class="label">الحد المتبقي لـ WPS:</span>
+                <span class="value text-warning">${formatNumber(maxWpsAmount)} ريال (${wpsMaxPercentage}%)</span>
+            </div>
+            <div class="payment-info">
+                <span class="label">المتبقي المسموح لـ WPS:</span>
+                <span class="value text-primary">${formatNumber(remainingWpsAllowed)} ريال</span>
             </div>
 
             <hr>
@@ -201,18 +217,18 @@ function renderSelectedEmployees() {
             <div class="row partial-amount-section" data-index="${index}" style="display: none;">
                 <div class="col-12">
                     <label class="form-label fw-bold">المبلغ</label>
-                    <input type="number" 
-                           class="form-control payment-amount" 
+                    <input type="number"
+                           class="form-control payment-amount"
                            data-index="${index}"
-                           step="0.01" 
-                           min="0.01" 
+                           step="0.01"
+                           min="0.01"
                            max="${employee.remaining_amount}"
                            placeholder="أدخل المبلغ">
                     <small class="text-muted">الحد الأقصى: ${formatNumber(employee.remaining_amount)} ريال</small>
                     <div class="wps-limit-info" data-index="${index}" style="display: none; margin-top: 8px;">
                         <small class="text-warning">
                             <i class="bi bi-exclamation-triangle me-1"></i>
-                            الحد الأقصى لـ WPS: ${formatNumber(maxWpsForRemaining)} ريال (${wpsMaxPercentage}%)
+                            الحد الأقصى المتبقي لـ WPS: ${formatNumber(remainingWpsAllowed)} ريال (من أصل ${formatNumber(maxWpsAmount)})
                         </small>
                     </div>
                 </div>
@@ -221,9 +237,9 @@ function renderSelectedEmployees() {
             <div class="row mt-3">
                 <div class="col-12">
                     <label class="form-label">ملاحظات (اختياري)</label>
-                    <textarea class="form-control payment-notes" 
-                              data-index="${index}" 
-                              rows="2" 
+                    <textarea class="form-control payment-notes"
+                              data-index="${index}"
+                              rows="2"
                               placeholder="أضف ملاحظات إن وجدت"></textarea>
                 </div>
             </div>
@@ -234,7 +250,6 @@ function renderSelectedEmployees() {
 
     attachEventListeners();
 }
-
 // Attach event listeners to form elements
 function attachEventListeners() {
     // Payment type change
@@ -242,7 +257,7 @@ function attachEventListeners() {
         select.addEventListener('change', function() {
             const index = this.dataset.index;
             const partialSection = document.querySelector(`.partial-amount-section[data-index="${index}"]`);
-            
+
             if (this.value === 'partial') {
                 partialSection.style.display = 'block';
             } else {
@@ -257,7 +272,7 @@ function attachEventListeners() {
             const index = this.dataset.index;
             const wpsLimitInfo = document.querySelector(`.wps-limit-info[data-index="${index}"]`);
             const card = this.closest('.employee-payment-card');
-            
+
             if (this.value === 'wps') {
                 wpsLimitInfo.style.display = 'block';
                 card.classList.add('wps-mode');
@@ -265,7 +280,7 @@ function attachEventListeners() {
             } else {
                 wpsLimitInfo.style.display = 'none';
                 card.classList.remove('wps-mode');
-                
+
                 // Check if any other employee has WPS mode
                 const hasWps = Array.from(document.querySelectorAll('.payment-mode'))
                     .some(s => s.value === 'wps');
@@ -276,7 +291,7 @@ function attachEventListeners() {
         });
     });
 
-    // Amount validation
+// Amount validation
     document.querySelectorAll('.payment-amount').forEach(input => {
         input.addEventListener('input', function() {
             const index = this.dataset.index;
@@ -284,23 +299,33 @@ function attachEventListeners() {
             const paymentMode = document.querySelector(`.payment-mode[data-index="${index}"]`).value;
             const amount = parseFloat(this.value);
 
+            if (isNaN(amount) || amount <= 0) {
+                this.setCustomValidity('المبلغ يجب أن يكون أكبر من صفر');
+                return;
+            }
+
+            if (amount > employee.remaining_amount) {
+                this.setCustomValidity(`المبلغ يتجاوز المبلغ المتبقي (${formatNumber(employee.remaining_amount)} ريال)`);
+                return;
+            }
+
             if (paymentMode === 'wps') {
+                const currentWpsPaid = employee.wps_paid || 0;
                 const maxWpsAmount = (employee.total_salary * wpsMaxPercentage) / 100;
-                const remainingWpsAllowance = maxWpsAmount - employee.wps_paid;
-                const maxWpsForRemaining = Math.min(remainingWpsAllowance, employee.remaining_amount);
-                
-                if (amount > maxWpsForRemaining) {
-                    this.setCustomValidity(`المبلغ يتجاوز الحد الأقصى لـ WPS (${formatNumber(maxWpsForRemaining)} ريال)`);
-                } else {
-                    this.setCustomValidity('');
-                }
-            } else {
-                if (amount > employee.remaining_amount) {
-                    this.setCustomValidity(`المبلغ يتجاوز المبلغ المتبقي (${formatNumber(employee.remaining_amount)} ريال)`);
-                } else {
-                    this.setCustomValidity('');
+                const remainingWpsAllowed = maxWpsAmount - currentWpsPaid;
+
+                if (amount > remainingWpsAllowed) {
+                    this.setCustomValidity(
+                        `المبلغ يتجاوز الحد المتبقي المسموح به لـ WPS. ` +
+                        `المدفوع سابقاً: ${formatNumber(currentWpsPaid)} ريال, ` +
+                        `الحد الأقصى: ${formatNumber(maxWpsAmount)} ريال, ` +
+                        `المتبقي: ${formatNumber(remainingWpsAllowed)} ريال`
+                    );
+                    return;
                 }
             }
+
+            this.setCustomValidity('');
         });
     });
 }
@@ -314,30 +339,30 @@ document.getElementById('processPaymentBtn').addEventListener('click', async fun
         const paymentType = document.querySelector(`.payment-type[data-index="${index}"]`).value;
         const paymentMode = document.querySelector(`.payment-mode[data-index="${index}"]`).value;
         const notes = document.querySelector(`.payment-notes[data-index="${index}"]`).value;
-        
+
         let amount = employee.remaining_amount;
-        
+
         if (paymentType === 'partial') {
             const amountInput = document.querySelector(`.payment-amount[data-index="${index}"]`);
             amount = parseFloat(amountInput.value);
-            
+
             if (!amount || amount <= 0) {
                 hasErrors = true;
                 amountInput.classList.add('is-invalid');
                 return;
             }
-            
+
             if (amount > employee.remaining_amount) {
                 hasErrors = true;
                 amountInput.classList.add('is-invalid');
                 return;
             }
-            
+
             if (paymentMode === 'wps') {
                 const maxWpsAmount = (employee.total_salary * wpsMaxPercentage) / 100;
                 const remainingWpsAllowance = maxWpsAmount - employee.wps_paid;
                 const maxWpsForRemaining = Math.min(remainingWpsAllowance, employee.remaining_amount);
-                
+
                 if (amount > maxWpsForRemaining) {
                     hasErrors = true;
                     amountInput.classList.add('is-invalid');

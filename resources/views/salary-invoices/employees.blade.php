@@ -325,8 +325,8 @@
                                                    data-total-paid="{{ $employee->total_paid ?? 0 }}"
                                                    data-remaining="{{ $employee->remaining_amount ?? $employee->net_salary }}"
                                                    data-salary-type="{{ $employee->salary_type ?? 'monthly' }}"
-                                                   data-wps-paid="{{ $employee->payments()->where('payment_mode', 'wps')->sum('payment_amount') }}"
-                                                   {{ $employee->payment_status === 'paid' ? 'disabled' : '' }}>
+                                                   data-wps-paid="{{ $employee->wps_paid ?? 0 }}"  // Add this line
+                                            {{ $employee->payment_status === 'paid' ? 'disabled' : '' }}>
                                         </td>
                                     @endif
                                     <td>{{ $employee->id }}</td>

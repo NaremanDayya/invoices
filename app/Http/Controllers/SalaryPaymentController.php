@@ -7,6 +7,7 @@ use App\Models\InvoiceEmployee;
 use App\Services\ChatActivityLogger;
 use App\Services\SalaryPaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class SalaryPaymentController extends Controller
@@ -20,67 +21,63 @@ class SalaryPaymentController extends Controller
         $this->chatLogger = $chatLogger;
     }
 
-    public function processPayments(Request $request, $invoiceId)
+    public function processPayments(Invoice $invoice, array $payments, int $userId)
     {
+        DB::beginTransaction();
+
         try {
-            $invoice = Invoice::findOrFail($invoiceId);
+            $processedPayments = [];
 
-            if (!$invoice->isApproved()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'لا يمكن معالجة المدفوعات. الفاتورة غير معتمدة'
-                ], 422);
+            foreach ($payments as $paymentData) {
+                $employee = InvoiceEmployee::where('invoice_id', $invoice->id)
+                    ->where('id', $paymentData['employee_id'])
+                    ->firstOrFail();
+
+                // Calculate current WPS paid amount for this employee
+                $currentWpsPaid = InvoicePayment::where('invoice_employee_id', $employee->id)
+                    ->where('payment_mode', 'wps')
+                    ->sum('amount');
+
+                $maxWpsAllowed = ($employee->total_salary * $this->wpsMaxPercentage) / 100;
+                $remainingWpsAllowed = $maxWpsAllowed - $currentWpsPaid;
+
+                // Validate WPS payment
+                if ($paymentData['payment_mode'] === 'wps') {
+                    if ($paymentData['amount'] > $remainingWpsAllowed) {
+                        throw new \Exception(
+                            "الموظف {$employee->employee_name}: المبلغ المطلوب ({$paymentData['amount']}) يتجاوز الحد المتبقي المسموح به لـ WPS ({$remainingWpsAllowed})"
+                        );
+                    }
+                }
+
+                // Process the payment
+                $payment = $this->createPayment($employee, $paymentData, $userId);
+                $processedPayments[] = $payment;
+
+                // Update employee's wps_paid field if you store it
+                if ($paymentData['payment_mode'] === 'wps') {
+                    $employee->wps_paid = ($employee->wps_paid ?? 0) + $paymentData['amount'];
+                    $employee->save();
+                }
             }
 
-            $validator = Validator::make($request->all(), [
-                'payments' => 'required|array|min:1',
-                'payments.*.employee_id' => 'required|exists:invoice_employees,id',
-                'payments.*.payment_type' => 'required|in:full,partial',
-                'payments.*.payment_mode' => 'required|in:monthly,wps',
-                'payments.*.amount' => 'required_if:payments.*.payment_type,partial|numeric|min:0.01',
-                'payments.*.notes' => 'nullable|string|max:1000'
-            ]);
+            DB::commit();
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'بيانات غير صالحة',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            $this->paymentService->validatePaymentRequest($request->payments);
-
-            $result = $this->paymentService->processPayments(
-                $invoice,
-                $request->payments,
-                auth()->id()
-            );
-
-            if ($result['success']) {
-                // Log bulk employee payments to chat
-                $paymentsCount = count($result['payments']);
-                $totalAmount = collect($result['payments'])->sum('amount');
-                $this->chatLogger->logBulkEmployeePayments($invoice, $paymentsCount, $totalAmount);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => $result['message'],
-                    'payments' => $result['payments'],
-                    'summary' => $this->paymentService->getPaymentSummary($invoice)
-                ]);
-            } else {
-                return response()->json($result, 422);
-            }
+            return [
+                'success' => true,
+                'message' => 'تم معالجة الدفعات بنجاح',
+                'payments' => $processedPayments
+            ];
 
         } catch (\Exception $e) {
-            return response()->json([
+            DB::rollBack();
+
+            return [
                 'success' => false,
-                'message' => 'حدث خطأ أثناء معالجة المدفوعات: ' . $e->getMessage()
-            ], 500);
+                'message' => $e->getMessage()
+            ];
         }
     }
-
     public function getPaymentSummary($invoiceId)
     {
         try {

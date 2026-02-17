@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Services\ChatActivityLogger;
 use App\Services\SalaryInvoiceImportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class SalaryInvoiceController extends Controller
@@ -29,7 +30,7 @@ class SalaryInvoiceController extends Controller
         ]);
 
         try {
-            \Log::info('Salary Import Controller: Starting import', [
+            Log::info('Salary Import Controller: Starting import', [
                 'invoice_id' => $request->invoice_id,
                 'file_name' => $request->file('excel_file')->getClientOriginalName()
             ]);
@@ -37,7 +38,7 @@ class SalaryInvoiceController extends Controller
             $invoice = Invoice::findOrFail($request->invoice_id);
 
             if ($invoice->invoiceEmployees()->exists()) {
-                \Log::warning('Salary Import Controller: Duplicate import attempt', [
+                Log::warning('Salary Import Controller: Duplicate import attempt', [
                     'invoice_id' => $invoice->id
                 ]);
                 return response()->json([
@@ -49,13 +50,13 @@ class SalaryInvoiceController extends Controller
             $file = $request->file('excel_file');
             $filePath = $file->getRealPath();
 
-            \Log::info('Salary Import Controller: Calling import service', [
+            Log::info('Salary Import Controller: Calling import service', [
                 'file_path' => $filePath
             ]);
 
             $result = $this->importService->import($filePath, $invoice->id);
 
-            \Log::info('Salary Import Controller: Import result', [
+            Log::info('Salary Import Controller: Import result', [
                 'success' => $result['success'],
                 'message' => $result['message'] ?? 'No message'
             ]);
@@ -83,7 +84,7 @@ class SalaryInvoiceController extends Controller
             }
 
         } catch (\Exception $e) {
-            \Log::error('Salary Import Controller: Exception caught', [
+            Log::error('Salary Import Controller: Exception caught', [
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
@@ -202,7 +203,7 @@ class SalaryInvoiceController extends Controller
 
     public function updatePaymentMethod(Request $request, $employee)
     {
-        \Log::info('Payment Method Update: Request received', [
+        Log::info('Payment Method Update: Request received', [
             'employee_id' => $employee,
             'method' => $request->method(),
             'content_type' => $request->header('Content-Type'),
@@ -217,7 +218,7 @@ class SalaryInvoiceController extends Controller
                 'wps_amount' => 'required_if:payment_method,wps|nullable|numeric|min:0'
             ]);
 
-            \Log::info('Payment Method Update: Validation passed', [
+            Log::info('Payment Method Update: Validation passed', [
                 'validated' => $validated
             ]);
 
@@ -227,7 +228,7 @@ class SalaryInvoiceController extends Controller
                 $request->input('wps_amount')
             );
 
-            \Log::info('Payment Method Update: Service result', [
+            Log::info('Payment Method Update: Service result', [
                 'success' => $result['success'],
                 'message' => $result['message'] ?? 'No message'
             ]);
@@ -246,7 +247,7 @@ class SalaryInvoiceController extends Controller
             ], 422);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::warning('Payment Method Update: Validation failed', [
+            Log::warning('Payment Method Update: Validation failed', [
                 'errors' => $e->errors()
             ]);
             return response()->json([
@@ -255,7 +256,7 @@ class SalaryInvoiceController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Payment Method Update: Exception', [
+            Log::error('Payment Method Update: Exception', [
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
@@ -352,7 +353,7 @@ class SalaryInvoiceController extends Controller
                 'employees_count' => 0
             ]);
 
-            \Log::info('Salary Import: All employees cleared', [
+            Log::info('Salary Import: All employees cleared', [
                 'invoice_id' => $invoiceId,
                 'deleted_count' => $deletedCount
             ]);
@@ -363,7 +364,7 @@ class SalaryInvoiceController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Salary Import: Error clearing employees', [
+            Log::error('Salary Import: Error clearing employees', [
                 'invoice_id' => $invoiceId,
                 'error' => $e->getMessage()
             ]);

@@ -472,58 +472,57 @@
             </form>
         </div>
     </div>
-    <!-- Revision Modal -->
-    <div class="modal fade" id="revisionModal" tabindex="-1" aria-labelledby="revisionModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="revisionModalLabel">
-                        <i class="bi bi-pencil-square me-2"></i>إتمام المراجعة
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+</div>
+<!-- Revision Modal -->
+<div class="modal fade" id="revisionModal" tabindex="-1" aria-labelledby="revisionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="revisionModalLabel">
+                    <i class="bi bi-pencil-square me-2"></i>إتمام المراجعة
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
 
-                <form id="revisionForm">
-                    <div class="modal-body">
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">نتيجة المراجعة</label>
-                            <div class="d-flex gap-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="revision_status" id="revisionApproved" value="revision_approved" checked>
-                                    <label class="form-check-label" for="revisionApproved">
-                                        <span class="badge bg-success">موافقة</span>
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="revision_status" id="revisionRejected" value="revision_rejected">
-                                    <label class="form-check-label" for="revisionRejected">
-                                        <span class="badge bg-danger">رفض</span>
-                                    </label>
-                                </div>
+            <form id="revisionForm">
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">نتيجة المراجعة</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="revision_status" id="revisionApproved" value="revision_approved" checked>
+                                <label class="form-check-label" for="revisionApproved">
+                                    <span class="badge bg-success">موافقة</span>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="revision_status" id="revisionRejected" value="revision_rejected">
+                                <label class="form-check-label" for="revisionRejected">
+                                    <span class="badge bg-danger">رفض</span>
+                                </label>
                             </div>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="revisionNotes" class="form-label fw-bold">ملاحظات المراجعة</label>
-                            <textarea class="form-control" id="revisionNotes" name="revision_notes" rows="4" placeholder="أضف ملاحظاتك حول المراجعة..."></textarea>
-                            <small class="text-muted">هذه الملاحظات ستكون ظاهرة في الفاتورة</small>
-                        </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-2"></i>إلغاء
-                        </button>
-                        <button type="submit" class="btn btn-primary" id="submitRevisionBtn">
-                            <i class="bi bi-check-circle me-2"></i>تأكيد المراجعة
-                        </button>
+                    <div class="mb-3">
+                        <label for="revisionNotes" class="form-label fw-bold">ملاحظات المراجعة</label>
+                        <textarea class="form-control" id="revisionNotes" name="revision_notes" rows="4" placeholder="أضف ملاحظاتك حول المراجعة..."></textarea>
+                        <small class="text-muted">هذه الملاحظات ستكون ظاهرة في الفاتورة</small>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>إلغاء
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submitRevisionBtn">
+                        <i class="bi bi-check-circle me-2"></i>تأكيد المراجعة
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

@@ -89,16 +89,10 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-// Salary Invoice Approval Routes (Admin only)
+// Salary Invoice Approval Routes
 Route::middleware(['auth', 'permission:approve_invoice_employees'])->group(function () {
     Route::post('/salary-invoices/{invoice}/approve', [\App\Http\Controllers\SalaryInvoiceController::class, 'approve'])->name('salary-invoices.approve');
     Route::post('/salary-invoices/{invoice}/reject', [\App\Http\Controllers\SalaryInvoiceController::class, 'reject'])->name('salary-invoices.reject');
-});
-
-// Salary Invoice Revision Routes (Preview permission)
-Route::middleware(['auth', 'permission:preview_invoice_employees'])->group(function () {
-    Route::post('/salary-invoices/{invoice}/request-revision', [\App\Http\Controllers\SalaryInvoiceController::class, 'requestRevision'])->name('salary-invoices.request-revision');
-    Route::post('/salary-invoices/{invoice}/complete-revision', [\App\Http\Controllers\SalaryInvoiceController::class, 'completeRevision'])->name('salary-invoices.complete-revision');
 });
 
 // Salary Payment Routes

@@ -85,21 +85,13 @@ class SalaryInvoiceImportService
                 $employeeData = $this->mapRowToEmployee($headers, $row, $invoice->id);
 
                 try {
-                    $this->validateEmployeeData($employeeData, $invoice);
+                    $this->validateEmployeeData($employeeData);
                 } catch (\Exception $e) {
-                    $errorMessage = "خطأ في الصف " . ($i + 1);
-                    if (!empty($employeeData['employee_name'])) {
-                        $errorMessage .= " (الموظف: {$employeeData['employee_name']})";
-                    }
-                    $errorMessage .= ": " . $e->getMessage();
-                    
                     Log::warning('Salary Import: Row validation failed', [
                         'row' => $i + 1,
-                        'employee_name' => $employeeData['employee_name'] ?? 'غير محدد',
                         'error' => $e->getMessage()
                     ]);
-                    
-                    throw new \Exception($errorMessage);
+                    continue;
                 }
 
                 $employee = InvoiceEmployee::create($employeeData);
@@ -228,7 +220,7 @@ class SalaryInvoiceImportService
         return $employeeData;
     }
 
-    protected function validateEmployeeData($data, $invoice)
+    protected function validateEmployeeData($data)
     {
         $validator = Validator::make($data, [
             'employee_name' => 'required|string|max:255',
@@ -240,15 +232,7 @@ class SalaryInvoiceImportService
         ]);
 
         if ($validator->fails()) {
-            throw new \Exception('بيانات غير صالحة: ' . implode(', ', $validator->errors()->all()));
-        }
-
-        // Validate work days against invoice work days
-        $invoiceWorkDays = $invoice->work_days_count ?? $invoice->work_days ?? 0;
-        $employeeWorkDays = $data['work_days_count'] ?? 0;
-        
-        if ($invoiceWorkDays > 0 && $employeeWorkDays > $invoiceWorkDays) {
-            throw new \Exception("أيام العمل ({$employeeWorkDays}) تتجاوز أيام عمل الفاتورة ({$invoiceWorkDays})");
+            throw new \Exception('بيانات الموظف ' . ($data['employee_name'] ?? 'غير معروف') . ' غير صالحة: ' . implode(', ', $validator->errors()->all()));
         }
     }
 

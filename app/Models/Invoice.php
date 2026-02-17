@@ -27,10 +27,6 @@ class Invoice extends Model
         'approved_by',
         'approved_at',
         'approval_notes',
-        'revision_status',
-        'revision_notes',
-        'revision_requested_by',
-        'revision_requested_at',
         'payment_date',
         'total_workers',
         'workers_days',
@@ -73,7 +69,6 @@ class Invoice extends Model
         'due_date' => 'date',
         'approval_date' => 'date',
         'approved_at' => 'datetime',
-        'revision_requested_at' => 'datetime',
         'payment_date' => 'date',
         'cancelled_at' => 'datetime',
         'base_price' => 'decimal:2',
@@ -140,11 +135,6 @@ class Invoice extends Model
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    public function revisionRequestedBy()
-    {
-        return $this->belongsTo(User::class, 'revision_requested_by');
     }
 
     public function employees()
@@ -503,37 +493,6 @@ class Invoice extends Model
         ]);
 
         return $this;
-    }
-
-    public function requestRevision($userId, $notes)
-    {
-        $this->update([
-            'revision_status' => 'revision_requested',
-            'revision_notes' => $notes,
-            'revision_requested_by' => $userId,
-            'revision_requested_at' => now()
-        ]);
-
-        return $this;
-    }
-
-    public function completeRevision()
-    {
-        $this->update([
-            'revision_status' => 'revision_completed'
-        ]);
-
-        return $this;
-    }
-
-    public function isRevisionRequested()
-    {
-        return $this->revision_status === 'revision_requested';
-    }
-
-    public function isRevisionCompleted()
-    {
-        return $this->revision_status === 'revision_completed';
     }
 
     public function scopeApproved($query)

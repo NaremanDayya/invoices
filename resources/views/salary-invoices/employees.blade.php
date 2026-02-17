@@ -53,13 +53,13 @@
                 </div>
                 <div class="col-md-3">
                     <div class="d-flex gap-2">
-                        @can('preview_invoice_employees')
+{{--                        @can('preview_invoice_employees')--}}
                             @if($invoice->approval_status !== 'approved')
                                 <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-info flex-fill">
                                     <i class="bi bi-eye me-2"></i>مراجعة
                                 </a>
                             @endif
-                        @endcan
+{{--                        @endcan--}}
                         @can('approve_invoice_employees')
                             @if($invoice->approval_status !== 'approved')
                                 <button type="button" class="btn btn-success flex-fill" onclick="approveInvoice()">
@@ -174,10 +174,10 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">بحث</label>
-                        <input type="text" 
-                               class="form-control" 
-                               name="search" 
-                               value="{{ $search }}" 
+                        <input type="text"
+                               class="form-control"
+                               name="search"
+                               value="{{ $search }}"
                                placeholder="ابحث بالاسم، المشروع، أو ID">
                     </div>
                     <div class="col-md-4">
@@ -202,27 +202,27 @@
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <div class="btn-group" role="group">
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'all', 'search' => $search]) }}" 
+                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'all', 'search' => $search]) }}"
                            class="btn btn-sm {{ $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' }}">
                             الكل ({{ $summary['total_employees'] }})
                         </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'unpaid', 'search' => $search]) }}" 
+                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'unpaid', 'search' => $search]) }}"
                            class="btn btn-sm {{ $filter === 'unpaid' ? 'btn-danger' : 'btn-outline-danger' }}">
                             غير مدفوع ({{ $summary['unpaid_employees'] }})
                         </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'partially_paid', 'search' => $search]) }}" 
+                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'partially_paid', 'search' => $search]) }}"
                            class="btn btn-sm {{ $filter === 'partially_paid' ? 'btn-warning' : 'btn-outline-warning' }}">
                             مدفوع جزئياً ({{ $summary['partially_paid_employees'] }})
                         </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'paid', 'search' => $search]) }}" 
+                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'paid', 'search' => $search]) }}"
                            class="btn btn-sm {{ $filter === 'paid' ? 'btn-success' : 'btn-outline-success' }}">
                             مدفوع ({{ $summary['paid_employees'] }})
                         </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'wps', 'search' => $search]) }}" 
+                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'wps', 'search' => $search]) }}"
                            class="btn btn-sm {{ $filter === 'wps' ? 'btn-info' : 'btn-outline-info' }}">
                             WPS ({{ $summary['wps_employees'] }})
                         </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'monthly', 'search' => $search]) }}" 
+                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'monthly', 'search' => $search]) }}"
                            class="btn btn-sm {{ $filter === 'monthly' ? 'btn-secondary' : 'btn-outline-secondary' }}">
                             شهري ({{ $summary['monthly_employees'] }})
                         </a>
@@ -230,8 +230,8 @@
                 </div>
                 <div class="col-md-4 text-end">
                     @if($invoice->approval_status === 'approved')
-                        <button type="button" 
-                                class="btn btn-success" 
+                        <button type="button"
+                                class="btn btn-success"
                                 id="processBatchBtn"
                                 data-bs-toggle="modal"
                                 data-bs-target="#batchPaymentModal"
@@ -277,8 +277,8 @@
                                 <tr>
                                     @if($invoice->approval_status === 'approved')
                                         <td>
-                                            <input type="checkbox" 
-                                                   class="form-check-input employee-checkbox" 
+                                            <input type="checkbox"
+                                                   class="form-check-input employee-checkbox"
                                                    value="{{ $employee->id }}"
                                                    data-employee-name="{{ $employee->employee_name }}"
                                                    data-total-salary="{{ $employee->total_salary ?? $employee->net_salary }}"
@@ -317,7 +317,7 @@
                                     <td>
                                         <div class="d-flex gap-1">
                                             @if($invoice->approval_status === 'approved' && $employee->payment_status !== 'paid')
-                                                <button type="button" 
+                                                <button type="button"
                                                         class="btn btn-sm btn-success"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#paymentModal"
@@ -331,7 +331,7 @@
                                                     <i class="bi bi-cash-coin"></i>
                                                 </button>
                                             @endif
-                                            <a href="{{ route('salary-invoices.employees.payments', [$invoice->id, $employee->id]) }}" 
+                                            <a href="{{ route('salary-invoices.employees.payments', [$invoice->id, $employee->id]) }}"
                                                class="btn btn-sm btn-info"
                                                title="سجل الدفعات">
                                                 <i class="bi bi-clock-history"></i>
@@ -400,10 +400,10 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
+
             <form id="paymentForm">
                 <input type="hidden" id="employeeId" name="employee_id">
-                
+
                 <div class="modal-body">
                     <!-- Employee Card -->
                     <div id="singleEmployeeCard"></div>
@@ -457,7 +457,7 @@ async function loadWpsSettings() {
 // Initialize modal when shown
 document.getElementById('paymentModal').addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
-    
+
     currentEmployeeData = {
         id: button.getAttribute('data-employee-id'),
         name: button.getAttribute('data-employee-name'),
@@ -470,12 +470,12 @@ document.getElementById('paymentModal').addEventListener('show.bs.modal', functi
     // Populate modal
     document.getElementById('employeeId').value = currentEmployeeData.id;
     document.getElementById('wpsMaxPercentage').textContent = wpsMaxPercentage;
-    
+
     // Reset form
     document.getElementById('paymentForm').reset();
     document.getElementById('employeeId').value = currentEmployeeData.id;
     document.getElementById('wpsWarning').style.display = 'none';
-    
+
     renderSingleEmployeeCard();
 });
 
@@ -485,7 +485,7 @@ function renderSingleEmployeeCard() {
     const emp = currentEmployeeData;
     const maxWpsAmount = (emp.totalSalary * wpsMaxPercentage) / 100;
     const maxWpsForRemaining = Math.min(maxWpsAmount, emp.remaining);
-    
+
     container.innerHTML = `
         <div class="card">
             <div class="card-body">
@@ -517,11 +517,11 @@ function renderSingleEmployeeCard() {
                     </div>
                     <div class="col-md-3" id="singleAmountSection" style="display: none;">
                         <label class="form-label small fw-bold">المبلغ</label>
-                        <input type="number" 
-                               class="form-control" 
+                        <input type="number"
+                               class="form-control"
                                id="singlePaymentAmount"
-                               step="0.01" 
-                               min="0.01" 
+                               step="0.01"
+                               min="0.01"
                                max="${emp.remaining}"
                                placeholder="أدخل المبلغ">
                         <small class="text-muted">الحد الأقصى: ${formatNumber(emp.remaining)}</small>
@@ -537,7 +537,7 @@ function renderSingleEmployeeCard() {
             </div>
         </div>
     `;
-    
+
     attachSingleEmployeeEventListeners();
 }
 
@@ -554,12 +554,12 @@ function attachSingleEmployeeEventListeners() {
             document.getElementById('singlePaymentAmount').required = false;
         }
     });
-    
+
     // Payment mode change
     document.getElementById('singlePaymentMode').addEventListener('change', function() {
         const wpsLimit = document.getElementById('singleWpsLimit');
         const wpsWarning = document.getElementById('wpsWarning');
-        
+
         if (this.value === 'wps') {
             wpsLimit.style.display = 'block';
             wpsWarning.style.display = 'block';
@@ -568,36 +568,36 @@ function attachSingleEmployeeEventListeners() {
             wpsWarning.style.display = 'none';
         }
     });
-    
+
     // Amount validation
     document.getElementById('singlePaymentAmount').addEventListener('input', function() {
         const amount = parseFloat(this.value);
         const paymentMode = document.getElementById('singlePaymentMode').value;
         const errorDiv = document.getElementById('singleAmountError');
-        
+
         if (isNaN(amount) || amount <= 0) {
             this.classList.add('is-invalid');
             errorDiv.textContent = 'المبلغ يجب أن يكون أكبر من صفر';
             return;
         }
-        
+
         if (amount > currentEmployeeData.remaining) {
             this.classList.add('is-invalid');
             errorDiv.textContent = 'المبلغ يتجاوز المبلغ المتبقي';
             return;
         }
-        
+
         if (paymentMode === 'wps') {
             const maxWpsAmount = (currentEmployeeData.totalSalary * wpsMaxPercentage) / 100;
             const actualMax = Math.min(maxWpsAmount, currentEmployeeData.remaining);
-            
+
             if (amount > actualMax) {
                 this.classList.add('is-invalid');
                 errorDiv.textContent = `المبلغ يتجاوز الحد الأقصى لـ WPS (${formatNumber(actualMax)} ريال)`;
                 return;
             }
         }
-        
+
         this.classList.remove('is-invalid');
         errorDiv.textContent = '';
     });
@@ -606,15 +606,15 @@ function attachSingleEmployeeEventListeners() {
 // Form submission
 document.getElementById('paymentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const paymentType = document.getElementById('singlePaymentType').value;
     const paymentMode = document.getElementById('singlePaymentMode').value;
     const notes = document.getElementById('paymentNotes').value;
-    
+
     let amount = currentEmployeeData.remaining;
     if (paymentType === 'partial') {
         amount = parseFloat(document.getElementById('singlePaymentAmount').value);
-        
+
         if (isNaN(amount) || amount <= 0 || amount > currentEmployeeData.remaining) {
             Swal.fire({
                 icon: 'error',
@@ -624,11 +624,11 @@ document.getElementById('paymentForm').addEventListener('submit', async function
             });
             return;
         }
-        
+
         if (paymentMode === 'wps') {
             const maxWpsAmount = (currentEmployeeData.totalSalary * wpsMaxPercentage) / 100;
             const actualMax = Math.min(maxWpsAmount, currentEmployeeData.remaining);
-            
+
             if (amount > actualMax) {
                 Swal.fire({
                     icon: 'error',
@@ -640,11 +640,11 @@ document.getElementById('paymentForm').addEventListener('submit', async function
             }
         }
     }
-    
+
     const submitBtn = document.getElementById('submitPaymentBtn');
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري المعالجة...';
-    
+
     try {
         const response = await fetch('{{ route("salary-payments.process", $invoice->id) }}', {
             method: 'POST',
@@ -662,9 +662,9 @@ document.getElementById('paymentForm').addEventListener('submit', async function
                 }]
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             Swal.fire({
                 icon: 'success',
@@ -677,7 +677,7 @@ document.getElementById('paymentForm').addEventListener('submit', async function
         } else {
             // Show detailed error message
             let errorMessage = data.message || 'حدث خطأ أثناء معالجة الدفع';
-            
+
             // If there are validation errors, show them
             if (data.errors) {
                 errorMessage += '\n\n';
@@ -685,9 +685,9 @@ document.getElementById('paymentForm').addEventListener('submit', async function
                     errorMessage += errors.join('\n') + '\n';
                 });
             }
-            
+
             console.error('Payment Error:', data);
-            
+
             Swal.fire({
                 icon: 'error',
                 title: 'فشل في معالجة الدفع',
@@ -698,7 +698,7 @@ document.getElementById('paymentForm').addEventListener('submit', async function
         }
     } catch (error) {
         console.error('Payment Exception:', error);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'خطأ في الاتصال',
@@ -746,7 +746,7 @@ let batchEmployeesData = [];
 document.getElementById('batchPaymentModal')?.addEventListener('show.bs.modal', function(event) {
     const checkboxes = document.querySelectorAll('.employee-checkbox:checked');
     batchEmployeesData = [];
-    
+
     checkboxes.forEach(checkbox => {
         batchEmployeesData.push({
             id: checkbox.value,
@@ -757,10 +757,10 @@ document.getElementById('batchPaymentModal')?.addEventListener('show.bs.modal', 
             salaryType: checkbox.getAttribute('data-salary-type')
         });
     });
-    
+
     document.getElementById('batchSelectedCount').textContent = batchEmployeesData.length;
     document.getElementById('batchWpsMaxPercentage').textContent = wpsMaxPercentage;
-    
+
     renderBatchEmployees();
 });
 
@@ -768,11 +768,11 @@ document.getElementById('batchPaymentModal')?.addEventListener('show.bs.modal', 
 function renderBatchEmployees() {
     const container = document.getElementById('batchEmployeesList');
     container.innerHTML = '';
-    
+
     batchEmployeesData.forEach((emp, index) => {
         const maxWpsAmount = (emp.totalSalary * wpsMaxPercentage) / 100;
         const maxWpsForRemaining = Math.min(maxWpsAmount, emp.remaining);
-        
+
         const card = document.createElement('div');
         card.className = 'card mb-3';
         card.innerHTML = `
@@ -804,11 +804,11 @@ function renderBatchEmployees() {
                     </div>
                     <div class="col-md-3 batch-amount-section-${index}" style="display: none;">
                         <label class="form-label small fw-bold">المبلغ</label>
-                        <input type="number" 
-                               class="form-control form-control-sm batch-payment-amount" 
+                        <input type="number"
+                               class="form-control form-control-sm batch-payment-amount"
                                data-index="${index}"
-                               step="0.01" 
-                               min="0.01" 
+                               step="0.01"
+                               min="0.01"
                                max="${emp.remaining}"
                                placeholder="أدخل المبلغ">
                         <small class="text-muted">الحد الأقصى: ${formatNumber(emp.remaining)}</small>
@@ -830,7 +830,7 @@ function renderBatchEmployees() {
         `;
         container.appendChild(card);
     });
-    
+
     attachBatchEventListeners();
 }
 
@@ -841,7 +841,7 @@ function attachBatchEventListeners() {
         select.addEventListener('change', function() {
             const index = this.dataset.index;
             const amountSection = document.querySelector(`.batch-amount-section-${index}`);
-            
+
             if (this.value === 'partial') {
                 amountSection.style.display = 'block';
             } else {
@@ -849,19 +849,19 @@ function attachBatchEventListeners() {
             }
         });
     });
-    
+
     // Payment mode change
     document.querySelectorAll('.batch-payment-mode').forEach(select => {
         select.addEventListener('change', function() {
             const index = this.dataset.index;
             const wpsLimit = document.querySelector(`.batch-wps-limit-${index}`);
-            
+
             if (this.value === 'wps') {
                 wpsLimit.style.display = 'block';
                 document.getElementById('batchWpsWarning').style.display = 'block';
             } else {
                 wpsLimit.style.display = 'none';
-                
+
                 // Check if any other employee has WPS mode
                 const hasWps = Array.from(document.querySelectorAll('.batch-payment-mode'))
                     .some(s => s.value === 'wps');
@@ -871,7 +871,7 @@ function attachBatchEventListeners() {
             }
         });
     });
-    
+
     // Amount validation
     document.querySelectorAll('.batch-payment-amount').forEach(input => {
         input.addEventListener('input', function() {
@@ -880,30 +880,30 @@ function attachBatchEventListeners() {
             const paymentMode = document.querySelector(`.batch-payment-mode[data-index="${index}"]`).value;
             const amount = parseFloat(this.value);
             const errorDiv = document.querySelector(`.batch-amount-error-${index}`);
-            
+
             if (isNaN(amount) || amount <= 0) {
                 this.classList.add('is-invalid');
                 errorDiv.textContent = 'المبلغ يجب أن يكون أكبر من صفر';
                 return;
             }
-            
+
             if (amount > emp.remaining) {
                 this.classList.add('is-invalid');
                 errorDiv.textContent = 'المبلغ يتجاوز المبلغ المتبقي';
                 return;
             }
-            
+
             if (paymentMode === 'wps') {
                 const maxWpsAmount = (emp.totalSalary * wpsMaxPercentage) / 100;
                 const maxWpsForRemaining = Math.min(maxWpsAmount, emp.remaining);
-                
+
                 if (amount > maxWpsForRemaining) {
                     this.classList.add('is-invalid');
                     errorDiv.textContent = `يتجاوز حد WPS (${formatNumber(maxWpsForRemaining)} ريال)`;
                     return;
                 }
             }
-            
+
             this.classList.remove('is-invalid');
             errorDiv.textContent = '';
         });
@@ -914,13 +914,13 @@ function attachBatchEventListeners() {
 function removeBatchEmployee(index) {
     batchEmployeesData.splice(index, 1);
     document.getElementById('batchSelectedCount').textContent = batchEmployeesData.length;
-    
+
     if (batchEmployeesData.length === 0) {
         const modal = bootstrap.Modal.getInstance(document.getElementById('batchPaymentModal'));
         modal.hide();
         return;
     }
-    
+
     renderBatchEmployees();
 }
 
@@ -928,33 +928,33 @@ function removeBatchEmployee(index) {
 document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', async function() {
     const payments = [];
     let hasErrors = false;
-    
+
     batchEmployeesData.forEach((emp, index) => {
         const paymentType = document.querySelector(`.batch-payment-type[data-index="${index}"]`).value;
         const paymentMode = document.querySelector(`.batch-payment-mode[data-index="${index}"]`).value;
-        
+
         let amount = emp.remaining;
-        
+
         if (paymentType === 'partial') {
             const amountInput = document.querySelector(`.batch-payment-amount[data-index="${index}"]`);
             amount = parseFloat(amountInput.value);
-            
+
             if (!amount || amount <= 0) {
                 hasErrors = true;
                 amountInput.classList.add('is-invalid');
                 return;
             }
-            
+
             if (amount > emp.remaining) {
                 hasErrors = true;
                 amountInput.classList.add('is-invalid');
                 return;
             }
-            
+
             if (paymentMode === 'wps') {
                 const maxWpsAmount = (emp.totalSalary * wpsMaxPercentage) / 100;
                 const maxWpsForRemaining = Math.min(maxWpsAmount, emp.remaining);
-                
+
                 if (amount > maxWpsForRemaining) {
                     hasErrors = true;
                     amountInput.classList.add('is-invalid');
@@ -962,7 +962,7 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
                 }
             }
         }
-        
+
         payments.push({
             employee_id: emp.id,
             payment_type: paymentType,
@@ -971,7 +971,7 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
             notes: `دفع ${paymentType === 'full' ? 'كامل' : 'جزئي'} - ${paymentMode === 'wps' ? 'WPS' : 'شهري'}`
         });
     });
-    
+
     if (hasErrors) {
         Swal.fire({
             icon: 'error',
@@ -981,7 +981,7 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
         });
         return;
     }
-    
+
     // Confirm before processing
     const result = await Swal.fire({
         title: 'تأكيد معالجة الدفعات',
@@ -997,13 +997,13 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
         cancelButtonText: 'إلغاء',
         confirmButtonColor: '#198754'
     });
-    
+
     if (!result.isConfirmed) return;
-    
+
     // Show loading
     this.disabled = true;
     this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري المعالجة...';
-    
+
     try {
         const response = await fetch('{{ route("salary-payments.process", $invoice->id) }}', {
             method: 'POST',
@@ -1013,9 +1013,9 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
             },
             body: JSON.stringify({ payments })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             Swal.fire({
                 icon: 'success',
@@ -1033,11 +1033,11 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
         } else {
             // Show detailed error message
             let errorMessage = data.message || 'حدث خطأ أثناء معالجة الدفعات';
-            
+
             // If there are errors, show them
             if (data.errors) {
                 errorMessage += '<br><br><div class="text-start small bg-light p-3 rounded">';
-                
+
                 // Check if errors is an array (from payment service)
                 if (Array.isArray(data.errors)) {
                     errorMessage += '<strong>تفاصيل الأخطاء:</strong><br>';
@@ -1050,14 +1050,14 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
                             errorMessage += `<div class="mt-2">${JSON.stringify(error)}</div>`;
                         }
                     });
-                } 
+                }
                 // Check if errors is an object (validation errors)
                 else if (typeof data.errors === 'object') {
                     errorMessage += '<strong>أخطاء التحقق:</strong><br>';
                     Object.keys(data.errors).forEach(key => {
                         const errorValue = data.errors[key];
                         let errorText;
-                        
+
                         if (Array.isArray(errorValue)) {
                             errorText = errorValue.join(', ');
                         } else if (typeof errorValue === 'object' && errorValue !== null) {
@@ -1065,17 +1065,17 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
                         } else {
                             errorText = String(errorValue);
                         }
-                        
+
                         errorMessage += `<div class="mt-2"><strong>${key}:</strong> ${errorText}</div>`;
                     });
                 }
-                
+
                 errorMessage += '</div>';
             }
-            
+
             // Log full error details for debugging
             console.error('Batch Payment Error:', data);
-            
+
             Swal.fire({
                 icon: 'error',
                 title: 'فشل في معالجة الدفعات',
@@ -1086,7 +1086,7 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
         }
     } catch (error) {
         console.error('Batch Payment Exception:', error);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'خطأ في الاتصال',
@@ -1119,7 +1119,7 @@ async function approveInvoice() {
         cancelButtonText: 'إلغاء',
         confirmButtonColor: '#198754'
     });
-    
+
     if (result.isConfirmed) {
         try {
             const response = await fetch('{{ route("salary-invoices.approve", $invoice->id) }}', {
@@ -1132,9 +1132,9 @@ async function approveInvoice() {
                     notes: result.value
                 })
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 Swal.fire({
                     icon: 'success',

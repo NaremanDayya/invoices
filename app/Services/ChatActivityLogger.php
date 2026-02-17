@@ -191,6 +191,37 @@ class ChatActivityLogger
     }
 
     /**
+     * Log invoice review/revision
+     */
+    public function logInvoiceReviewed(Invoice $invoice, string $revisionStatus, string $notes = null): ?Message
+    {
+        $conversation = $this->getOrCreateInvoiceConversation($invoice);
+        
+        $user = Auth::user();
+        $userName = $user ? $user->name : 'النظام';
+        
+        $statusIcon = $revisionStatus === 'revision_approved' ? '✅' : '❌';
+        $statusText = $revisionStatus === 'revision_approved' ? 'قبول المراجعة' : 'رفض المراجعة';
+        $notesText = $notes ? "\n\n**ملاحظات المراجعة:** {$notes}" : '';
+        
+        $message = "{$statusIcon} **تم {$statusText}**\n\n" .
+                   "رقم الفاتورة: {$invoice->number}\n" .
+                   "العميل: {$invoice->client->name}\n" .
+                   "تاريخ المراجعة: " . now()->format('Y-m-d H:i') .
+                   $notesText .
+                   "\n\n👤 بواسطة: {$userName}";
+        
+        return $this->createSystemMessage($conversation, $invoice, $message, 'invoice_reviewed', [
+            'invoice_id' => $invoice->id,
+            'invoice_number' => $invoice->number,
+            'revision_status' => $revisionStatus,
+            'revision_notes' => $notes,
+            'reviewed_by' => $invoice->revision_by,
+            'action' => 'reviewed'
+        ]);
+    }
+
+    /**
      * Log employee creation
      */
     public function logEmployeeCreated(Employee $employee, Invoice $invoice = null): ?Message

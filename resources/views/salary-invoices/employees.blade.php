@@ -81,13 +81,13 @@
                             </button>
                         @endif
 {{--                        @endpermission--}}
-                        @can('approve_invoice_employees')
+{{--                        @can('approve_invoice_employees')--}}
                             @if($invoice->approval_status !== 'approved')
                                 <button type="button" class="btn btn-success" onclick="approveInvoice()">
                                     <i class="bi bi-check-circle me-2"></i>اعتماد
                                 </button>
                             @endif
-                        @endcan
+{{--                        @endcan--}}
                         <!-- Add Revision Button -->
                         @can('review_invoice')
                             @if($invoice->revision_status === 'pending')

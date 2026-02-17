@@ -68,25 +68,27 @@ class User extends Authenticatable
 
     public function hasPermission(string $permissionName): bool
     {
-        foreach ($this->roles as $role) {
-            if ($role->isAdmin()) {
-                return true;
-            }
-            if ($role->hasPermission($permissionName)) {
-                return true;
-            }
-        }
-        return false;
+        // foreach ($this->roles as $role) {
+        //     if ($role->isAdmin()) {
+        //         return true;
+        //     }
+        //     if ($role->hasPermission($permissionName)) {
+        //         return true;
+        //     }
+        // }
+        // return false;
+        return true; // Always return true - permission checks disabled
     }
 
     public function hasAnyPermission(array $permissions): bool
     {
-        foreach ($permissions as $permission) {
-            if ($this->hasPermission($permission)) {
-                return true;
-            }
-        }
-        return false;
+        // foreach ($permissions as $permission) {
+        //     if ($this->hasPermission($permission)) {
+        //         return true;
+        //     }
+        // }
+        // return false;
+        return true; // Always return true - permission checks disabled
     }
 
     public function isAdmin(): bool

@@ -75,11 +75,11 @@
                 <div class="col-md-12">
                     <div class="d-flex gap-2 justify-content-end">
 {{--                        @permission('preview_invoice_employees')--}}
-                            @if($invoice->approval_status !== 'approved')
-                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-info">
-                                    <i class="bi bi-eye me-2"></i>مراجعة
-                                </a>
-                            @endif
+                        @if($invoice->approval_status !== 'approved')
+                            <button type="button" class="btn btn-info" onclick="openRevisionModal()">
+                                <i class="bi bi-pencil-square me-2"></i>مراجعة
+                            </button>
+                        @endif
 {{--                        @endpermission--}}
                         @can('approve_invoice_employees')
                             @if($invoice->approval_status !== 'approved')

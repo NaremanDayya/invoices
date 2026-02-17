@@ -131,14 +131,14 @@ function showPaymentModal() {
 
     selectedEmployees = [];
     checkboxes.forEach(checkbox => {
-        const row = checkbox.closest('tr');
         const employeeData = {
             id: checkbox.value,
-            name: row.querySelector('[data-employee-name]').textContent,
-            total_salary: parseFloat(row.querySelector('[data-total-salary]').textContent.replace(/,/g, '')),
-            total_paid: parseFloat(row.querySelector('[data-total-paid]').textContent.replace(/,/g, '')),
-            remaining_amount: parseFloat(row.querySelector('[data-remaining]').textContent.replace(/,/g, '')),
-            salary_type: row.querySelector('[data-salary-type]').textContent.trim()
+            name: checkbox.dataset.employeeName,
+            total_salary: parseFloat(checkbox.dataset.totalSalary),
+            total_paid: parseFloat(checkbox.dataset.totalPaid),
+            remaining_amount: parseFloat(checkbox.dataset.remaining),
+            salary_type: checkbox.dataset.salaryType,
+            wps_paid: parseFloat(checkbox.dataset.wpsPaid || 0)
         };
         selectedEmployees.push(employeeData);
     });
@@ -157,7 +157,8 @@ function renderSelectedEmployees() {
 
     selectedEmployees.forEach((employee, index) => {
         const maxWpsAmount = (employee.total_salary * wpsMaxPercentage) / 100;
-        const maxWpsForRemaining = Math.min(maxWpsAmount, employee.remaining_amount);
+        const remainingWpsAllowance = maxWpsAmount - employee.wps_paid;
+        const maxWpsForRemaining = Math.min(remainingWpsAllowance, employee.remaining_amount);
 
         const card = document.createElement('div');
         card.className = 'employee-payment-card';
@@ -285,7 +286,8 @@ function attachEventListeners() {
 
             if (paymentMode === 'wps') {
                 const maxWpsAmount = (employee.total_salary * wpsMaxPercentage) / 100;
-                const maxWpsForRemaining = Math.min(maxWpsAmount, employee.remaining_amount);
+                const remainingWpsAllowance = maxWpsAmount - employee.wps_paid;
+                const maxWpsForRemaining = Math.min(remainingWpsAllowance, employee.remaining_amount);
                 
                 if (amount > maxWpsForRemaining) {
                     this.setCustomValidity(`المبلغ يتجاوز الحد الأقصى لـ WPS (${formatNumber(maxWpsForRemaining)} ريال)`);
@@ -333,7 +335,8 @@ document.getElementById('processPaymentBtn').addEventListener('click', async fun
             
             if (paymentMode === 'wps') {
                 const maxWpsAmount = (employee.total_salary * wpsMaxPercentage) / 100;
-                const maxWpsForRemaining = Math.min(maxWpsAmount, employee.remaining_amount);
+                const remainingWpsAllowance = maxWpsAmount - employee.wps_paid;
+                const maxWpsForRemaining = Math.min(remainingWpsAllowance, employee.remaining_amount);
                 
                 if (amount > maxWpsForRemaining) {
                     hasErrors = true;

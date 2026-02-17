@@ -66,7 +66,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/invoices/{invoice}/credit-notes/{creditNote}', [CreditNoteController::class, 'show'])->name('invoices.credit-notes.show');
     Route::get('/invoices/{invoice}/credit-notes-data', [CreditNoteController::class, 'getInvoiceCreditNotes'])->name('credit-notes.invoice');
     Route::get('/credit-notes/invoice/{invoice}/count', [CreditNoteController::class, 'getCreditNoteCount'])->name('credit-notes.count');
-    
+
     Route::middleware(['permission:add_credit_note'])->group(function () {
         Route::post('/invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
         Route::delete('/credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
@@ -80,7 +80,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'getWpsSettings'])->name('salary-invoices.wps-settings');
     Route::put('/salary-invoices/wps-settings', [\App\Http\Controllers\SalaryInvoiceController::class, 'updateWpsSettings'])->name('salary-invoices.update-wps-settings');
     Route::get('/salary-invoices/download-template', [\App\Http\Controllers\SalaryInvoiceController::class, 'downloadTemplate'])->name('salary-invoices.download-template');
-    
+
     Route::middleware(['permission:import_invoice_employees'])->group(function () {
         Route::post('/salary-invoices/import', [\App\Http\Controllers\SalaryInvoiceController::class, 'importEmployees'])->name('salary-invoices.import');
         Route::put('/salary-invoices/employees/{employee}/payment-method', [\App\Http\Controllers\SalaryInvoiceController::class, 'updatePaymentMethod'])->name('salary-invoices.update-payment-method');
@@ -94,6 +94,10 @@ Route::middleware(['auth', 'permission:approve_invoice_employees'])->group(funct
     Route::post('/salary-invoices/{invoice}/approve', [\App\Http\Controllers\SalaryInvoiceController::class, 'approve'])->name('salary-invoices.approve');
     Route::post('/salary-invoices/{invoice}/reject', [\App\Http\Controllers\SalaryInvoiceController::class, 'reject'])->name('salary-invoices.reject');
 });
+// Salary Invoice Revision Routes
+Route::middleware(['auth', 'permission:preview_invoice_employees'])->group(function () {
+    Route::post('/salary-invoices/{invoice}/review', [\App\Http\Controllers\SalaryInvoiceController::class, 'review'])->name('salary-invoices.revision');
+});
 
 // Salary Payment Routes
 Route::middleware(['auth'])->group(function () {
@@ -101,7 +105,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/salary-invoices/employees/{employee}/payment-details', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentDetails'])->name('salary-payments.employee-details');
     Route::get('/salary-invoices/employees/{employee}/payment-history', [\App\Http\Controllers\SalaryPaymentController::class, 'getEmployeePaymentHistory'])->name('salary-payments.history');
     Route::get('/salary-invoices/{invoice}/employees/{employee}/payments', [\App\Http\Controllers\SalaryPaymentController::class, 'showEmployeePayments'])->name('salary-invoices.employees.payments');
-    
+
     Route::middleware(['permission:add_invoice_employee_payment'])->group(function () {
         Route::post('/salary-invoices/{invoice}/process-payments', [\App\Http\Controllers\SalaryPaymentController::class, 'processPayments'])->name('salary-payments.process');
         Route::post('/salary-invoices/employees/{employee}/calculate-breakdown', [\App\Http\Controllers\SalaryPaymentController::class, 'calculatePaymentBreakdown'])->name('salary-payments.calculate-breakdown');
@@ -152,7 +156,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('clients/{client}', [\App\Http\Controllers\ClientController::class, 'show'])->name('clients.show');
     Route::get('clients/{client}/monthly-report', [\App\Http\Controllers\ClientController::class, 'monthlyReport'])->name('clients.monthly-report');
     Route::get('clients/{client}/monthly-report/export', [\App\Http\Controllers\ClientController::class, 'exportMonthlyReport'])->name('clients.monthly-report.export');
-    
+
     Route::middleware(['permission:add_clients'])->group(function () {
         Route::get('clients/create', [\App\Http\Controllers\ClientController::class, 'create'])->name('clients.create');
         Route::post('clients', [\App\Http\Controllers\ClientController::class, 'store'])->name('clients.store');

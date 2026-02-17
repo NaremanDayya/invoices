@@ -31,16 +31,33 @@
                     <h6 class="text-muted mb-1">حالة الاعتماد</h6>
                     @if($invoice->approval_status === 'approved')
                         <span class="badge bg-success fs-6">
-                            <i class="bi bi-check-circle me-1"></i>معتمدة
-                        </span>
+                        <i class="bi bi-check-circle me-1"></i>معتمدة
+                    </span>
                     @elseif($invoice->approval_status === 'rejected')
                         <span class="badge bg-danger fs-6">
-                            <i class="bi bi-x-circle me-1"></i>مرفوضة
-                        </span>
+                        <i class="bi bi-x-circle me-1"></i>مرفوضة
+                    </span>
                     @else
                         <span class="badge bg-warning fs-6">
-                            <i class="bi bi-clock me-1"></i>قيد الانتظار
-                        </span>
+                        <i class="bi bi-clock me-1"></i>قيد الانتظار
+                    </span>
+                    @endif
+                </div>
+                <!-- Add Revision Status Column -->
+                <div class="col-md-3">
+                    <h6 class="text-muted mb-1">حالة المراجعة</h6>
+                    @if($invoice->revision_status === 'revision_approved')
+                        <span class="badge bg-success fs-6">
+                        <i class="bi bi-check-circle me-1"></i>تمت المراجعة (معتمدة)
+                    </span>
+                    @elseif($invoice->revision_status === 'revision_rejected')
+                        <span class="badge bg-danger fs-6">
+                        <i class="bi bi-x-circle me-1"></i>تمت المراجعة (مرفوضة)
+                    </span>
+                    @else
+                        <span class="badge bg-warning fs-6">
+                        <i class="bi bi-clock me-1"></i>في انتظار المراجعة
+                    </span>
                     @endif
                 </div>
                 <div class="col-md-3">
@@ -51,25 +68,48 @@
                     <h6 class="text-muted mb-1">العميل</h6>
                     <p class="mb-0 fw-bold">{{ $invoice->client->name ?? '-' }}</p>
                 </div>
-                <div class="col-md-3">
-                    <div class="d-flex gap-2">
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="d-flex gap-2 justify-content-end">
                         @can('preview_invoice_employees')
                             @if($invoice->approval_status !== 'approved')
-                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-info flex-fill">
+                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-info">
                                     <i class="bi bi-eye me-2"></i>مراجعة
                                 </a>
                             @endif
                         @endcan
                         @can('approve_invoice_employees')
                             @if($invoice->approval_status !== 'approved')
-                                <button type="button" class="btn btn-success flex-fill" onclick="approveInvoice()">
+                                <button type="button" class="btn btn-success" onclick="approveInvoice()">
                                     <i class="bi bi-check-circle me-2"></i>اعتماد
+                                </button>
+                            @endif
+                        @endcan
+                        <!-- Add Revision Button -->
+                        @can('review_invoice')
+                            @if($invoice->revision_status === 'pending')
+                                <button type="button" class="btn btn-primary" onclick="openRevisionModal()">
+                                    <i class="bi bi-pencil-square me-2"></i>إتمام المراجعة
                                 </button>
                             @endif
                         @endcan
                     </div>
                 </div>
             </div>
+
+            <!-- Display Revision Notes if exists -->
+            @if($invoice->revision_notes && $invoice->revision_status !== 'pending')
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="alert alert-{{ $invoice->revision_status === 'revision_approved' ? 'success' : 'danger' }} mb-0">
+                            <strong>ملاحظات المراجعة:</strong> {{ $invoice->revision_notes }}
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -432,6 +472,56 @@
             </form>
         </div>
     </div>
+    <!-- Revision Modal -->
+    <div class="modal fade" id="revisionModal" tabindex="-1" aria-labelledby="revisionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="revisionModalLabel">
+                        <i class="bi bi-pencil-square me-2"></i>إتمام المراجعة
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form id="revisionForm">
+                    <div class="modal-body">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">نتيجة المراجعة</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="revision_status" id="revisionApproved" value="revision_approved" checked>
+                                    <label class="form-check-label" for="revisionApproved">
+                                        <span class="badge bg-success">موافقة</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="revision_status" id="revisionRejected" value="revision_rejected">
+                                    <label class="form-check-label" for="revisionRejected">
+                                        <span class="badge bg-danger">رفض</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="revisionNotes" class="form-label fw-bold">ملاحظات المراجعة</label>
+                            <textarea class="form-control" id="revisionNotes" name="revision_notes" rows="4" placeholder="أضف ملاحظاتك حول المراجعة..."></textarea>
+                            <small class="text-muted">هذه الملاحظات ستكون ظاهرة في الفاتورة</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>إلغاء
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitRevisionBtn">
+                            <i class="bi bi-check-circle me-2"></i>تأكيد المراجعة
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -478,7 +568,84 @@ document.getElementById('paymentModal').addEventListener('show.bs.modal', functi
 
     renderSingleEmployeeCard();
 });
+// Open Revision Modal
+function openRevisionModal() {
+    const modal = new bootstrap.Modal(document.getElementById('revisionModal'));
+    modal.show();
+}
 
+// Handle Revision Form Submission
+document.getElementById('revisionForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const revisionStatus = document.querySelector('input[name="revision_status"]:checked').value;
+    const revisionNotes = document.getElementById('revisionNotes').value;
+
+    // Validate notes for rejection
+    if (revisionStatus === 'revision_rejected' && !revisionNotes.trim()) {
+        Swal.fire({
+            icon: 'error',
+            title: 'خطأ',
+            text: 'يرجى إدخال ملاحظات المراجعة عند الرفض',
+            confirmButtonText: 'حسناً'
+        });
+        return;
+    }
+
+    const submitBtn = document.getElementById('submitRevisionBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري المعالجة...';
+
+    try {
+        const response = await fetch('{{ route("salary-invoices.revision", $invoice->id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                revision_status: revisionStatus,
+                revision_notes: revisionNotes
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('revisionModal'));
+            modal.hide();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'نجح!',
+                text: data.message,
+                confirmButtonText: 'حسناً'
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'فشل في إتمام المراجعة',
+                text: data.message || 'حدث خطأ أثناء المراجعة',
+                confirmButtonText: 'حسناً'
+            });
+        }
+    } catch (error) {
+        console.error('Revision Error:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'خطأ في الاتصال',
+            text: error.message || 'حدث خطأ أثناء المراجعة',
+            confirmButtonText: 'حسناً'
+        });
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>تأكيد المراجعة';
+    }
+});
 // Render single employee card with payment options
 function renderSingleEmployeeCard() {
     const container = document.getElementById('singleEmployeeCard');

@@ -56,7 +56,7 @@
                         @permission('preview_invoice_employees')
                             @if($invoice->approval_status !== 'approved')
                                 <button type="button" class="btn btn-info flex-fill" onclick="completeRevision()">
-                                    <i class="bi bi-check-circle me-2"></i>مراجعة تمت
+                                    <i class="bi bi-check-circle me-2"></i> تمت المراجعة
                                 </button>
                             @endif
                         @endpermission

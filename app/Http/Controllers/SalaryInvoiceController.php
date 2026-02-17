@@ -602,4 +602,78 @@ class SalaryInvoiceController extends Controller
             ], 500);
         }
     }
+
+    public function requestRevision(Request $request, $invoiceId)
+    {
+        $request->validate([
+            'notes' => 'required|string|max:1000'
+        ]);
+
+        try {
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            if (!$invoice->isSalaryInvoice()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'هذه الفاتورة ليست فاتورة رواتب'
+                ], 422);
+            }
+
+            if ($invoice->isApproved()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا يمكن طلب مراجعة لفاتورة معتمدة'
+                ], 422);
+            }
+
+            $invoice->requestRevision(auth()->id(), $request->notes);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم طلب المراجعة بنجاح',
+                'invoice' => $invoice->fresh()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function completeRevision($invoiceId)
+    {
+        try {
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            if (!$invoice->isSalaryInvoice()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'هذه الفاتورة ليست فاتورة رواتب'
+                ], 422);
+            }
+
+            if (!$invoice->isRevisionRequested()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لم يتم طلب مراجعة لهذه الفاتورة'
+                ], 422);
+            }
+
+            $invoice->completeRevision();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إكمال المراجعة بنجاح',
+                'invoice' => $invoice->fresh()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

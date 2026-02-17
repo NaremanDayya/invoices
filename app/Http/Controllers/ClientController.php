@@ -34,15 +34,24 @@ class ClientController extends Controller
             'tax_number' => 'required|numeric|digits:15',
             'address' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'logo_data' => 'nullable|string',
             'default_payment_day' => 'nullable|integer|min:1|max:31',
             'grace_period_days' => 'nullable|integer|min:0',
         ]);
 
+        // Handle logo upload - either file or pasted data
         if ($request->hasFile('logo')) {
             $logoPath = $request->file('logo')->store('clients/logos', 'public');
             $validated['logo'] = $logoPath;
+        } elseif ($request->filled('logo_data')) {
+            // Handle pasted image from clipboard
+            $logoPath = $this->saveBase64Image($request->logo_data, 'clients/logos');
+            if ($logoPath) {
+                $validated['logo'] = $logoPath;
+            }
         }
 
+        unset($validated['logo_data']);
         $client = Client::create($validated);
 
         // Log client creation to chat
@@ -82,6 +91,7 @@ class ClientController extends Controller
             'tax_number' => 'required|numeric|digits:15',
             'address' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'logo_data' => 'nullable|string',
             'default_payment_day' => 'nullable|integer|min:1|max:31',
             'grace_period_days' => 'nullable|integer|min:0',
         ]);
@@ -98,14 +108,25 @@ class ClientController extends Controller
             $changes['البريد الإلكتروني'] = ['old' => $client->email ?? '-', 'new' => $validated['email'] ?? '-'];
         }
 
+        // Handle logo upload - either file or pasted data
         if ($request->hasFile('logo')) {
             if ($client->logo && \Storage::disk('public')->exists($client->logo)) {
                 \Storage::disk('public')->delete($client->logo);
             }
             $logoPath = $request->file('logo')->store('clients/logos', 'public');
             $validated['logo'] = $logoPath;
+        } elseif ($request->filled('logo_data')) {
+            // Handle pasted image from clipboard
+            if ($client->logo && \Storage::disk('public')->exists($client->logo)) {
+                \Storage::disk('public')->delete($client->logo);
+            }
+            $logoPath = $this->saveBase64Image($request->logo_data, 'clients/logos');
+            if ($logoPath) {
+                $validated['logo'] = $logoPath;
+            }
         }
 
+        unset($validated['logo_data']);
         $client->update($validated);
 
         // Log client update to chat
@@ -114,6 +135,42 @@ class ClientController extends Controller
         }
 
         return redirect()->route('clients.index')->with('success', 'تم تحديث بيانات العميل بنجاح');
+    }
+
+    protected function saveBase64Image($base64String, $directory)
+    {
+        try {
+            // Extract base64 data
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64String, $type)) {
+                $base64String = substr($base64String, strpos($base64String, ',') + 1);
+                $type = strtolower($type[1]);
+                
+                // Validate image type
+                if (!in_array($type, ['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
+                    return null;
+                }
+                
+                $base64String = base64_decode($base64String);
+                
+                if ($base64String === false) {
+                    return null;
+                }
+                
+                // Generate unique filename
+                $filename = uniqid() . '.' . $type;
+                $path = $directory . '/' . $filename;
+                
+                // Save to storage
+                \Storage::disk('public')->put($path, $base64String);
+                
+                return $path;
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            \Log::error('Failed to save base64 image: ' . $e->getMessage());
+            return null;
+        }
     }
 
     public function destroy(Client $client)

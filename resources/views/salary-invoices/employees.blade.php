@@ -53,20 +53,20 @@
                 </div>
                 <div class="col-md-3">
                     <div class="d-flex gap-2">
-{{--                        @can('preview_invoice_employees')--}}
-                            @if($invoice->approval_status !== 'approved')
-                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-info flex-fill">
-                                    <i class="bi bi-eye me-2"></i>مراجعة
-                                </a>
+                        @permission('preview_invoice_employees')
+                            @if($invoice->approval_status !== 'approved' && $invoice->revision_status !== 'revision_requested')
+                                <button type="button" class="btn btn-warning flex-fill" onclick="requestRevision()">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>طلب مراجعة
+                                </button>
                             @endif
-{{--                        @endcan--}}
-                        @can('approve_invoice_employees')
-                            @if($invoice->approval_status !== 'approved')
+                        @endpermission
+                        @permission('approve_invoice_employees')
+                            @if($invoice->approval_status !== 'approved' && ($invoice->revision_status === 'revision_completed' || $invoice->revision_status === 'pending'))
                                 <button type="button" class="btn btn-success flex-fill" onclick="approveInvoice()">
                                     <i class="bi bi-check-circle me-2"></i>اعتماد
                                 </button>
                             @endif
-                        @endcan
+                        @endpermission
                     </div>
                 </div>
             </div>
@@ -1101,10 +1101,69 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
             width: '600px'
         });
     } finally {
-        this.disabled = false;
-        this.innerHTML = '<i class="bi bi-check-circle me-2"></i>تأكيد معالجة الدفعات';
     }
-});
+}
+
+// Request Revision
+async function requestRevision() {
+    const result = await Swal.fire({
+        title: 'طلب مراجعة الفاتورة',
+        input: 'textarea',
+        inputLabel: 'ملاحظات المراجعة (إلزامي)',
+        inputPlaceholder: 'أدخل ملاحظات المراجعة المطلوبة...',
+        showCancelButton: true,
+        confirmButtonText: 'طلب مراجعة',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#ffc107',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'يجب إدخال ملاحظات المراجعة'
+            }
+        }
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch('{{ route("salary-invoices.request-revision", $invoice->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    notes: result.value
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم طلب المراجعة',
+                    text: data.message,
+                    confirmButtonColor: '#198754'
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'فشل طلب المراجعة',
+                    text: data.message,
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'خطأ في الاتصال',
+                text: 'حدث خطأ أثناء طلب المراجعة',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    }
+}
 
 // Approve invoice
 async function approveInvoice() {

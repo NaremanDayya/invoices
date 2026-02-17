@@ -592,6 +592,7 @@ document.getElementById('revisionForm')?.addEventListener('submit', async functi
     }
 
     const submitBtn = document.getElementById('submitRevisionBtn');
+    const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري المعالجة...';
 
@@ -600,7 +601,8 @@ document.getElementById('revisionForm')?.addEventListener('submit', async functi
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 revision_status: revisionStatus,
@@ -608,12 +610,21 @@ document.getElementById('revisionForm')?.addEventListener('submit', async functi
             })
         });
 
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            // Handle HTML response (error page)
+            const html = await response.text();
+            console.error('Received HTML instead of JSON:', html.substring(0, 200));
+            throw new Error('استجابة غير متوقعة من الخادم. قد تكون الجلسة منتهية أو حدث خطأ في الخادم.');
+        }
+
         const data = await response.json();
 
         if (response.ok && data.success) {
             // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('revisionModal'));
-            modal.hide();
+            if (modal) modal.hide();
 
             Swal.fire({
                 icon: 'success',
@@ -637,12 +648,20 @@ document.getElementById('revisionForm')?.addEventListener('submit', async functi
         Swal.fire({
             icon: 'error',
             title: 'خطأ في الاتصال',
-            text: error.message || 'حدث خطأ أثناء المراجعة',
+            html: `
+                <p>${error.message || 'حدث خطأ أثناء المراجعة'}</p>
+                <div class="text-start small mt-3 p-3 bg-light rounded">
+                    <strong>تأكد من:</strong><br>
+                    • أنك مسجل الدخول<br>
+                    • أن لديك صلاحية المراجعة<br>
+                    • أن الفاتورة لا تزال في حالة انتظار المراجعة
+                </div>
+            `,
             confirmButtonText: 'حسناً'
         });
     } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>تأكيد المراجعة';
+        submitBtn.innerHTML = originalText;
     }
 });
 // Render single employee card with payment options

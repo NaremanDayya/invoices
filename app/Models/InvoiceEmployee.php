@@ -171,7 +171,8 @@ class InvoiceEmployee extends Pivot
     public function getMaxWpsAmountAttribute()
     {
         $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
-        return ($this->net_salary * $maxWpsPercentage) / 100;
+        $netSalary = $this->net_salary ?? $this->total_salary;
+        return ($netSalary * $maxWpsPercentage) / 100;
     }
 
     public function markAsPaid($amount = null)
@@ -228,15 +229,15 @@ class InvoiceEmployee extends Pivot
 
         if ($paymentMode === 'wps') {
             $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
-            // IMPORTANT: Calculate against TOTAL salary, not remaining
-            $totalSalary = $this->total_salary ?? $this->net_salary;
-            $maxWpsAmount = ($totalSalary * $maxWpsPercentage) / 100;
+            // IMPORTANT: Calculate WPS limit as percentage of NET SALARY (not remaining)
+            $netSalary = $this->net_salary ?? $this->total_salary;
+            $maxWpsAmount = ($netSalary * $maxWpsPercentage) / 100;
             
             // Check total WPS payments (already paid + current payment)
             $totalWpsPayments = $this->payments()->where('payment_mode', 'wps')->sum('payment_amount') + $amount;
             
             if ($totalWpsPayments > $maxWpsAmount) {
-                throw new \Exception("إجمالي مدفوعات WPS ({$totalWpsPayments} ريال) لا يمكن أن يتجاوز {$maxWpsPercentage}% من إجمالي الراتب (الحد الأقصى: " . number_format($maxWpsAmount, 0) . " ريال)");
+                throw new \Exception("إجمالي مدفوعات WPS (" . number_format($totalWpsPayments, 0) . " ريال) لا يمكن أن يتجاوز {$maxWpsPercentage}% من صافي الراتب (الحد الأقصى: " . number_format($maxWpsAmount, 0) . " ريال)");
             }
         }
 
@@ -281,8 +282,16 @@ class InvoiceEmployee extends Pivot
     public function getMaxWpsPaymentAttribute()
     {
         $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
-        $maxByPercentage = ($this->total_salary * $maxWpsPercentage) / 100;
-        return min($maxByPercentage, $this->remaining_amount);
+        // Calculate max WPS as percentage of NET SALARY
+        $netSalary = $this->net_salary ?? $this->total_salary;
+        $maxWpsTotal = ($netSalary * $maxWpsPercentage) / 100;
+        
+        // Subtract already paid WPS amounts
+        $alreadyPaidWps = $this->payments()->where('payment_mode', 'wps')->sum('payment_amount');
+        $remainingWpsAllowance = $maxWpsTotal - $alreadyPaidWps;
+        
+        // Return the minimum of remaining WPS allowance and remaining salary amount
+        return max(0, min($remainingWpsAllowance, $this->remaining_amount));
     }
 
     /**

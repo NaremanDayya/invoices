@@ -52,11 +52,22 @@
                     <p class="mb-0 fw-bold">{{ $invoice->client->name ?? '-' }}</p>
                 </div>
                 <div class="col-md-3">
-                    @if($invoice->approval_status !== 'approved')
-                        <button type="button" class="btn btn-success w-100" onclick="approveInvoice()">
-                            <i class="bi bi-check-circle me-2"></i>اعتماد الفاتورة
-                        </button>
-                    @endif
+                    <div class="d-flex gap-2">
+                        @can('preview_invoice_employees')
+                            @if($invoice->approval_status !== 'approved')
+                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-info flex-fill">
+                                    <i class="bi bi-eye me-2"></i>مراجعة
+                                </a>
+                            @endif
+                        @endcan
+                        @can('approve_invoice_employees')
+                            @if($invoice->approval_status !== 'approved')
+                                <button type="button" class="btn btn-success flex-fill" onclick="approveInvoice()">
+                                    <i class="bi bi-check-circle me-2"></i>اعتماد
+                                </button>
+                            @endif
+                        @endcan
+                    </div>
                 </div>
             </div>
         </div>

@@ -181,18 +181,18 @@
                                 <i class="bi bi-calendar3 me-1 text-muted"></i>
                                 {{ $invoice['date'] }}
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <strong>{{ number_format($invoice['total_amount'], 0) }}</strong> ر.س
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <strong class="text-success">{{ number_format($invoice['paid_amount'], 0) }}</strong> ر.س
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <strong class="{{ $invoice['remaining_balance'] > 0 ? 'text-danger' : 'text-success' }}">
                                     {{ number_format($invoice['remaining_balance'], 0) }}
                                 </strong> ر.س
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 @if($invoice['credit_notes'] > 0)
                                     <strong class="text-warning">{{ number_format($invoice['credit_notes'], 0) }}</strong> ر.س
                                 @else
@@ -201,10 +201,17 @@
                             </td>
                             <td class="text-center">
                                 @php
-                                    $statusClass = $invoice['payment_status'] === 'paid' ? 'paid' : 
-                                                  ($invoice['payment_status'] === 'partially_paid' ? 'partially_paid' : 'pending');
-                                    $statusLabel = $invoice['payment_status'] === 'paid' ? 'مدفوعة' : 
-                                                  ($invoice['payment_status'] === 'partially_paid' ? 'مدفوعة جزئياً' : 'معلقة');
+                                    // Check if invoice is paid, partially paid, or pending based on amounts
+                                    if ($invoice['remaining_balance'] <= 0) {
+                                        $statusClass = 'paid';
+                                        $statusLabel = 'مدفوعة';
+                                    } elseif ($invoice['paid_amount'] > 0) {
+                                        $statusClass = 'partially_paid';
+                                        $statusLabel = 'مدفوعة جزئياً';
+                                    } else {
+                                        $statusClass = 'pending';
+                                        $statusLabel = 'معلقة';
+                                    }
                                 @endphp
                                 <span class="payment-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                             </td>

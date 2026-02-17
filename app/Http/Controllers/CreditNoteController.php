@@ -88,6 +88,8 @@ class CreditNoteController extends Controller
                 'amount_difference' => $creditAfterTax,
                 'previous_total' => $previousValues['total_price'],
                 'new_total' => $newValues['total_price'],
+                'previous_base_price' => $previousValues['base_price'],
+                'new_base_price' => $newValues['base_price'],
                 'reason' => $validated['reason'],
                 'notes' => $validated['notes'] ?? null,
                 'number' => $creditNoteNumber,

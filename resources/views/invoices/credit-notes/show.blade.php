@@ -85,8 +85,8 @@
                                 </h6>
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <small class="text-muted d-block">المبلغ الأساسي</small>
-                                        <strong>{{ number_format($creditNote->previous_values['base_price'] ?? 0, 0) }} ر.س</strong>
+                                        <small class="text-muted d-block">المبلغ قبل الضريبة</small>
+                                        <strong class="text-primary">{{ number_format($creditNote->previous_base_price, 0) }} ر.س</strong>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted d-block">نسبة الضريبة</small>
@@ -97,7 +97,7 @@
                                         <strong>{{ number_format($creditNote->previous_values['tax_amount'] ?? 0, 0) }} ر.س</strong>
                                     </div>
                                     <div class="col-6">
-                                        <small class="text-muted d-block">الإجمالي</small>
+                                        <small class="text-muted d-block">الإجمالي مع الضريبة</small>
                                         <strong class="text-danger">{{ number_format($creditNote->previous_total, 0) }} ر.س</strong>
                                     </div>
                                     @if(isset($creditNote->previous_values['employees_count']))
@@ -126,8 +126,8 @@
                                 </h6>
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <small class="text-muted d-block">المبلغ الأساسي</small>
-                                        <strong>{{ number_format($creditNote->new_values['base_price'] ?? 0, 0) }} ر.س</strong>
+                                        <small class="text-muted d-block">المبلغ قبل الضريبة</small>
+                                        <strong class="text-primary">{{ number_format($creditNote->new_base_price, 0) }} ر.س</strong>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted d-block">نسبة الضريبة</small>
@@ -138,7 +138,7 @@
                                         <strong>{{ number_format($creditNote->new_values['tax_amount'] ?? 0, 0) }} ر.س</strong>
                                     </div>
                                     <div class="col-6">
-                                        <small class="text-muted d-block">الإجمالي</small>
+                                        <small class="text-muted d-block">الإجمالي مع الضريبة</small>
                                         <strong class="text-success">{{ number_format($creditNote->new_total, 0) }} ر.س</strong>
                                     </div>
                                     @if(isset($creditNote->new_values['employees_count']))

@@ -208,11 +208,10 @@
                             <tr>
                                 <th>رقم الإشعار</th>
                                 <th>التاريخ</th>
-                                <th>المبلغ قبل الضريبة</th>
-                                <th>مبلغ الضريبة</th>
-                                <th>الإجمالي بعد الضريبة</th>
-                                <th>قيمة الفاتورة السابقة</th>
-                                <th>قيمة الفاتورة الجديدة</th>
+                                <th>المبلغ قبل الضريبة (قبل)</th>
+                                <th>المبلغ قبل الضريبة (بعد)</th>
+                                <th>الإجمالي مع الضريبة (قبل)</th>
+                                <th>الإجمالي مع الضريبة (بعد)</th>
                                 <th>أنشئ بواسطة</th>
                                 <th>إجراءات</th>
                             </tr>
@@ -222,9 +221,8 @@
                             <tr>
                                 <td><strong>{{ $creditNote->credit_note_number }}</strong></td>
                                 <td>{{ $creditNote->created_at->format('Y-m-d') }}</td>
-                                <td>{{ number_format($creditNote->new_values['base_price'] ?? 0, 0) }} ر.س</td>
-                                <td>{{ number_format($creditNote->new_values['tax_amount'] ?? 0, 0) }} ر.س</td>
-                                <td><strong>{{ number_format($creditNote->new_total, 0) }} ر.س</strong></td>
+                                <td>{{ number_format($creditNote->previous_base_price, 0) }} ر.س</td>
+                                <td>{{ number_format($creditNote->new_base_price, 0) }} ر.س</td>
                                 <td>{{ number_format($creditNote->previous_total, 0) }} ر.س</td>
                                 <td class="text-success"><strong>{{ number_format($creditNote->new_total, 0) }} ر.س</strong></td>
                                 <td>{{ $creditNote->creator->name ?? '-' }}</td>

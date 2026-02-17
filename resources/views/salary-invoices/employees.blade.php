@@ -75,7 +75,7 @@
                 <div class="col-md-12">
                     <div class="d-flex gap-2 justify-content-end">
 {{--                        @permission('preview_invoice_employees')--}}
-                        @if($invoice->approval_status !== 'approved')
+                        @if($invoice->revision_status == 'pending')
                             <button type="button" class="btn btn-info" onclick="openRevisionModal()">
                                 <i class="bi bi-pencil-square me-2"></i>مراجعة
                             </button>

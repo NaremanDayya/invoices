@@ -60,6 +60,10 @@ class Invoice extends Model
         'credit_notes_count',
         'total_credit_notes',
         'notes',
+        'revision_status',
+        'revision_notes',
+        'revision_by',
+        'revision_at',
         'additional_data'
     ];
 
@@ -229,7 +233,7 @@ class Invoice extends Model
     public function getResponsePeriodFormattedAttribute()
     {
         $diff = $this->response_period;
-        
+
         if (!$diff) {
             return '-';
         }

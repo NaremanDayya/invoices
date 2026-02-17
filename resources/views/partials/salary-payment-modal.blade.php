@@ -151,14 +151,11 @@ function showPaymentModal() {
 }
 
 // Render selected employees in modal
-// Render selected employees in modal
 function renderSelectedEmployees() {
     const container = document.getElementById('selectedEmployeesList');
     container.innerHTML = '';
 
     selectedEmployees.forEach((employee, index) => {
-        // Get current WPS paid amount from server (you might need to fetch this)
-        // For now, we'll use the value from the checkbox data
         const currentWpsPaid = employee.wps_paid || 0;
         const maxWpsAmount = (employee.total_salary * wpsMaxPercentage) / 100;
         const remainingWpsAllowed = maxWpsAmount - currentWpsPaid;
@@ -187,7 +184,7 @@ function renderSelectedEmployees() {
                 <span class="value text-info">${formatNumber(currentWpsPaid)} ريال</span>
             </div>
             <div class="payment-info">
-                <span class="label">الحد المتبقي لـ WPS:</span>
+                <span class="label">الحد الأقصى لـ WPS:</span>
                 <span class="value text-warning">${formatNumber(maxWpsAmount)} ريال (${wpsMaxPercentage}%)</span>
             </div>
             <div class="payment-info">

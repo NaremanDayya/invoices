@@ -325,8 +325,8 @@
                                                    data-total-paid="{{ $employee->total_paid ?? 0 }}"
                                                    data-remaining="{{ $employee->remaining_amount ?? $employee->net_salary }}"
                                                    data-salary-type="{{ $employee->salary_type ?? 'monthly' }}"
-                                                   data-wps-paid="{{ $employee->wps_paid ?? 0 }}"  // Add this line
-                                            {{ $employee->payment_status === 'paid' ? 'disabled' : '' }}>
+                                                   data-wps-paid="{{ $employee->wps_paid ?? 0 }}"
+                                                   {{ $employee->payment_status === 'paid' ? 'disabled' : '' }}>
                                         </td>
                                     @endif
                                     <td>{{ $employee->id }}</td>
@@ -936,11 +936,12 @@ document.getElementById('batchPaymentModal')?.addEventListener('show.bs.modal', 
     checkboxes.forEach(checkbox => {
         batchEmployeesData.push({
             id: checkbox.value,
-            name: checkbox.getAttribute('data-employee-name'),
-            totalSalary: parseFloat(checkbox.getAttribute('data-total-salary')),
-            totalPaid: parseFloat(checkbox.getAttribute('data-total-paid')),
-            remaining: parseFloat(checkbox.getAttribute('data-remaining')),
-            salaryType: checkbox.getAttribute('data-salary-type')
+            name: checkbox.dataset.employeeName,
+            totalSalary: parseFloat(checkbox.dataset.totalSalary),
+            totalPaid: parseFloat(checkbox.dataset.totalPaid),
+            remaining: parseFloat(checkbox.dataset.remaining),
+            salaryType: checkbox.dataset.salaryType,
+            wpsPaid: parseFloat(checkbox.dataset.wpsPaid || 0)
         });
     });
 
@@ -957,7 +958,8 @@ function renderBatchEmployees() {
 
     batchEmployeesData.forEach((emp, index) => {
         const maxWpsAmount = (emp.totalSalary * wpsMaxPercentage) / 100;
-        const maxWpsForRemaining = Math.min(maxWpsAmount, emp.remaining);
+        const remainingWpsAllowance = maxWpsAmount - emp.wpsPaid;
+        const maxWpsForRemaining = Math.min(remainingWpsAllowance, emp.remaining);
 
         const card = document.createElement('div');
         card.className = 'card mb-3';
@@ -1081,11 +1083,12 @@ function attachBatchEventListeners() {
 
             if (paymentMode === 'wps') {
                 const maxWpsAmount = (emp.totalSalary * wpsMaxPercentage) / 100;
-                const maxWpsForRemaining = Math.min(maxWpsAmount, emp.remaining);
+                const remainingWpsAllowance = maxWpsAmount - emp.wpsPaid;
+                const maxWpsForRemaining = Math.min(remainingWpsAllowance, emp.remaining);
 
                 if (amount > maxWpsForRemaining) {
                     this.classList.add('is-invalid');
-                    errorDiv.textContent = `يتجاوز حد WPS (${formatNumber(maxWpsForRemaining)} ريال)`;
+                    errorDiv.textContent = `يتجاوز حد WPS المتبقي (${formatNumber(maxWpsForRemaining)} ريال)`;
                     return;
                 }
             }

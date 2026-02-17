@@ -113,8 +113,8 @@
                         <tbody>
                         @foreach($creditNotes as $creditNote)
                             @php
-                                $previous = json_decode($creditNote->previous_values, true);
-                                $new = json_decode($creditNote->new_values, true);
+                                $previous = $creditNote->previous_values ?? [];
+                                $new = $creditNote->new_values ?? [];
                             @endphp
                             <tr>
                                 <td class="px-4 py-3">

@@ -17,8 +17,8 @@
 
 @section('content')
     @php
-        $previous = json_decode($creditNote->previous_values, true);
-        $new = json_decode($creditNote->new_values, true);
+        $previous = $creditNote->previous_values ?? [];
+        $new = $creditNote->new_values ?? [];
 
         // Calculate totals if not present
         $previousBasePrice = $previous['base_price'] ?? $creditNote->previous_base_price;

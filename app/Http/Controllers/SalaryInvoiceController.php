@@ -604,9 +604,9 @@ class SalaryInvoiceController extends Controller
     }
     public function review(Request $request, $invoiceId)
     {
-        dd($request);
         $request->validate([
-            'notes' => 'nullable|string|max:1000'
+            'revision_status' => 'required|in:revision_approved,revision_rejected',
+            'revision_notes' => 'required_if:revision_status,revision_rejected|string|max:1000'
         ]);
 
         try {
@@ -619,28 +619,30 @@ class SalaryInvoiceController extends Controller
                 ], 422);
             }
 
-            if ($invoice->isApproved()) {
+            // Check if revision is already done
+            if ($invoice->revision_status !== 'pending') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'الفاتورة معتمدة بالفعل'
+                    'message' => 'تمت مراجعة هذه الفاتورة بالفعل'
                 ], 422);
             }
 
-            if ($invoice->invoiceEmployees()->count() === 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'لا يمكن اعتماد فاتورة بدون موظفين'
-                ], 422);
-            }
+            // Update revision status and notes
+            $invoice->update([
+                'revision_status' => $request->revision_status,
+                'revision_notes' => $request->revision_notes,
+                'revision_by' => auth()->id(),
+                'revision_at' => now()
+            ]);
 
-            $invoice->approve(auth()->id(), $request->notes);
+            // Log invoice revision to chat
+            $this->chatLogger->logInvoiceReviewed($invoice->fresh(), $request->revision_status, $request->revision_notes);
 
-            // Log invoice approval to chat
-            $this->chatLogger->logInvoiceApproved($invoice->fresh(), $request->notes);
+            $statusText = $request->revision_status === 'revision_approved' ? 'قبول' : 'رفض';
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم اعتماد الفاتورة بنجاح',
+                'message' => "تم {$statusText} المراجعة بنجاح",
                 'invoice' => $invoice->fresh()
             ]);
 
@@ -651,5 +653,4 @@ class SalaryInvoiceController extends Controller
             ], 500);
         }
     }
-
 }

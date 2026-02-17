@@ -54,14 +54,14 @@
                 <div class="col-md-3">
                     <div class="d-flex gap-2">
                         @permission('preview_invoice_employees')
-                            @if($invoice->approval_status !== 'approved' && $invoice->revision_status !== 'revision_requested')
-                                <button type="button" class="btn btn-warning flex-fill" onclick="requestRevision()">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>طلب مراجعة
+                            @if($invoice->approval_status !== 'approved')
+                                <button type="button" class="btn btn-info flex-fill" onclick="completeRevision()">
+                                    <i class="bi bi-check-circle me-2"></i>مراجعة تمت
                                 </button>
                             @endif
                         @endpermission
                         @permission('approve_invoice_employees')
-                            @if($invoice->approval_status !== 'approved' && ($invoice->revision_status === 'revision_completed' || $invoice->revision_status === 'pending'))
+                            @if($invoice->approval_status !== 'approved')
                                 <button type="button" class="btn btn-success flex-fill" onclick="approveInvoice()">
                                     <i class="bi bi-check-circle me-2"></i>اعتماد
                                 </button>
@@ -1104,35 +1104,26 @@ document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', asyn
     }
 }
 
-// Request Revision
-async function requestRevision() {
+// Complete Revision
+async function completeRevision() {
     const result = await Swal.fire({
-        title: 'طلب مراجعة الفاتورة',
-        input: 'textarea',
-        inputLabel: 'ملاحظات المراجعة (إلزامي)',
-        inputPlaceholder: 'أدخل ملاحظات المراجعة المطلوبة...',
+        title: 'تأكيد إتمام المراجعة',
+        text: 'هل تم الانتهاء من مراجعة الفاتورة؟',
+        icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'طلب مراجعة',
+        confirmButtonText: 'نعم، المراجعة تمت',
         cancelButtonText: 'إلغاء',
-        confirmButtonColor: '#ffc107',
-        inputValidator: (value) => {
-            if (!value) {
-                return 'يجب إدخال ملاحظات المراجعة'
-            }
-        }
+        confirmButtonColor: '#0dcaf0'
     });
 
     if (result.isConfirmed) {
         try {
-            const response = await fetch('{{ route("salary-invoices.request-revision", $invoice->id) }}', {
+            const response = await fetch('{{ route("salary-invoices.complete-revision", $invoice->id) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    notes: result.value
-                })
+                }
             });
 
             const data = await response.json();
@@ -1140,7 +1131,7 @@ async function requestRevision() {
             if (data.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'تم طلب المراجعة',
+                    title: 'تمت المراجعة',
                     text: data.message,
                     confirmButtonColor: '#198754'
                 }).then(() => {
@@ -1149,7 +1140,7 @@ async function requestRevision() {
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'فشل طلب المراجعة',
+                    title: 'فشل إتمام المراجعة',
                     text: data.message,
                     confirmButtonColor: '#dc3545'
                 });
@@ -1158,7 +1149,7 @@ async function requestRevision() {
             Swal.fire({
                 icon: 'error',
                 title: 'خطأ في الاتصال',
-                text: 'حدث خطأ أثناء طلب المراجعة',
+                text: 'حدث خطأ أثناء إتمام المراجعة',
                 confirmButtonColor: '#dc3545'
             });
         }

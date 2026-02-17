@@ -179,11 +179,9 @@ class SalaryPaymentService
 
         if ($paymentMode === 'wps') {
             $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
-            // Calculate WPS limit as percentage of NET SALARY
-            $netSalary = $employee->net_salary ?? $employee->total_salary;
-            $maxWpsAmount = ($netSalary * $maxWpsPercentage) / 100;
+            $maxWpsAmount = ($employee->total_salary * $maxWpsPercentage) / 100;
             
-            $breakdown['wps_percentage'] = ($amount / $netSalary) * 100;
+            $breakdown['wps_percentage'] = ($amount / $employee->total_salary) * 100;
             $breakdown['wps_max_percentage'] = $maxWpsPercentage;
             $breakdown['wps_max_amount'] = $maxWpsAmount;
             $breakdown['within_wps_limit'] = $amount <= $maxWpsAmount;

@@ -53,13 +53,13 @@
                 </div>
                 <div class="col-md-3">
                     <div class="d-flex gap-2">
-{{--                        @can('preview_invoice_employees')--}}
+                        @can('preview_invoice_employees')
                             @if($invoice->approval_status !== 'approved')
                                 <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-info flex-fill">
                                     <i class="bi bi-eye me-2"></i>مراجعة
                                 </a>
                             @endif
-{{--                        @endcan--}}
+                        @endcan
                         @can('approve_invoice_employees')
                             @if($invoice->approval_status !== 'approved')
                                 <button type="button" class="btn btn-success flex-fill" onclick="approveInvoice()">

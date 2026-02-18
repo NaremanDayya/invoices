@@ -29,70 +29,20 @@
             --secondary: #047857;
             --light: #f0fdf4;
             --dark: #064e3b;
-            --chat-teal: #2d5f5d;
-            --chat-teal-dark: #1e4a46;
         }
 
         body {
             font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f8fafc;
             min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: inherit;
-            filter: blur(80px);
-            opacity: 0.8;
-            z-index: 0;
-        }
-
-        /* Chat Container */
-        .chat-main-wrapper {
-            position: relative;
-            z-index: 1;
-            width: 90%;
-            max-width: 1400px;
-            height: 90vh;
-            background: white;
-            border-radius: 30px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
         /* Header Styles */
         .main-header {
-            background: linear-gradient(135deg, var(--chat-teal-dark) 0%, var(--chat-teal) 100%);
-            box-shadow: 0 4px 20px rgba(30, 74, 70, 0.3);
-            position: relative;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .main-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>');
-            background-size: cover;
-            opacity: 0.3;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
         }
 
         .header-content {
@@ -145,11 +95,10 @@
         }
 
         .user-avatar {
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .user-text {
@@ -201,20 +150,10 @@
             justify-content: center;
         }
 
-        /* Main Content Area */
-        .chat-content-wrapper {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
         /* Navigation */
         .main-nav {
             background: white;
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-            flex-shrink: 0;
-            display: none; /* Hide navigation in chat layout */
         }
 
         .nav-container {
@@ -282,9 +221,8 @@
         /* Main Content */
         .main-content {
             flex: 1;
-            padding: 0;
-            background: white;
-            overflow: hidden;
+            padding: 2rem 0;
+            background: #f8fafc;
         }
 
         .content-card {
@@ -295,7 +233,13 @@
         }
         /* Footer */
         .main-footer {
-            display: none; /* Hide footer in chat layout */
+            background: linear-gradient(135deg, var(--dark) 0%, #0f766e 100%);
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            margin-top: auto;
+            width: 100%;
+            position: relative;
         }
 
         .footer-text {
@@ -304,52 +248,8 @@
             opacity: 0.9;
         }
 
-        /* Chat Header Actions */
-        .header-chat-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .chat-icon-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
-            color: white;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-        }
-
-        .chat-icon-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
-
         /* Responsive */
-        @media (max-width: 1200px) {
-            .chat-main-wrapper {
-                width: 95%;
-                height: 95vh;
-            }
-        }
-
         @media (max-width: 768px) {
-            body {
-                padding: 0;
-            }
-
-            .chat-main-wrapper {
-                width: 100%;
-                height: 100vh;
-                border-radius: 0;
-            }
-
             .nav-list {
                 flex-direction: column;
                 gap: 0;
@@ -363,72 +263,145 @@
             .user-details {
                 display: none;
             }
-
-            .system-subtitle {
-                display: none;
-            }
         }
     </style>
     @stack('styles')
 </head>
 
 <body>
-<div class="chat-main-wrapper">
-    <!-- Header Section -->
-    <header class="main-header">
-        <div class="container-fluid px-4">
-            <div class="header-content">
-                <!-- Left Side: Back Button & Title -->
-                <div class="brand-info">
-                    <div class="d-flex align-items-center gap-3">
-                        <button class="chat-icon-btn" onclick="window.location.href='{{ route('dashboard') }}'" title="العودة">
-                            <i class="bi bi-arrow-right"></i>
-                        </button>
-                        <button class="chat-icon-btn" onclick="window.location.href='{{ route('dashboard') }}'" title="الرئيسية">
-                            <i class="bi bi-house-door"></i>
-                        </button>
-                        <div>
-                            <h1 class="system-name mb-0">المحادثات</h1>
-                            <p class="system-subtitle mb-0">تواصل مع فريق الدعم والإدارة</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Side: User Profile & Actions -->
-                <div class="user-info">
-                    <div class="header-chat-actions">
-                        <!-- Messages Icon -->
-                        <button class="chat-icon-btn" title="الرسائل">
-                            <i class="bi bi-chat-dots"></i>
-                        </button>
-                    </div>
-
-                    <!-- User Profile -->
-                    <div class="user-details">
-                        <img src="{{ asset(Auth::user()->personal_image) }}" alt="User Avatar" class="user-avatar">
-                        <div class="user-text">
-                            <div class="user-name">{{ Auth::user()->name ?? 'المستخدم' }}</div>
-                            <div class="user-role">{{ Auth::user()->getRoleName() ?? 'مدير النظام' }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Logout -->
-                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                        @csrf
-                        <button type="submit" class="chat-icon-btn" title="تسجيل الخروج">
-                            <i class="bi bi-box-arrow-left"></i>
-                        </button>
-                    </form>
+<!-- Header Section -->
+<header class="main-header">
+    <div class="container">
+        <div class="header-content">
+            <!-- Brand Info -->
+            <div class="brand-info">
+                {{--                <div class="logo-container">--}}
+                {{--                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="h-10 w-auto">--}}
+                {{--                </div>--}}
+                <div>
+                    <h1 class="system-name">نظام إدارة الفواتير</h1>
+                    <p class="system-subtitle">الحل المتكامل لإدارة الفواتير والمستحقات</p>
                 </div>
             </div>
-        </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        {{ $slot }}
-    </main>
-</div>
+            <!-- User Controls -->
+            <div class="user-info">
+                <!-- Notifications -->
+                <button class="icon-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+
+                {{--                <!-- Messages -->--}}
+                {{--                <button class="icon-btn">--}}
+                {{--                    <i class="fas fa-envelope"></i>--}}
+                {{--                    <span class="notification-badge">5</span>--}}
+                {{--                </button>--}}
+
+                <!-- User Profile -->
+                <!-- User Profile -->
+                <div class="user-details">
+                    <div class="relative group">
+                        <img src="{{ asset(Auth::user()->personal_image) }}" alt="User Avatar" id="profileImage"
+                             class="user-avatar">
+
+                        <button type="button"
+                                class="absolute -top-2 -right-2 bg-white text-gray-800 rounded-full p-1 hover:bg-gray-200 transition-all duration-200 shadow-md"
+                                onclick="document.getElementById('profilePhotoInput').click()">
+                            <i class="bi bi-pencil-fill text-xs"></i>
+                        </button>
+
+                        <form id="avatarUploadForm" action="{{ route('admin.updatePhoto') }}" method="POST"
+                              enctype="multipart/form-data">
+                            @csrf
+                            <input type="file" id="profilePhotoInput" name="personal_image"
+                                   accept="image/jpeg,image/png,image/gif" style="display: none;">
+                        </form>
+                    </div>
+
+                    <div class="user-text">
+                        <div class="user-name">{{ Auth::user()->name ?? 'المستخدم' }}</div>
+                        <div class="user-role">مدير النظام</div>
+                    </div>
+                </div>
+
+
+                <!-- Logout -->
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="icon-btn" title="تسجيل الخروج">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Navigation -->
+<nav class="main-nav">
+    <div class="container">
+        <div class="nav-container">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}"
+                       class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        لوحة التحكم
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('invoices.index') }}"
+                       class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                        <i class="fas fa-file-invoice"></i>
+                        إدارة الفواتير
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('payments.index') }}"
+                       class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}">
+                        <i class="fas fa-credit-card"></i>
+                        أوامر السداد
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('employees.index') }}"
+                       class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
+                        <i class="fas fa-users"></i>
+                        إدارة العمالة
+                    </a>
+                </li>
+                {{--                <li class="nav-item">--}}
+                {{--                    <a href="{{ route('welcome') }}"--}}
+                {{--                       class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">--}}
+                {{--                        <i class="fas fa-chart-bar"></i>--}}
+                {{--                        التقارير المالية--}}
+                {{--                    </a>--}}
+                {{--                </li>--}}
+                <li class="nav-item">
+                    <a href="{{ route('chat.index') }}"
+                       class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}">
+                        <i class="fas fa-boxes"></i>
+                        المحادثات
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main>
+    {{ $slot }}
+</main>
+<!-- Footer -->
+{{--<footer class="main-footer">--}}
+{{--    <div class="container">--}}
+{{--        <p class="footer-text">--}}
+{{--            جميع الحقوق محفوظة &copy; {{ date('Y') }} نظام إدارة الفواتير - شركة افاق الخليج--}}
+{{--        </p>--}}
+{{--    </div>--}}
+{{--</footer>--}}
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

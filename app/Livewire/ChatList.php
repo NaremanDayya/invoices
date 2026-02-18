@@ -182,37 +182,55 @@ class ChatList extends Component
                     ->whereColumn('conversation_id', 'conversations.id')
             ]);
 
-        // Add unread messages count for filtering/sorting
-        $query->withCount(['messages as unread_count' => function ($sub) use ($user) {
+        // Add unread messages count for main conversation
+        $query->withCount(['messages as main_unread_count' => function ($sub) use ($user) {
             $sub->whereNull('read_at')
                 ->where('sender_id', '!=', $user->id);
         }]);
 
-        // Apply filter conditions
+        // Add nested invoice chats unread count using subquery
+        $query->addSelect([
+            'invoice_chats_unread_count' => \DB::table('conversations as invoice_convos')
+                ->join('messages as invoice_msgs', 'invoice_convos.id', '=', 'invoice_msgs.conversation_id')
+                ->join('conversation_participants as invoice_parts', 'invoice_convos.id', '=', 'invoice_parts.conversation_id')
+                ->whereColumn('invoice_convos.client_id', 'conversations.client_id')
+                ->where('invoice_convos.type', 'invoice')
+                ->whereNotNull('invoice_convos.invoice_id')
+                ->where('invoice_parts.user_id', $user->id)
+                ->whereNull('invoice_msgs.read_at')
+                ->where('invoice_msgs.sender_id', '!=', $user->id)
+                ->selectRaw('COUNT(DISTINCT invoice_msgs.id)')
+                ->limit(1)
+        ]);
+
+        // Calculate total unread count (main + invoice chats)
+        $query->addSelect([
+            'total_unread_count' => \DB::raw('COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)')
+        ]);
+
+        // Apply filter conditions based on total unread
         $query->when($this->filter === 'unread', function ($q) {
-            $q->having('unread_count', '>', 0);
+            $q->havingRaw('(COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)) > 0');
         });
 
         $query->when($this->filter === 'read', function ($q) {
-            $q->having('unread_count', '=', 0);
+            $q->havingRaw('(COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)) = 0');
         });
 
-        // Apply ordering using latest message timestamp
+        // Apply ordering: unread first (by total count), then by latest message
         if ($this->filter === 'oldest') {
-            // Oldest conversations first by latest message time
-            $query->orderBy('unread_count', 'desc')
+            $query->orderByRaw('(COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)) DESC')
                 ->orderBy('latest_message_created_at', 'asc')
                 ->orderBy('created_at', 'asc');
         } else {
-            // Default/newest + other filters: unread first then latest message time desc
-            $query->orderBy('unread_count', 'desc')
+            // Default: unread conversations first, then by latest message time
+            $query->orderByRaw('(COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)) DESC')
                 ->orderBy('latest_message_created_at', 'desc')
                 ->orderBy('created_at', 'desc');
         }
 
         $conversations = $query
             ->skip($offset)
-            // Fetch one extra record to determine if there are more without another query
             ->take($this->perPage + 1)
             ->get();
 
@@ -262,9 +280,8 @@ class ChatList extends Component
 
             $conversation->is_last_message_read = $conversation->isLastMessageReadByUser();
 
-            if (!isset($conversation->unread_count)) {
-                $conversation->unread_count = $conversation->unreadMessagesCount();
-            }
+            // Set unread_count to total (main + invoice chats)
+            $conversation->unread_count = ($conversation->main_unread_count ?? 0) + ($conversation->invoice_chats_unread_count ?? 0);
         });
 
         return $conversations;

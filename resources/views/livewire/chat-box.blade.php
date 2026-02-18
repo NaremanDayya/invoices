@@ -121,7 +121,7 @@
             <span></span>
             <span></span>
         </div>
-        <span class="typing-text">العميل يكتب الآن...</span>
+        <span class="typing-text">يكتب الآن...</span>
     </div>
 
     <!-- إدخال الرسالة -->

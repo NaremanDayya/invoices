@@ -27,12 +27,13 @@
 
                 <div class="col-12">
                     <div class="d-flex gap-2">
-                        <select wire:model.live="filter" class="form-select form-select-sm border-secondary-subtle">
-                            <option value="newest">الأحدث</option>
-                            <option value="unread">غير المقروء</option>
+                        <select wire:model.live="filter" class="form-select form-select-sm" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
+                            <option value="newest" style="color: #1e4a46;">الأحدث</option>
+                            <option value="unread" style="color: #1e4a46;">غير المقروء</option>
                         </select>
 
-                        <button class="btn btn-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center"
+                        <button class="btn btn-sm flex-grow-1 d-flex align-items-center justify-content-center"
+                                style="background: #fbbd08; color: #1e4a46; border: none; font-weight: 600;"
                                 data-bs-toggle="modal"
                                 data-bs-target="#clientSelectionModal">
                             <i class="bi bi-plus-lg ms-1"></i>
@@ -51,7 +52,8 @@
                 <i class="bi bi-chat-square-text display-4 text-muted mb-3"></i>
                 <h5 class="text-muted">لا توجد محادثات</h5>
                 <p class="text-muted">ابدأ محادثة جديدة مع عميلك</p>
-                <button class="btn btn-success mt-2"
+                <button class="btn mt-2"
+                        style="background: #1e4a46; color: white; border: none;"
                         data-bs-toggle="modal"
                         data-bs-target="#clientSelectionModal">
                     <i class="bi bi-plus-lg ms-1"></i>
@@ -150,7 +152,8 @@
             @if($hasMore)
                 <div class="text-center py-3">
                     <button wire:click="loadMore"
-                            class="btn btn-outline-success btn-sm"
+                            class="btn btn-sm"
+                            style="border: 1px solid #1e4a46; color: #1e4a46;"
                         {{ $loading ? 'disabled' : '' }}>
                         @if($loading)
                             <span class="spinner-border spinner-border-sm ms-2"></span>
@@ -170,17 +173,31 @@
         <style>
             .invoices-chat-list {
                 background: white;
-                border-radius: 12px;
+                border-radius: 20px;
                 box-shadow: 0 4px 20px rgba(0,0,0,0.05);
                 height: 100%;
                 overflow: hidden;
                 display: flex;
                 flex-direction: column;
+                border: 1px solid #e2e8f0;
             }
 
             .chat-list-header {
-                background: white;
+                background: linear-gradient(135deg, #1e4a46 0%, #2a635e 100%);
                 flex-shrink: 0;
+                color: white;
+            }
+
+            .chat-list-header h4 {
+                color: white;
+            }
+
+            .chat-list-header .text-muted {
+                color: rgba(255, 255, 255, 0.8) !important;
+            }
+
+            .chat-list-header .text-primary {
+                color: #fbbd08 !important;
             }
 
             .stat-card {
@@ -234,16 +251,20 @@
                 text-align: right;
             }
 
-            .conversation-item:hover, .conversation-item.unread {
-                background: #f8f9fa;
-                border-color: #e9ecef;
+            .conversation-item:hover {
+                background: #f4f7f6;
+                border-color: #e2e8f0;
                 transform: translateX(-5px);
             }
 
             .conversation-item.unread {
-                background: rgba(25, 135, 84, 0.05);
-                border-right: 3px solid #198754;
+                background: rgba(30, 74, 70, 0.05);
+                border-right: 3px solid #1e4a46;
                 border-left: none;
+            }
+
+            .conversation-item.unread:hover {
+                background: rgba(30, 74, 70, 0.08);
             }
 
             .conversation-avatar {
@@ -269,7 +290,7 @@
                 justify-content: center;
                 color: white;
                 font-weight: bold;
-                background: linear-gradient(135deg, #20c997, #198754);
+                background: linear-gradient(135deg, #1e4a46, #2a635e);
             }
 
             .online-status {
@@ -332,12 +353,12 @@
             }
 
             .conversations-container::-webkit-scrollbar-thumb {
-                background: #20c997;
+                background: #1e4a46;
                 border-radius: 10px;
             }
 
             .conversations-container::-webkit-scrollbar-thumb:hover {
-                background: #198754;
+                background: #2a635e;
             }
 
             /* رسالة لا توجد محادثات */

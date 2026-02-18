@@ -176,7 +176,7 @@
             height: 45px;
             border-radius: 10px;
             overflow: hidden;
-            border: 2px solid #20c997;
+            border: 2px solid #1e4a46;
         }
 
         .company-logo {
@@ -193,7 +193,7 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            background: linear-gradient(135deg, #20c997, #198754);
+            background: linear-gradient(135deg, #1e4a46, #2a635e);
         }
 
         .chat-body {
@@ -223,7 +223,7 @@
         }
 
         .sidebar-header h6 {
-            color: #198754;
+            color: #1e4a46;
             font-weight: 600;
         }
 
@@ -295,14 +295,14 @@
         }
 
         .invoice-item:hover {
-            background: #f8f9fa;
-            color: #198754;
+            background: #f4f7f6;
+            color: #1e4a46;
         }
 
         .invoice-item.active {
-            background: rgba(25, 135, 84, 0.05);
-            border-left: 3px solid #198754;
-            color: #198754;
+            background: rgba(30, 74, 70, 0.05);
+            border-left: 3px solid #1e4a46;
+            color: #1e4a46;
         }
 
         .invoice-item:last-child {
@@ -326,7 +326,7 @@
         }
 
         .invoice-item.active .invoice-item-icon {
-            background: #198754;
+            background: #1e4a46;
         }
 
         .invoice-item.active .invoice-item-icon i {
@@ -405,7 +405,7 @@
 
         .attachment-item:hover {
             background: #e9ecef;
-            border-color: #20c997;
+            border-color: #1e4a46;
             transform: translateX(5px);
         }
 

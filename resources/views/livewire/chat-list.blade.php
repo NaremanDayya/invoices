@@ -183,9 +183,23 @@
             }
 
             .chat-list-header {
-                background: linear-gradient(135deg, #1e4a46 0%, #2a635e 100%);
+                background: linear-gradient(135deg, #2d5f5d 0%, #3d7a76 100%);
                 flex-shrink: 0;
                 color: white;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .chat-list-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>');
+                background-size: cover;
+                opacity: 0.3;
             }
 
             .chat-list-header h4 {
@@ -197,7 +211,7 @@
             }
 
             .chat-list-header .text-primary {
-                color: #fbbd08 !important;
+                color: #10b981 !important;
             }
 
             .stat-card {
@@ -252,19 +266,19 @@
             }
 
             .conversation-item:hover {
-                background: #f4f7f6;
-                border-color: #e2e8f0;
+                background: #f0fdf4;
+                border-color: #d1fae5;
                 transform: translateX(-5px);
             }
 
             .conversation-item.unread {
-                background: rgba(30, 74, 70, 0.05);
-                border-right: 3px solid #1e4a46;
+                background: rgba(45, 95, 93, 0.05);
+                border-right: 3px solid #2d5f5d;
                 border-left: none;
             }
 
             .conversation-item.unread:hover {
-                background: rgba(30, 74, 70, 0.08);
+                background: rgba(45, 95, 93, 0.08);
             }
 
             .conversation-avatar {
@@ -278,7 +292,7 @@
                 height: 50px;
                 border-radius: 10px;
                 object-fit: cover;
-                border: 2px solid #20c997;
+                border: 2px solid #10b981;
             }
 
             .avatar-placeholder-sm {
@@ -290,7 +304,7 @@
                 justify-content: center;
                 color: white;
                 font-weight: bold;
-                background: linear-gradient(135deg, #1e4a46, #2a635e);
+                background: linear-gradient(135deg, #2d5f5d, #3d7a76);
             }
 
             .online-status {
@@ -353,12 +367,12 @@
             }
 
             .conversations-container::-webkit-scrollbar-thumb {
-                background: #1e4a46;
+                background: #2d5f5d;
                 border-radius: 10px;
             }
 
             .conversations-container::-webkit-scrollbar-thumb:hover {
-                background: #2a635e;
+                background: #3d7a76;
             }
 
             /* رسالة لا توجد محادثات */

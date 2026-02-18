@@ -157,26 +157,71 @@
     <style>
         .invoice-chat-container {
             height: calc(100vh - 180px);
-            background: #f8f9fa;
-            border-radius: 12px;
+            background: white;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
             display: flex;
             flex-direction: column;
+            border: 1px solid #e2e8f0;
         }
 
         .chat-header {
-            background: white;
-            border-bottom: 1px solid #e9ecef;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            background: linear-gradient(135deg, #2d5f5d 0%, #3d7a76 100%);
+            border-bottom: none;
+            box-shadow: 0 4px 12px rgba(45, 95, 93, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>');
+            background-size: cover;
+            opacity: 0.3;
+        }
+
+        .chat-header .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .chat-header .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateX(3px);
+        }
+
+        .chat-header h5 {
+            color: white !important;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .chat-header small {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        .chat-header .text-muted {
+            color: rgba(255, 255, 255, 0.85) !important;
         }
 
         .avatar-container {
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
             overflow: hidden;
-            border: 2px solid #1e4a46;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
         }
 
         .company-logo {
@@ -193,45 +238,85 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            background: linear-gradient(135deg, #1e4a46, #2a635e);
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #10b981, #059669);
         }
 
         .chat-body {
             display: flex;
             height: calc(100% - 75px);
+            background: #f8fafb;
         }
 
         .messages-container {
             flex: 1;
-            background: #f8f9fa;
-            padding: 20px;
+            background: #f8fafb;
+            padding: 24px;
             overflow-y: auto;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #2d5f5d;
+            border-radius: 10px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #3d7a76;
         }
 
         .chat-sidebar {
-            width: 320px;
+            width: 340px;
             background: white;
             border-left: 1px solid #e9ecef;
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
         }
 
+        .chat-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .chat-sidebar::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .chat-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
         .sidebar-header {
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e9ecef;
             margin-bottom: 20px;
         }
 
         .sidebar-header h6 {
-            color: #1e4a46;
-            font-weight: 600;
+            color: #2d5f5d;
+            font-weight: 700;
+            font-size: 1rem;
         }
 
         .invoice-summary {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #d1fae5;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
         }
 
         .summary-item {
@@ -295,14 +380,14 @@
         }
 
         .invoice-item:hover {
-            background: #f4f7f6;
-            color: #1e4a46;
+            background: #f0fdf4;
+            color: #2d5f5d;
         }
 
         .invoice-item.active {
-            background: rgba(30, 74, 70, 0.05);
-            border-left: 3px solid #1e4a46;
-            color: #1e4a46;
+            background: linear-gradient(90deg, rgba(45, 95, 93, 0.08) 0%, rgba(45, 95, 93, 0.03) 100%);
+            border-left: 4px solid #2d5f5d;
+            color: #2d5f5d;
         }
 
         .invoice-item:last-child {
@@ -326,7 +411,7 @@
         }
 
         .invoice-item.active .invoice-item-icon {
-            background: #1e4a46;
+            background: linear-gradient(135deg, #2d5f5d, #3d7a76);
         }
 
         .invoice-item.active .invoice-item-icon i {

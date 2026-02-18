@@ -42,7 +42,11 @@
                         </div>
                     @else
                         <div class="message-content">
-                            {{ $message->message }}
+                            @if($message->message_type === 'system')
+                                {!! nl2br(e($message->message)) !!}
+                            @else
+                                {{ $message->message }}
+                            @endif
 
                             @if($isEdited)
                                 <small class="edited-text">(تم التعديل)</small>

@@ -141,6 +141,11 @@ class Invoice extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function revisionStatuses()
+    {
+        return $this->hasMany(InvoiceRevisionStatus::class);
+    }
+
     public function employees()
     {
         return $this->belongsToMany(Employee::class, 'invoice_employees')

@@ -92,104 +92,89 @@
                         @endif
                     </div>
 
-                    <!-- Detailed Comparison Cards -->
-                    <div class="row g-4">
-                        <!-- Previous Values Card -->
-                        <div class="col-md-6">
-                            <div class="card bg-light border-0 h-100">
-                                <div class="card-header bg-transparent border-0 pt-3 px-3">
-                                    <h6 class="fw-bold text-muted mb-0">
-                                        <i class="bi bi-arrow-right-circle me-1"></i>
-                                        القيم السابقة
-                                    </h6>
-                                </div>
-                                <div class="card-body p-3 pt-0">
-                                    <table class="table table-sm table-borderless">
-                                        <tr>
-                                            <td>عدد الموظفين:</td>
-                                            <td class="fw-bold">{{ $previous['employees_count'] ?? $invoice->employees_count }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>أيام العمل:</td>
-                                            <td class="fw-bold">{{ $previous['work_days_count'] ?? $invoice->work_days_count }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>إجمالي العمال:</td>
-                                            <td class="fw-bold">{{ $previous['total_workers'] ?? $invoice->total_workers }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>إجمالي أيام العمل:</td>
-                                            <td class="fw-bold">{{ $previous['work_days'] ?? $invoice->work_days }}</td>
-                                        </tr>
-                                        <tr class="border-top">
-                                            <td class="pt-2">المبلغ قبل الضريبة:</td>
-                                            <td class="fw-bold text-primary pt-2">{{ number_format($previousBasePrice, 0) }} ر.س</td>
-                                        </tr>
-                                        <tr>
-                                            <td>نسبة الضريبة:</td>
-                                            <td class="fw-bold">{{ $previousTaxRate }}%</td>
-                                        </tr>
-                                        <tr>
-                                            <td>مبلغ الضريبة:</td>
-                                            <td class="fw-bold text-info">{{ number_format($previousTaxAmount, 0) }} ر.س</td>
-                                        </tr>
-                                        <tr class="border-top">
-                                            <td class="pt-2">الإجمالي مع الضريبة:</td>
-                                            <td class="fw-bold text-danger fs-5 pt-2">{{ number_format($previousTotal, 0) }} ر.س</td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
+                    <!-- Improved Credit Note Table Structure -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-gradient-primary text-white p-3">
+                            <h6 class="mb-0 fw-bold">
+                                <i class="bi bi-table me-2"></i>
+                                تفاصيل الإشعار الدائن
+                            </h6>
                         </div>
-
-                        <!-- New Values Card -->
-                        <div class="col-md-6">
-                            <div class="card bg-success bg-opacity-10 border-success border-opacity-25 h-100">
-                                <div class="card-header bg-transparent border-0 pt-3 px-3">
-                                    <h6 class="fw-bold text-success mb-0">
-                                        <i class="bi bi-arrow-left-circle me-1"></i>
-                                        القيم الجديدة
-                                    </h6>
-                                </div>
-                                <div class="card-body p-3 pt-0">
-                                    <table class="table table-sm table-borderless">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
                                         <tr>
-                                            <td>عدد الموظفين:</td>
-                                            <td class="fw-bold">{{ $new['employees_count'] ?? $invoice->employees_count }}</td>
+                                            <th class="px-4 py-3 fw-bold">البيان</th>
+                                            <th class="px-4 py-3 text-center fw-bold text-primary">قبل الإشعار الدائن</th>
+                                            <th class="px-4 py-3 text-center fw-bold text-danger">قيمة الخصم</th>
+                                            <th class="px-4 py-3 text-center fw-bold text-success">بعد الإشعار الدائن</th>
                                         </tr>
+                                    </thead>
+                                    <tbody>
                                         <tr>
-                                            <td>أيام العمل:</td>
-                                            <td class="fw-bold">{{ $new['work_days_count'] ?? $invoice->work_days_count }}</td>
+                                            <td class="px-4 py-3 fw-bold">المبلغ قبل الضريبة</td>
+                                            <td class="px-4 py-3 text-center">{{ number_format($previousBasePrice, 2) }} ر.س</td>
+                                            <td class="px-4 py-3 text-center text-danger">-{{ number_format($previousBasePrice - $newBasePrice, 2) }} ر.س</td>
+                                            <td class="px-4 py-3 text-center text-success fw-bold">{{ number_format($newBasePrice, 2) }} ر.س</td>
                                         </tr>
-                                        <tr>
-                                            <td>إجمالي العمال:</td>
-                                            <td class="fw-bold">{{ $new['total_workers'] ?? $invoice->total_workers }}</td>
+                                        <tr class="bg-light">
+                                            <td class="px-4 py-3 fw-bold">مبلغ الضريبة ({{ $previousTaxRate }}%)</td>
+                                            <td class="px-4 py-3 text-center">{{ number_format($previousTaxAmount, 2) }} ر.س</td>
+                                            <td class="px-4 py-3 text-center text-danger">-{{ number_format($previousTaxAmount - $newTaxAmount, 2) }} ر.س</td>
+                                            <td class="px-4 py-3 text-center text-success fw-bold">{{ number_format($newTaxAmount, 2) }} ر.س</td>
                                         </tr>
-                                        <tr>
-                                            <td>إجمالي أيام العمل:</td>
-                                            <td class="fw-bold">{{ $new['work_days'] ?? $invoice->work_days }}</td>
+                                        <tr class="table-primary">
+                                            <td class="px-4 py-3 fw-bold fs-6">الإجمالي مع الضريبة</td>
+                                            <td class="px-4 py-3 text-center fw-bold">{{ number_format($previousTotal, 2) }} ر.س</td>
+                                            <td class="px-4 py-3 text-center text-danger fw-bold">-{{ number_format($creditNote->amount_difference, 2) }} ر.س</td>
+                                            <td class="px-4 py-3 text-center text-success fw-bold fs-6">{{ number_format($newTotal, 2) }} ر.س</td>
                                         </tr>
-                                        <tr class="border-top">
-                                            <td class="pt-2">المبلغ قبل الضريبة:</td>
-                                            <td class="fw-bold text-primary pt-2">{{ number_format($newBasePrice, 0) }} ر.س</td>
-                                        </tr>
-                                        <tr>
-                                            <td>نسبة الضريبة:</td>
-                                            <td class="fw-bold">{{ $newTaxRate }}%</td>
-                                        </tr>
-                                        <tr>
-                                            <td>مبلغ الضريبة:</td>
-                                            <td class="fw-bold text-info">{{ number_format($newTaxAmount, 0) }} ر.س</td>
-                                        </tr>
-                                        <tr class="border-top">
-                                            <td class="pt-2">الإجمالي مع الضريبة:</td>
-                                            <td class="fw-bold text-success fs-5 pt-2">{{ number_format($newTotal, 0) }} ر.س</td>
-                                        </tr>
-                                    </table>
-                                </div>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
+
+                    @if(isset($previous['employees_count']) || isset($previous['work_days_count']))
+                    <!-- Additional Information -->
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-light p-3">
+                            <h6 class="mb-0 fw-bold">
+                                <i class="bi bi-info-circle me-2"></i>
+                                معلومات إضافية
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                @if(isset($previous['employees_count']))
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block">عدد الموظفين</small>
+                                    <strong>{{ $previous['employees_count'] ?? '-' }} ← {{ $new['employees_count'] ?? '-' }}</strong>
+                                </div>
+                                @endif
+                                @if(isset($previous['work_days_count']))
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block">أيام العمل</small>
+                                    <strong>{{ $previous['work_days_count'] ?? '-' }} ← {{ $new['work_days_count'] ?? '-' }}</strong>
+                                </div>
+                                @endif
+                                @if(isset($previous['total_workers']))
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block">إجمالي العمال</small>
+                                    <strong>{{ $previous['total_workers'] ?? '-' }} ← {{ $new['total_workers'] ?? '-' }}</strong>
+                                </div>
+                                @endif
+                                @if(isset($previous['work_days']))
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block">إجمالي أيام العمل</small>
+                                    <strong>{{ $previous['work_days'] ?? '-' }} ← {{ $new['work_days'] ?? '-' }}</strong>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

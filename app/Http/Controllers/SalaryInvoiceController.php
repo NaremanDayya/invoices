@@ -611,6 +611,8 @@ class SalaryInvoiceController extends Controller
         ]);
 
         try {
+            DB::beginTransaction();
+            
             $invoice = Invoice::findOrFail($invoiceId);
 
             if (!$invoice->isSalaryInvoice()) {
@@ -628,26 +630,71 @@ class SalaryInvoiceController extends Controller
                 ], 422);
             }
 
-            // Update revision status and notes
-            $invoice->update([
-                'revision_status' => $request->revision_status,
+            // Store revision history in new table
+            $revisionStatus = $request->revision_status === 'revision_approved' ? 'approved' : 'rejected';
+            \App\Models\InvoiceRevisionStatus::create([
+                'invoice_id' => $invoice->id,
+                'revision_status' => $revisionStatus,
                 'revision_notes' => $request->revision_notes,
-                'revision_by' => auth()->id(),
-                'revision_at' => now()
+                'revised_by' => auth()->id(),
+                'approved_by' => $request->revision_status === 'revision_approved' ? auth()->id() : null,
             ]);
+
+            // If revision is rejected, delete all invoice employees and reset
+            if ($request->revision_status === 'revision_rejected') {
+                $deletedCount = $invoice->invoiceEmployees()->count();
+                
+                // Delete all invoice employees
+                $invoice->invoiceEmployees()->delete();
+                
+                // Reset invoice to allow re-import
+                $invoice->update([
+                    'type' => 'regular',
+                    'employees_count' => 0,
+                    'base_price' => 0,
+                    'total_price' => 0,
+                    'revision_status' => $request->revision_status,
+                    'revision_notes' => $request->revision_notes,
+                    'revision_by' => auth()->id(),
+                    'revision_at' => now()
+                ]);
+                
+                Log::info('Invoice revision rejected - employees deleted', [
+                    'invoice_id' => $invoice->id,
+                    'deleted_employees' => $deletedCount
+                ]);
+            } else {
+                // Update revision status for approval
+                $invoice->update([
+                    'revision_status' => $request->revision_status,
+                    'revision_notes' => $request->revision_notes,
+                    'revision_by' => auth()->id(),
+                    'revision_at' => now()
+                ]);
+            }
 
             // Log invoice revision to chat
             $this->chatLogger->logInvoiceReviewed($invoice->fresh(), $request->revision_status, $request->revision_notes);
 
+            DB::commit();
+
             $statusText = $request->revision_status === 'revision_approved' ? 'قبول' : 'رفض';
+            $additionalMessage = $request->revision_status === 'revision_rejected' 
+                ? ' تم حذف جميع الموظفين. يمكنك الآن إعادة الاستيراد.' 
+                : '';
 
             return response()->json([
                 'success' => true,
-                'message' => "تم {$statusText} المراجعة بنجاح",
+                'message' => "تم {$statusText} المراجعة بنجاح.{$additionalMessage}",
                 'invoice' => $invoice->fresh()
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Invoice review error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ: ' . $e->getMessage()

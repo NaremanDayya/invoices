@@ -182,15 +182,19 @@ class ChatList extends Component
                     ->whereColumn('conversation_id', 'conversations.id')
             ]);
 
-        // Add unread messages count for main conversation
-        $query->withCount(['messages as main_unread_count' => function ($sub) use ($user) {
-            $sub->whereNull('read_at')
-                ->where('sender_id', '!=', $user->id);
-        }]);
+        // Add unread messages count for main conversation using subquery
+        $query->addSelect([
+            'main_unread_count' => \DB::table('messages')
+                ->selectRaw('COALESCE(COUNT(*), 0)')
+                ->whereColumn('conversation_id', 'conversations.id')
+                ->whereNull('read_at')
+                ->where('sender_id', '!=', $user->id)
+        ]);
 
         // Add nested invoice chats unread count using subquery
         $query->addSelect([
             'invoice_chats_unread_count' => \DB::table('conversations as invoice_convos')
+                ->selectRaw('COALESCE(COUNT(DISTINCT invoice_msgs.id), 0)')
                 ->join('messages as invoice_msgs', 'invoice_convos.id', '=', 'invoice_msgs.conversation_id')
                 ->join('conversation_participants as invoice_parts', 'invoice_convos.id', '=', 'invoice_parts.conversation_id')
                 ->whereColumn('invoice_convos.client_id', 'conversations.client_id')
@@ -199,32 +203,25 @@ class ChatList extends Component
                 ->where('invoice_parts.user_id', $user->id)
                 ->whereNull('invoice_msgs.read_at')
                 ->where('invoice_msgs.sender_id', '!=', $user->id)
-                ->selectRaw('COUNT(DISTINCT invoice_msgs.id)')
-                ->limit(1)
-        ]);
-
-        // Calculate total unread count (main + invoice chats)
-        $query->addSelect([
-            'total_unread_count' => \DB::raw('COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)')
         ]);
 
         // Apply filter conditions based on total unread
-        $query->when($this->filter === 'unread', function ($q) {
-            $q->havingRaw('(COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)) > 0');
+        $query->when($this->filter === 'unread', function ($q) use ($user) {
+            $q->havingRaw('((SELECT COALESCE(COUNT(*), 0) FROM messages WHERE conversation_id = conversations.id AND read_at IS NULL AND sender_id != ?) + (SELECT COALESCE(COUNT(DISTINCT invoice_msgs.id), 0) FROM conversations as invoice_convos JOIN messages as invoice_msgs ON invoice_convos.id = invoice_msgs.conversation_id JOIN conversation_participants as invoice_parts ON invoice_convos.id = invoice_parts.conversation_id WHERE invoice_convos.client_id = conversations.client_id AND invoice_convos.type = "invoice" AND invoice_convos.invoice_id IS NOT NULL AND invoice_parts.user_id = ? AND invoice_msgs.read_at IS NULL AND invoice_msgs.sender_id != ?)) > 0', [$user->id, $user->id, $user->id]);
         });
 
-        $query->when($this->filter === 'read', function ($q) {
-            $q->havingRaw('(COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)) = 0');
+        $query->when($this->filter === 'read', function ($q) use ($user) {
+            $q->havingRaw('((SELECT COALESCE(COUNT(*), 0) FROM messages WHERE conversation_id = conversations.id AND read_at IS NULL AND sender_id != ?) + (SELECT COALESCE(COUNT(DISTINCT invoice_msgs.id), 0) FROM conversations as invoice_convos JOIN messages as invoice_msgs ON invoice_convos.id = invoice_msgs.conversation_id JOIN conversation_participants as invoice_parts ON invoice_convos.id = invoice_parts.conversation_id WHERE invoice_convos.client_id = conversations.client_id AND invoice_convos.type = "invoice" AND invoice_convos.invoice_id IS NOT NULL AND invoice_parts.user_id = ? AND invoice_msgs.read_at IS NULL AND invoice_msgs.sender_id != ?)) = 0', [$user->id, $user->id, $user->id]);
         });
 
         // Apply ordering: unread first (by total count), then by latest message
         if ($this->filter === 'oldest') {
-            $query->orderByRaw('(COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)) DESC')
+            $query->orderByRaw('((SELECT COALESCE(COUNT(*), 0) FROM messages WHERE conversation_id = conversations.id AND read_at IS NULL AND sender_id != ?) + (SELECT COALESCE(COUNT(DISTINCT invoice_msgs.id), 0) FROM conversations as invoice_convos JOIN messages as invoice_msgs ON invoice_convos.id = invoice_msgs.conversation_id JOIN conversation_participants as invoice_parts ON invoice_convos.id = invoice_parts.conversation_id WHERE invoice_convos.client_id = conversations.client_id AND invoice_convos.type = "invoice" AND invoice_convos.invoice_id IS NOT NULL AND invoice_parts.user_id = ? AND invoice_msgs.read_at IS NULL AND invoice_msgs.sender_id != ?)) DESC', [$user->id, $user->id, $user->id])
                 ->orderBy('latest_message_created_at', 'asc')
                 ->orderBy('created_at', 'asc');
         } else {
             // Default: unread conversations first, then by latest message time
-            $query->orderByRaw('(COALESCE(main_unread_count, 0) + COALESCE(invoice_chats_unread_count, 0)) DESC')
+            $query->orderByRaw('((SELECT COALESCE(COUNT(*), 0) FROM messages WHERE conversation_id = conversations.id AND read_at IS NULL AND sender_id != ?) + (SELECT COALESCE(COUNT(DISTINCT invoice_msgs.id), 0) FROM conversations as invoice_convos JOIN messages as invoice_msgs ON invoice_convos.id = invoice_msgs.conversation_id JOIN conversation_participants as invoice_parts ON invoice_convos.id = invoice_parts.conversation_id WHERE invoice_convos.client_id = conversations.client_id AND invoice_convos.type = "invoice" AND invoice_convos.invoice_id IS NOT NULL AND invoice_parts.user_id = ? AND invoice_msgs.read_at IS NULL AND invoice_msgs.sender_id != ?)) DESC', [$user->id, $user->id, $user->id])
                 ->orderBy('latest_message_created_at', 'desc')
                 ->orderBy('created_at', 'desc');
         }

@@ -69,6 +69,18 @@ class Message extends Model
         return $this->hasMany(MessageRead::class, 'message_id');
     }
 
+    public function receivers()
+    {
+        return $this->hasMany(ChatReceiver::class, 'message_id');
+    }
+
+    public function receiverUsers()
+    {
+        return $this->belongsToMany(User::class, 'chat_receivers', 'message_id', 'receiver_id')
+            ->withPivot('is_read', 'read_at')
+            ->withTimestamps();
+    }
+
     /* Status Methods */
 
     public function isRead(): bool

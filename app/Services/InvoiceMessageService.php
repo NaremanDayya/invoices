@@ -159,19 +159,20 @@ class InvoiceMessageService
     }
 
     /**
-     * Get unread messages count for user
+     * Get unread conversations count for user (not message count)
      */
     public function getUnreadCount(?int $userId = null): int
     {
         $userId = $userId ?? Auth::id();
 
-        return Message::whereHas('conversation', function($query) use ($userId) {
-                $query->whereHas('users', function($q) use ($userId) {
-                    $q->where('users.id', $userId);
-                });
+        // Count conversations that have unread messages for this user
+        return Conversation::whereHas('users', function($q) use ($userId) {
+                $q->where('users.id', $userId);
             })
-            ->where('sender_id', '!=', $userId)
-            ->whereNull('read_at')
+            ->whereHas('messages', function($query) use ($userId) {
+                $query->where('sender_id', '!=', $userId)
+                    ->whereNull('read_at');
+            })
             ->count();
     }
 }

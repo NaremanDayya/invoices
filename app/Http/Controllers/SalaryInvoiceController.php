@@ -684,11 +684,18 @@ class SalaryInvoiceController extends Controller
                 ? ' تم حذف جميع الموظفين. يمكنك الآن إعادة الاستيراد.'
                 : '';
 
-            return response()->json([
+            $response = [
                 'success' => true,
                 'message' => "تم {$statusText} المراجعة بنجاح.{$additionalMessage}",
                 'invoice' => $invoice->fresh()
-            ]);
+            ];
+
+            // Add redirect URL for rejected revisions
+            if ($request->revision_status === 'revision_rejected') {
+                $response['redirect_url'] = route('invoices.show', $invoice->id);
+            }
+
+            return response()->json($response);
 
         } catch (\Exception $e) {
             DB::rollBack();

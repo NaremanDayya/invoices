@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Services\ChatActivityLogger;
 use App\Services\SalaryInvoiceImportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -612,7 +613,7 @@ class SalaryInvoiceController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             $invoice = Invoice::findOrFail($invoiceId);
 
             if (!$invoice->isSalaryInvoice()) {
@@ -643,10 +644,10 @@ class SalaryInvoiceController extends Controller
             // If revision is rejected, delete all invoice employees and reset
             if ($request->revision_status === 'revision_rejected') {
                 $deletedCount = $invoice->invoiceEmployees()->count();
-                
+
                 // Delete all invoice employees
                 $invoice->invoiceEmployees()->delete();
-                
+
                 // Reset invoice to allow re-import
                 $invoice->update([
                     'type' => 'regular',
@@ -658,7 +659,7 @@ class SalaryInvoiceController extends Controller
                     'revision_by' => auth()->id(),
                     'revision_at' => now()
                 ]);
-                
+
                 Log::info('Invoice revision rejected - employees deleted', [
                     'invoice_id' => $invoice->id,
                     'deleted_employees' => $deletedCount
@@ -679,8 +680,8 @@ class SalaryInvoiceController extends Controller
             DB::commit();
 
             $statusText = $request->revision_status === 'revision_approved' ? 'قبول' : 'رفض';
-            $additionalMessage = $request->revision_status === 'revision_rejected' 
-                ? ' تم حذف جميع الموظفين. يمكنك الآن إعادة الاستيراد.' 
+            $additionalMessage = $request->revision_status === 'revision_rejected'
+                ? ' تم حذف جميع الموظفين. يمكنك الآن إعادة الاستيراد.'
                 : '';
 
             return response()->json([

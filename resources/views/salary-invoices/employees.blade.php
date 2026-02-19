@@ -3,297 +3,248 @@
 @section('title', 'موظفي فاتورة الرواتب #' . $invoice->number)
 
 @section('content')
+<style>
+.emp-hero{background:linear-gradient(135deg,#1e4a46 0%,#2d6a65 60%,#326462 100%);border-radius:16px;padding:24px 28px 20px;margin-bottom:20px;position:relative;overflow:hidden;}
+.emp-hero::before{content:'';position:absolute;top:-50px;left:-50px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%;}
+.emp-hero::after{content:'';position:absolute;bottom:-60px;right:-30px;width:220px;height:220px;background:rgba(251,189,8,.05);border-radius:50%;}
+.hero-title{color:#fff;font-size:1.4rem;font-weight:700;margin-bottom:3px;}
+.hero-sub{color:rgba(255,255,255,.65);font-size:.82rem;}
+.hero-sub a{color:rgba(255,255,255,.55);text-decoration:none;}
+.hero-sub a:hover{color:#fbbd08;}
+.hero-meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);}
+.hm-label{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.4px;}
+.hm-value{font-size:13px;font-weight:700;color:#fff;margin-top:1px;}
+.sbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.stat-card{border:none!important;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:transform .15s,box-shadow .15s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.1);}
+.stat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.stat-label{font-size:11px;color:#6c757d;margin-bottom:2px;}
+.stat-value{font-size:22px;font-weight:800;line-height:1.1;}
+.fin-bar{background:linear-gradient(135deg,#1e4a46,#326462);border-radius:12px;padding:14px 24px;display:flex;justify-content:space-around;align-items:center;margin-bottom:18px;}
+.fin-item{text-align:center;}
+.fin-label{font-size:10px;color:rgba(255,255,255,.6);}
+.fin-value{font-size:17px;font-weight:800;margin-top:2px;}
+.fin-sep{width:1px;height:36px;background:rgba(255,255,255,.15);}
+.toolbar-card{border:none!important;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:18px;}
+.filter-tabs .btn{border-radius:20px!important;font-size:12px;padding:4px 13px;}
+.emp-table thead th{background:linear-gradient(135deg,#1e4a46,#326462);color:#fff;font-size:11px;font-weight:600;padding:10px 9px;white-space:nowrap;border:none;}
+.emp-table thead th:first-child{border-radius:0 8px 0 0;}
+.emp-table thead th:last-child{border-radius:8px 0 0 0;}
+.emp-table tbody tr:hover{background:#f0fdf4!important;}
+.emp-table td{font-size:12.5px;padding:8px 9px;vertical-align:middle;border-bottom:1px solid #f1f5f9;}
+</style>
+
 <div class="container-fluid px-4 py-3">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-1">موظفي فاتورة الرواتب #{{ $invoice->number }}</h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('invoices.index') }}">الفواتير</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('invoices.show', $invoice->id) }}">فاتورة #{{ $invoice->number }}</a></li>
-                    <li class="breadcrumb-item active">الموظفين</li>
-                </ol>
-            </nav>
-        </div>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-dark" onclick="exportSalaryPDF()">
-                <i class="bi bi-file-earmark-pdf me-2"></i>تصدير PDF
-            </button>
-            <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-right me-2"></i>رجوع للفاتورة
-            </a>
-        </div>
-    </div>
 
-    <!-- Invoice Status Card -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-md-3">
-                    <h6 class="text-muted mb-1">حالة الاعتماد</h6>
-                    @if($invoice->approval_status === 'approved')
-                        <span class="badge bg-success fs-6">
-                        <i class="bi bi-check-circle me-1"></i>معتمدة
-                    </span>
-                    @elseif($invoice->approval_status === 'rejected')
-                        <span class="badge bg-danger fs-6">
-                        <i class="bi bi-x-circle me-1"></i>مرفوضة
-                    </span>
-                    @else
-                        <span class="badge bg-warning fs-6">
-                        <i class="bi bi-clock me-1"></i>قيد الانتظار
-                    </span>
-                    @endif
+    {{-- HERO HEADER --}}
+    <div class="emp-hero">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <div style="flex:1;min-width:0;">
+                <div class="hero-title">
+                    <i class="bi bi-people-fill me-2" style="color:#fbbd08;"></i>كشف رواتب الموظفين &mdash; فاتورة #{{ $invoice->number }}
                 </div>
-                <!-- Add Revision Status Column -->
-                <div class="col-md-3">
-                    <h6 class="text-muted mb-1">حالة المراجعة</h6>
-                    @if($invoice->revision_status === 'revision_approved')
-                        <span class="badge bg-success fs-6">
-                        <i class="bi bi-check-circle me-1"></i>تمت المراجعة (معتمدة)
-                    </span>
-                    @elseif($invoice->revision_status === 'revision_rejected')
-                        <span class="badge bg-danger fs-6">
-                        <i class="bi bi-x-circle me-1"></i>تمت المراجعة (مرفوضة)
-                    </span>
-                    @else
-                        <span class="badge bg-warning fs-6">
-                        <i class="bi bi-clock me-1"></i>في انتظار المراجعة
-                    </span>
-                    @endif
+                <div class="hero-sub">
+                    <a href="{{ route('invoices.index') }}">الفواتير</a>
+                    <span style="margin:0 5px;opacity:.4;">/</span>
+                    <a href="{{ route('invoices.show', $invoice->id) }}">فاتورة #{{ $invoice->number }}</a>
+                    <span style="margin:0 5px;opacity:.4;">/</span>
+                    <span>الموظفين</span>
                 </div>
-                <div class="col-md-3">
-                    <h6 class="text-muted mb-1">تاريخ الفاتورة</h6>
-                    <p class="mb-0 fw-bold">{{ $invoice->generation_date }}</p>
-                </div>
-                <div class="col-md-3">
-                    <h6 class="text-muted mb-1">العميل</h6>
-                    <p class="mb-0 fw-bold">{{ $invoice->client->name ?? '-' }}</p>
-                </div>
-            </div>
-
-            <!-- Action Buttons Row -->
-            <div class="row mt-3">
-                <div class="col-md-12">
-                    <div class="d-flex gap-2 justify-content-end">
-{{--                        @permission('preview_invoice_employees')--}}
-                        @if($invoice->revision_status == 'pending')
-                            <button type="button" class="btn btn-info" onclick="openRevisionModal()">
-                                <i class="bi bi-pencil-square me-2"></i>مراجعة
-                            </button>
-                        @endif
-{{--                        @endpermission--}}
-{{--                        @can('approve_invoice_employees')--}}
-                            @if($invoice->approval_status !== 'approved')
-                                <button type="button" class="btn btn-success" onclick="approveInvoice()">
-                                    <i class="bi bi-check-circle me-2"></i>اعتماد
-                                </button>
+                <div class="hero-meta">
+                    <div><div class="hm-label">العميل</div><div class="hm-value">{{ $invoice->client->name ?? '-' }}</div></div>
+                    <div><div class="hm-label">تاريخ الفاتورة</div><div class="hm-value">{{ $invoice->generation_date }}</div></div>
+                    <div>
+                        <div class="hm-label">حالة الاعتماد</div>
+                        <div class="hm-value">
+                            @if($invoice->approval_status === 'approved')
+                                <span class="sbadge" style="background:rgba(25,135,84,.25);color:#6ee7b7;"><i class="bi bi-check-circle-fill"></i>معتمدة</span>
+                            @elseif($invoice->approval_status === 'rejected')
+                                <span class="sbadge" style="background:rgba(220,53,69,.25);color:#fca5a5;"><i class="bi bi-x-circle-fill"></i>مرفوضة</span>
+                            @else
+                                <span class="sbadge" style="background:rgba(255,193,7,.2);color:#fde68a;"><i class="bi bi-clock-fill"></i>قيد الانتظار</span>
                             @endif
-{{--                        @endcan--}}
-                        <!-- Add Revision Button -->
-                        @can('review_invoice')
-                            @if($invoice->revision_status === 'pending')
-                                <button type="button" class="btn btn-primary" onclick="openRevisionModal()">
-                                    <i class="bi bi-pencil-square me-2"></i>إتمام المراجعة
-                                </button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="hm-label">حالة المراجعة</div>
+                        <div class="hm-value">
+                            @if($invoice->revision_status === 'revision_approved')
+                                <span class="sbadge" style="background:rgba(25,135,84,.25);color:#6ee7b7;"><i class="bi bi-patch-check-fill"></i>معتمدة</span>
+                            @elseif($invoice->revision_status === 'revision_rejected')
+                                <span class="sbadge" style="background:rgba(220,53,69,.25);color:#fca5a5;"><i class="bi bi-patch-exclamation-fill"></i>مرفوضة</span>
+                            @else
+                                <span class="sbadge" style="background:rgba(13,202,240,.15);color:#a5f3fc;"><i class="bi bi-hourglass-split"></i>قيد المراجعة</span>
                             @endif
-                        @endcan
-                    </div>
-                </div>
-            </div>
-
-            <!-- Display Revision Notes if exists -->
-            @if($invoice->revision_notes && $invoice->revision_status !== 'pending')
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <div class="alert alert-{{ $invoice->revision_status === 'revision_approved' ? 'success' : 'danger' }} mb-0">
-                            <strong>ملاحظات المراجعة:</strong> {{ $invoice->revision_notes }}
-                        </div>
-                    </div>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <!-- Summary Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-primary">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-1">إجمالي الموظفين</h6>
-                            <h3 class="mb-0 text-primary">{{ $summary['total_employees'] }}</h3>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-people fs-2 text-primary"></i>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-success">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-1">مدفوع بالكامل</h6>
-                            <h3 class="mb-0 text-success">{{ $summary['paid_employees'] }}</h3>
-                        </div>
-                        <div class="bg-success bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-check-circle fs-2 text-success"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-warning">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-1">مدفوع جزئياً</h6>
-                            <h3 class="mb-0 text-warning">{{ $summary['partially_paid_employees'] }}</h3>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-hourglass-split fs-2 text-warning"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-danger">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-1">غير مدفوع</h6>
-                            <h3 class="mb-0 text-danger">{{ $summary['unpaid_employees'] }}</h3>
-                        </div>
-                        <div class="bg-danger bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-x-circle fs-2 text-danger"></i>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex gap-2 flex-wrap justify-content-end" style="flex-shrink:0;">
+                <button type="button" class="btn btn-light btn-sm" onclick="exportSalaryPDF()">
+                    <i class="bi bi-file-earmark-pdf me-1" style="color:#dc3545;"></i>PDF
+                </button>
+{{--                @permission('preview_invoice_employees')--}}
+                @if($invoice->revision_status == 'pending')
+                    <button type="button" class="btn btn-warning btn-sm" onclick="openRevisionModal()">
+                        <i class="bi bi-pencil-square me-1"></i>مراجعة
+                    </button>
+                @endif
+{{--                @endpermission--}}
+{{--                @can('approve_invoice_employees')--}}
+                @if($invoice->approval_status !== 'approved')
+                    <button type="button" class="btn btn-success btn-sm" onclick="approveInvoice()">
+                        <i class="bi bi-check-circle me-1"></i>اعتماد
+                    </button>
+                @endif
+{{--                @endcan--}}
+                @can('review_invoice')
+                    @if($invoice->revision_status === 'pending')
+                        <button type="button" class="btn btn-info btn-sm" onclick="openRevisionModal()">
+                            <i class="bi bi-pencil-square me-1"></i>إتمام المراجعة
+                        </button>
+                    @endif
+                @endcan
+                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>رجوع
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Financial Summary -->
-    <div class="card mb-4">
+    {{-- Revision notes alert --}}
+    @if($invoice->revision_notes && $invoice->revision_status !== 'pending')
+        <div class="alert alert-{{ $invoice->revision_status === 'revision_approved' ? 'success' : 'danger' }} d-flex align-items-center gap-2 mb-4 rounded-3">
+            <i class="bi bi-{{ $invoice->revision_status === 'revision_approved' ? 'check-circle-fill' : 'exclamation-triangle-fill' }} fs-5"></i>
+            <div><strong>ملاحظات المراجعة:</strong> {{ $invoice->revision_notes }}</div>
+        </div>
+    @endif
+
+    {{-- SUMMARY CARDS --}}
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-md">
+            <div class="stat-card card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><div class="stat-label">إجمالي الموظفين</div><div class="stat-value text-primary">{{ $summary['total_employees'] }}</div></div>
+                    <div class="stat-icon" style="background:#eff6ff;"><i class="bi bi-people-fill text-primary"></i></div>
+                </div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><div class="stat-label">مدفوع بالكامل</div><div class="stat-value text-success">{{ $summary['paid_employees'] }}</div></div>
+                    <div class="stat-icon" style="background:#f0fdf4;"><i class="bi bi-check-circle-fill text-success"></i></div>
+                </div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><div class="stat-label">مدفوع جزئياً</div><div class="stat-value text-warning">{{ $summary['partially_paid_employees'] }}</div></div>
+                    <div class="stat-icon" style="background:#fffbeb;"><i class="bi bi-hourglass-split text-warning"></i></div>
+                </div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><div class="stat-label">غير مدفوع</div><div class="stat-value text-danger">{{ $summary['unpaid_employees'] }}</div></div>
+                    <div class="stat-icon" style="background:#fef2f2;"><i class="bi bi-x-circle-fill text-danger"></i></div>
+                </div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><div class="stat-label">WPS</div><div class="stat-value text-info">{{ $summary['wps_employees'] }}</div></div>
+                    <div class="stat-icon" style="background:#ecfeff;"><i class="bi bi-bank text-info"></i></div>
+                </div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><div class="stat-label">شهري</div><div class="stat-value" style="color:#475569;">{{ $summary['monthly_employees'] }}</div></div>
+                    <div class="stat-icon" style="background:#f8fafc;"><i class="bi bi-calendar-month" style="color:#475569;"></i></div>
+                </div>
+            </div></div>
+        </div>
+    </div>
+
+    {{-- FINANCIAL BAR --}}
+    <div class="fin-bar">
+        <div class="fin-item">
+            <div class="fin-label">إجمالي الرواتب</div>
+            <div class="fin-value" style="color:#fbbd08;">{{ number_format($summary['total_salaries'], 0) }} ر.س</div>
+        </div>
+        <div class="fin-sep"></div>
+        <div class="fin-item">
+            <div class="fin-label">المبلغ المدفوع</div>
+            <div class="fin-value" style="color:#6ee7b7;">{{ number_format($summary['total_paid'], 0) }} ر.س</div>
+        </div>
+        <div class="fin-sep"></div>
+        <div class="fin-item">
+            <div class="fin-label">المبلغ المتبقي</div>
+            <div class="fin-value" style="color:#fca5a5;">{{ number_format($summary['total_remaining'], 0) }} ر.س</div>
+        </div>
+    </div>
+
+    {{-- TOOLBAR: search + invoice select + filters + batch --}}
+    <div class="toolbar-card card">
         <div class="card-body">
-            <div class="row text-center">
-                <div class="col-md-4">
-                    <h6 class="text-muted mb-2">إجمالي الرواتب</h6>
-                    <h4 class="mb-0 text-primary">{{ number_format($summary['total_salaries'], 0) }} ريال</h4>
-                </div>
-                <div class="col-md-4">
-                    <h6 class="text-muted mb-2">المبلغ المدفوع</h6>
-                    <h4 class="mb-0 text-success">{{ number_format($summary['total_paid'], 0) }} ريال</h4>
-                </div>
-                <div class="col-md-4">
-                    <h6 class="text-muted mb-2">المبلغ المتبقي</h6>
-                    <h4 class="mb-0 text-danger">{{ number_format($summary['total_remaining'], 0) }} ريال</h4>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search and Invoice Filter -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" action="{{ route('salary-invoices.employees.index', $invoice->id) }}">
-                <div class="row g-3">
+            <form method="GET" action="{{ route('salary-invoices.employees.index', $invoice->id) }}" class="mb-3">
+                <div class="row g-2 align-items-end">
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">اختر فاتورة</label>
-                        <select class="form-select" name="invoice_id" onchange="if(this.value) window.location.href='/salary-invoices/'+this.value+'/employees'">
+                        <select class="form-select form-select-sm" name="invoice_id" onchange="if(this.value) window.location.href='/salary-invoices/'+this.value+'/employees'">
                             @foreach($allSalaryInvoices as $inv)
                                 <option value="{{ $inv->id }}" {{ $inv->id == $invoice->id ? 'selected' : '' }}>
-                                    فاتورة #{{ $inv->number }} - {{ $inv->generation_date }} - {{ $inv->client->name ?? 'بدون عميل' }}
+                                    فاتورة #{{ $inv->number }} — {{ $inv->generation_date }} — {{ $inv->client->name ?? 'بدون عميل' }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">بحث</label>
-                        <input type="text"
-                               class="form-control"
-                               name="search"
-                               value="{{ $search }}"
-                               placeholder="ابحث بالاسم، المشروع، أو ID">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">&nbsp;</label>
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary flex-fill">
-                                <i class="bi bi-search me-2"></i>بحث
-                            </button>
-                            <a href="{{ route('salary-invoices.employees.index', $invoice->id) }}" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i>
-                            </a>
+                    <div class="col-md-5">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" name="search" value="{{ $search }}" placeholder="ابحث بالاسم، المشروع، أو ID">
+                            <button type="submit" class="btn btn-primary">بحث</button>
+                            <a href="{{ route('salary-invoices.employees.index', $invoice->id) }}" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>
                         </div>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        @if($invoice->approval_status === 'approved')
+                            <button type="button" class="btn btn-success btn-sm" id="processBatchBtn"
+                                    data-bs-toggle="modal" data-bs-target="#batchPaymentModal" disabled>
+                                <i class="bi bi-cash-coin me-1"></i>معالجة الدفعات (<span id="selectedCount">0</span>)
+                            </button>
+                        @endif
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Filters and Actions -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <div class="btn-group" role="group">
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'all', 'search' => $search]) }}"
-                           class="btn btn-sm {{ $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' }}">
-                            الكل ({{ $summary['total_employees'] }})
-                        </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'unpaid', 'search' => $search]) }}"
-                           class="btn btn-sm {{ $filter === 'unpaid' ? 'btn-danger' : 'btn-outline-danger' }}">
-                            غير مدفوع ({{ $summary['unpaid_employees'] }})
-                        </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'partially_paid', 'search' => $search]) }}"
-                           class="btn btn-sm {{ $filter === 'partially_paid' ? 'btn-warning' : 'btn-outline-warning' }}">
-                            مدفوع جزئياً ({{ $summary['partially_paid_employees'] }})
-                        </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'paid', 'search' => $search]) }}"
-                           class="btn btn-sm {{ $filter === 'paid' ? 'btn-success' : 'btn-outline-success' }}">
-                            مدفوع ({{ $summary['paid_employees'] }})
-                        </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'wps', 'search' => $search]) }}"
-                           class="btn btn-sm {{ $filter === 'wps' ? 'btn-info' : 'btn-outline-info' }}">
-                            WPS ({{ $summary['wps_employees'] }})
-                        </a>
-                        <a href="{{ route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'filter' => 'monthly', 'search' => $search]) }}"
-                           class="btn btn-sm {{ $filter === 'monthly' ? 'btn-secondary' : 'btn-outline-secondary' }}">
-                            شهري ({{ $summary['monthly_employees'] }})
-                        </a>
-                    </div>
-                </div>
-                <div class="col-md-4 text-end">
-                    @if($invoice->approval_status === 'approved')
-                        <button type="button"
-                                class="btn btn-success"
-                                id="processBatchBtn"
-                                data-bs-toggle="modal"
-                                data-bs-target="#batchPaymentModal"
-                                disabled>
-                            <i class="bi bi-cash-coin me-2"></i>معالجة الدفعات (<span id="selectedCount">0</span>)
-                        </button>
-                    @endif
-                </div>
+            <div class="filter-tabs d-flex flex-wrap gap-2">
+                <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id,'filter'=>'all','search'=>$search]) }}"
+                   class="btn btn-sm {{ $filter==='all' ? 'btn-primary' : 'btn-outline-primary' }}">الكل ({{ $summary['total_employees'] }})</a>
+                <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id,'filter'=>'unpaid','search'=>$search]) }}"
+                   class="btn btn-sm {{ $filter==='unpaid' ? 'btn-danger' : 'btn-outline-danger' }}">غير مدفوع ({{ $summary['unpaid_employees'] }})</a>
+                <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id,'filter'=>'partially_paid','search'=>$search]) }}"
+                   class="btn btn-sm {{ $filter==='partially_paid' ? 'btn-warning' : 'btn-outline-warning' }}">مدفوع جزئياً ({{ $summary['partially_paid_employees'] }})</a>
+                <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id,'filter'=>'paid','search'=>$search]) }}"
+                   class="btn btn-sm {{ $filter==='paid' ? 'btn-success' : 'btn-outline-success' }}">مدفوع ({{ $summary['paid_employees'] }})</a>
+                <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id,'filter'=>'wps','search'=>$search]) }}"
+                   class="btn btn-sm {{ $filter==='wps' ? 'btn-info' : 'btn-outline-info' }}">WPS ({{ $summary['wps_employees'] }})</a>
+                <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id,'filter'=>'monthly','search'=>$search]) }}"
+                   class="btn btn-sm {{ $filter==='monthly' ? 'btn-secondary' : 'btn-outline-secondary' }}">شهري ({{ $summary['monthly_employees'] }})</a>
             </div>
         </div>
     </div>
 
-    <!-- Employees Table -->
-    <div class="card">
-        <div class="card-body">
+    {{-- EMPLOYEES TABLE --}}
+    <div class="card" style="border:none;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+        <div class="card-body p-0">
             @if($employees->count() > 0)
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle emp-table mb-0">
+                        <thead>
                             <tr>
                                 @if($invoice->approval_status === 'approved')
                                     <th width="50">

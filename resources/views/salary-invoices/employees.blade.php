@@ -1277,233 +1277,9 @@
         }
 
         // ============================================
-        // PDF Export
+        // PDF Export — delegates to window._exportSalaryPDF defined below
         // ============================================
-        function exportSalaryPDF() {
-            const invoiceNumber   = '{{ $invoice->number }}';
-            const invoiceDate     = '{{ $invoice->generation_date ?? now()->format("Y-m-d") }}';
-            const clientName      = '{{ $invoice->client->name ?? "" }}';
-            const clientLogo      = '{{ $invoice->client->logo ? asset("storage/" . $invoice->client->logo) : "" }}';
-            const companyLogo     = '{{ asset("assets/img/logo.png") }}';
-            const totalEmployees  = '{{ $summary["total_employees"] }}';
-            const totalSalaries   = '{{ number_format($summary["total_salaries"], 2) }}';
-            const totalPaid       = '{{ number_format($summary["total_paid"], 2) }}';
-            const totalRemaining  = '{{ number_format($summary["total_remaining"], 2) }}';
-            const paidCount       = '{{ $summary["paid_employees"] }}';
-            const partialCount    = '{{ $summary["partially_paid_employees"] }}';
-            const unpaidCount     = '{{ $summary["unpaid_employees"] }}';
-            const wpsCount        = '{{ $summary["wps_employees"] }}';
-            const monthlyCount    = '{{ $summary["monthly_employees"] }}';
-            const approvalStatus  = '{{ $invoice->approval_status }}';
-            const revisionStatus  = '{{ $invoice->revision_status }}';
-            const today           = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
-
-            // Build table rows
-            let tableRows = '';
-            document.querySelectorAll('table tbody tr').forEach((row, i) => {
-                const cells = row.querySelectorAll('td');
-                if (!cells.length) return;
-
-                const offset = cells[0].querySelector('input[type="checkbox"]') ? 1 : 0;
-                const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-
-                const id           = cells[offset]?.innerText.trim() || '-';
-                const name         = cells[offset+1]?.innerText.trim() || '-';
-                const project      = cells[offset+2]?.innerText.trim() || '-';
-                const workDays     = cells[offset+3]?.innerText.trim() || '-';
-                const basicSalary  = cells[offset+4]?.innerText.trim() || '-';
-                const bonuses      = cells[offset+5]?.innerText.trim() || '-';
-                const advances     = cells[offset+6]?.innerText.trim() || '-';
-                const deductions   = cells[offset+7]?.innerText.trim() || '-';
-                const netSalary    = cells[offset+8]?.innerText.trim() || '-';
-                const paid         = cells[offset+9]?.innerText.trim() || '-';
-                const remaining    = cells[offset+10]?.innerText.trim() || '-';
-                const salaryType   = cells[offset+11]?.innerText.trim() || '-';
-                const payStatus    = cells[offset+12]?.innerText.trim() || '-';
-                const lastPayment  = cells[offset+13]?.innerText.trim() || '-';
-
-                tableRows += `
-        <tr style="background:${bg};">
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:center;">${id}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;font-weight:600;">${name}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;">${project}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:center;">${workDays}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:right;">${basicSalary}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:right;">${bonuses}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:right;">${advances}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:right;">${deductions}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:right;font-weight:700;">${netSalary}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:right;">${paid}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:right;">${remaining}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:center;">${salaryType}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:center;">${payStatus}</td>
-            <td style="padding:8px;border-bottom:1px solid #e9ecef;text-align:center;">${lastPayment}</td>
-        </tr>`;
-            });
-
-            const approvalBadge = approvalStatus === 'approved'
-                ? `<span style="background:#198754;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;">معتمدة</span>`
-                : approvalStatus === 'rejected'
-                    ? `<span style="background:#dc3545;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;">مرفوضة</span>`
-                    : `<span style="background:#ffc107;color:#000;padding:4px 12px;border-radius:20px;font-size:11px;">قيد الانتظار</span>`;
-
-            const revisionBadge = revisionStatus === 'revision_approved'
-                ? `<span style="background:#198754;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;">مراجعة معتمدة</span>`
-                : revisionStatus === 'revision_rejected'
-                    ? `<span style="background:#dc3545;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;">مراجعة مرفوضة</span>`
-                    : `<span style="background:#0dcaf0;color:#000;padding:4px 12px;border-radius:20px;font-size:11px;">قيد المراجعة</span>`;
-
-            const clientLogoHtml = clientLogo
-                ? `<img src="${clientLogo}" style="height:50px;width:auto;object-fit:contain;" onerror="this.style.display='none'" />`
-                : `<div style="width:50px;height:50px;background:#e9ecef;border-radius:8px;display:flex;align-items:center;justify-content:center;">${clientName.charAt(0)}</div>`;
-
-            const html = `
-    <!DOCTYPE html>
-    <html dir="rtl" lang="ar">
-    <head>
-        <meta charset="UTF-8">
-        <title>كشف رواتب فاتورة #${invoiceNumber}</title>
-        <style>
-            * { margin:0; padding:0; box-sizing:border-box; }
-            body {
-                font-family: 'Tajawal', 'Arial', sans-serif;
-                direction: rtl;
-                background: #fff;
-                color: #1e293b;
-                font-size: 12px;
-                padding: 20px;
-            }
-            .header {
-                background: linear-gradient(135deg, #1e4a46, #2d6a65);
-                color: white;
-                padding: 20px 30px;
-                border-radius: 12px;
-                margin-bottom: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .logos { display: flex; align-items: center; gap: 20px; }
-            .divider { width: 1px; height: 40px; background: rgba(255,255,255,0.3); }
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(6, 1fr);
-                gap: 15px;
-                margin-bottom: 20px;
-            }
-            .stat-card {
-                background: #f8fafc;
-                border: 1px solid #e2e8f0;
-                border-radius: 10px;
-                padding: 15px;
-                text-align: center;
-            }
-            .stat-label { font-size: 11px; color: #64748b; margin-bottom: 5px; }
-            .stat-value { font-size: 18px; font-weight: 700; }
-            .financial-bar {
-                background: linear-gradient(135deg, #1e4a46, #2d6a65);
-                border-radius: 10px;
-                padding: 15px 20px;
-                display: flex;
-                justify-content: space-around;
-                color: white;
-                margin-bottom: 20px;
-            }
-            .fin-item { text-align: center; }
-            .fin-label { font-size: 11px; opacity: 0.8; }
-            .fin-value { font-size: 18px; font-weight: 700; }
-            .fin-value.gold { color: #fbbd08; }
-            .fin-value.green { color: #6ee7b7; }
-            .fin-value.red { color: #fca5a5; }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 11px;
-            }
-            th {
-                background: #1e4a46;
-                color: white;
-                padding: 10px;
-                font-weight: 600;
-            }
-            td {
-                padding: 8px 10px;
-                border-bottom: 1px solid #e2e8f0;
-            }
-            .footer {
-                margin-top: 20px;
-                padding: 15px;
-                background: #f8fafc;
-                border-radius: 8px;
-                text-align: center;
-                color: #64748b;
-                font-size: 10px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <div class="logos">
-                <img src="${companyLogo}" style="height:40px;" onerror="this.style.display='none'">
-                <div class="divider"></div>
-                ${clientLogoHtml}
-            </div>
-            <div>
-                <h2 style="font-size:20px;margin-bottom:5px;">كشف رواتب الموظفين</h2>
-                <div>فاتورة #${invoiceNumber} | ${invoiceDate}</div>
-                <div style="margin-top:8px;display:flex;gap:8px;">${approvalBadge} ${revisionBadge}</div>
-            </div>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card"><div class="stat-label">إجمالي الموظفين</div><div class="stat-value" style="color:#0284c7;">${totalEmployees}</div></div>
-            <div class="stat-card"><div class="stat-label">مدفوع بالكامل</div><div class="stat-value" style="color:#059669;">${paidCount}</div></div>
-            <div class="stat-card"><div class="stat-label">مدفوع جزئياً</div><div class="stat-value" style="color:#d97706;">${partialCount}</div></div>
-            <div class="stat-card"><div class="stat-label">غير مدفوع</div><div class="stat-value" style="color:#dc2626;">${unpaidCount}</div></div>
-            <div class="stat-card"><div class="stat-label">WPS</div><div class="stat-value" style="color:#0891b2;">${wpsCount}</div></div>
-            <div class="stat-card"><div class="stat-label">شهري</div><div class="stat-value" style="color:#4b5563;">${monthlyCount}</div></div>
-        </div>
-
-        <div class="financial-bar">
-            <div class="fin-item"><div class="fin-label">إجمالي الرواتب</div><div class="fin-value gold">${totalSalaries}</div></div>
-            <div style="width:1px;background:rgba(255,255,255,0.2);"></div>
-            <div class="fin-item"><div class="fin-label">المدفوع</div><div class="fin-value green">${totalPaid}</div></div>
-            <div style="width:1px;background:rgba(255,255,255,0.2);"></div>
-            <div class="fin-item"><div class="fin-label">المتبقي</div><div class="fin-value red">${totalRemaining}</div></div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th><th>الموظف</th><th>المشروع</th><th>أيام</th><th>الراتب</th><th>مكافآت</th>
-                    <th>سلف</th><th>خصومات</th><th>صافي</th><th>مدفوع</th><th>متبقي</th><th>النوع</th><th>الحالة</th><th>آخر دفعة</th>
-                </tr>
-            </thead>
-            <tbody>${tableRows}</tbody>
-        </table>
-
-        <div class="footer">
-            <span style="font-weight:700;color:#1e4a46;">نظام الفواتير</span> | تم التصدير: ${today}
-        </div>
-    </body>
-    </html>`;
-
-            const container = document.createElement('div');
-            container.innerHTML = html;
-            document.body.appendChild(container);
-
-            const options = {
-                margin: [10, 10, 10, 10],
-                filename: `كشف_رواتب_فاتورة_${invoiceNumber}_${invoiceDate}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
-            };
-
-            html2pdf().set(options).from(container).save().then(() => {
-                document.body.removeChild(container);
-            });
-        }
+        function exportSalaryPDF() { window._exportSalaryPDF && window._exportSalaryPDF(); }
 
         // ============================================
         // Utility Functions
@@ -1516,3 +1292,201 @@
         }
     </script>
 @endpush
+
+{{-- Inline script so exportSalaryPDF is available globally before @push scripts load --}}
+<script>
+window._exportSalaryPDF = function exportSalaryPDF() {
+    const invoiceNumber   = '{{ $invoice->number }}';
+    const invoiceDate     = '{{ $invoice->generation_date ?? now()->format("Y-m-d") }}';
+    const clientName      = '{{ $invoice->client->name ?? "" }}';
+    const clientLogo      = '{{ $invoice->client->logo ? asset("storage/" . $invoice->client->logo) : "" }}';
+    const companyLogo     = '{{ asset("assets/img/logo.png") }}';
+    const totalEmployees  = '{{ $summary["total_employees"] }}';
+    const totalSalaries   = '{{ number_format($summary["total_salaries"], 2) }}';
+    const totalPaid       = '{{ number_format($summary["total_paid"], 2) }}';
+    const totalRemaining  = '{{ number_format($summary["total_remaining"], 2) }}';
+    const paidCount       = '{{ $summary["paid_employees"] }}';
+    const partialCount    = '{{ $summary["partially_paid_employees"] }}';
+    const unpaidCount     = '{{ $summary["unpaid_employees"] }}';
+    const wpsCount        = '{{ $summary["wps_employees"] }}';
+    const monthlyCount    = '{{ $summary["monthly_employees"] }}';
+    const approvalStatus  = '{{ $invoice->approval_status }}';
+    const revisionStatus  = '{{ $invoice->revision_status }}';
+    const today           = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    let tableRows = '';
+    document.querySelectorAll('table tbody tr').forEach((row, i) => {
+        const cells = row.querySelectorAll('td');
+        if (!cells.length) return;
+        const offset = cells[0].querySelector('input[type="checkbox"]') ? 1 : 0;
+        const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        const id          = cells[offset]?.innerText.trim() || '-';
+        const name        = cells[offset+1]?.innerText.trim() || '-';
+        const project     = cells[offset+2]?.innerText.trim() || '-';
+        const workDays    = cells[offset+3]?.innerText.trim() || '-';
+        const basicSalary = cells[offset+4]?.innerText.trim() || '-';
+        const bonuses     = cells[offset+5]?.innerText.trim() || '-';
+        const advances    = cells[offset+6]?.innerText.trim() || '-';
+        const deductions  = cells[offset+7]?.innerText.trim() || '-';
+        const netSalary   = cells[offset+8]?.innerText.trim() || '-';
+        const paid        = cells[offset+9]?.innerText.trim() || '-';
+        const remaining   = cells[offset+10]?.innerText.trim() || '-';
+        const salaryType  = cells[offset+11]?.innerText.trim() || '-';
+        const payStatus   = cells[offset+12]?.innerText.trim() || '-';
+        const lastPayment = cells[offset+13]?.innerText.trim() || '-';
+
+        let statusBg = '#e2e8f0', statusColor = '#334155';
+        if (payStatus.includes('مدفوع') && !payStatus.includes('جزئ')) { statusBg='#d1fae5'; statusColor='#065f46'; }
+        else if (payStatus.includes('جزئ')) { statusBg='#fed7aa'; statusColor='#92400e'; }
+        else if (payStatus.includes('غير')) { statusBg='#fee2e2'; statusColor='#991b1b'; }
+
+        const typeBg    = salaryType.includes('WPS') ? '#cffafe' : '#e2e8f0';
+        const typeColor = salaryType.includes('WPS') ? '#0e7490' : '#334155';
+
+        const td = 'padding:7px 9px;border-bottom:1px solid #e2e8f0;font-size:11px;vertical-align:middle;';
+        tableRows += `
+        <tr style="background:${bg};">
+            <td style="${td}text-align:center;color:#64748b;">${id}</td>
+            <td style="${td}font-weight:600;color:#1e293b;">${name}</td>
+            <td style="${td}color:#475569;">${project}</td>
+            <td style="${td}text-align:center;font-weight:600;">${workDays}</td>
+            <td style="${td}text-align:right;color:#2563eb;">${basicSalary}</td>
+            <td style="${td}text-align:right;color:#059669;">${bonuses}</td>
+            <td style="${td}text-align:right;color:#dc2626;">${advances}</td>
+            <td style="${td}text-align:right;color:#dc2626;">${deductions}</td>
+            <td style="${td}text-align:right;font-weight:700;color:#059669;">${netSalary}</td>
+            <td style="${td}text-align:right;color:#0891b2;font-weight:600;">${paid}</td>
+            <td style="${td}text-align:right;color:#dc2626;font-weight:600;">${remaining}</td>
+            <td style="${td}text-align:center;"><span style="background:${typeBg};color:${typeColor};padding:2px 8px;border-radius:10px;font-size:10px;">${salaryType}</span></td>
+            <td style="${td}text-align:center;"><span style="background:${statusBg};color:${statusColor};padding:2px 8px;border-radius:10px;font-size:10px;">${payStatus}</span></td>
+            <td style="${td}text-align:center;color:#64748b;">${lastPayment}</td>
+        </tr>`;
+    });
+
+    const approvalBadge = approvalStatus === 'approved'
+        ? `<span style="background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:20px;font-size:11px;">معتمدة</span>`
+        : approvalStatus === 'rejected'
+        ? `<span style="background:#fee2e2;color:#991b1b;padding:4px 12px;border-radius:20px;font-size:11px;">مرفوضة</span>`
+        : `<span style="background:#fef9c3;color:#854d0e;padding:4px 12px;border-radius:20px;font-size:11px;">قيد الانتظار</span>`;
+
+    const revisionBadge = revisionStatus === 'revision_approved'
+        ? `<span style="background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:20px;font-size:11px;">مراجعة معتمدة</span>`
+        : revisionStatus === 'revision_rejected'
+        ? `<span style="background:#fee2e2;color:#991b1b;padding:4px 12px;border-radius:20px;font-size:11px;">مراجعة مرفوضة</span>`
+        : `<span style="background:#cffafe;color:#0e7490;padding:4px 12px;border-radius:20px;font-size:11px;">قيد المراجعة</span>`;
+
+    const clientLogoHtml = clientLogo
+        ? `<img src="${clientLogo}" style="height:45px;width:auto;object-fit:contain;" onerror="this.style.display='none'" />`
+        : `<div style="width:45px;height:45px;background:#e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#475569;">${clientName.charAt(0)}</div>`;
+
+    const thStyle = 'padding:10px 9px;background:#1e4a46;color:#fff;font-weight:600;font-size:11px;white-space:nowrap;border:none;';
+
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>كشف رواتب فاتورة #${invoiceNumber}</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Tahoma','Arial',sans-serif; direction:rtl; background:#fff; color:#1e293b; font-size:12px; padding:16px; word-spacing:normal; letter-spacing:normal; }
+.pdf-header { background:linear-gradient(135deg,#1e4a46,#2d6a65); color:white; padding:18px 24px; border-radius:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+.logos { display:flex; align-items:center; gap:16px; }
+.divider { width:1px; height:40px; background:rgba(255,255,255,0.3); }
+.stats-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:14px; }
+.stat-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; }
+.stat-box .sl { font-size:10px; color:#64748b; margin-bottom:4px; }
+.stat-box .sv { font-size:16px; font-weight:700; }
+.fin-bar { background:linear-gradient(135deg,#1e4a46,#2d6a65); border-radius:8px; padding:12px 20px; display:flex; justify-content:space-around; align-items:center; color:white; margin-bottom:14px; }
+.fi { text-align:center; }
+.fi .fl { font-size:10px; opacity:0.8; margin-bottom:3px; }
+.fi .fv { font-size:16px; font-weight:700; }
+.fi .fv.gold { color:#fbbd08; }
+.fi .fv.green { color:#6ee7b7; }
+.fi .fv.red { color:#fca5a5; }
+table { width:100%; border-collapse:collapse; font-size:11px; }
+thead th { background:#1e4a46; color:#fff; padding:9px 8px; font-weight:600; white-space:nowrap; }
+tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+.pdf-footer { margin-top:14px; padding:10px 16px; background:#f8fafc; border-radius:8px; display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:10px; }
+</style>
+</head>
+<body>
+<div class="pdf-header">
+  <div class="logos">
+    <img src="${companyLogo}" style="height:38px;" onerror="this.style.display='none'">
+    <div class="divider"></div>
+    ${clientLogoHtml}
+  </div>
+  <div style="text-align:left;">
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px;">كشف رواتب الموظفين</div>
+    <div style="font-size:12px;opacity:0.85;">فاتورة #${invoiceNumber} &nbsp;|&nbsp; ${invoiceDate} &nbsp;|&nbsp; ${clientName}</div>
+    <div style="margin-top:8px;display:flex;gap:8px;">${approvalBadge} ${revisionBadge}</div>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-box"><div class="sl">إجمالي الموظفين</div><div class="sv" style="color:#0284c7;">${totalEmployees}</div></div>
+  <div class="stat-box"><div class="sl">مدفوع بالكامل</div><div class="sv" style="color:#059669;">${paidCount}</div></div>
+  <div class="stat-box"><div class="sl">مدفوع جزئياً</div><div class="sv" style="color:#d97706;">${partialCount}</div></div>
+  <div class="stat-box"><div class="sl">غير مدفوع</div><div class="sv" style="color:#dc2626;">${unpaidCount}</div></div>
+  <div class="stat-box"><div class="sl">WPS</div><div class="sv" style="color:#0891b2;">${wpsCount}</div></div>
+  <div class="stat-box"><div class="sl">شهري</div><div class="sv" style="color:#4b5563;">${monthlyCount}</div></div>
+</div>
+
+<div class="fin-bar">
+  <div class="fi"><div class="fl">إجمالي الرواتب</div><div class="fv gold">${totalSalaries} ر.س</div></div>
+  <div style="width:1px;height:36px;background:rgba(255,255,255,0.2);"></div>
+  <div class="fi"><div class="fl">المبلغ المدفوع</div><div class="fv green">${totalPaid} ر.س</div></div>
+  <div style="width:1px;height:36px;background:rgba(255,255,255,0.2);"></div>
+  <div class="fi"><div class="fl">المبلغ المتبقي</div><div class="fv red">${totalRemaining} ر.س</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:center;">#</th>
+      <th style="text-align:right;">اسم الموظف</th>
+      <th style="text-align:right;">المشروع</th>
+      <th style="text-align:center;">أيام العمل</th>
+      <th style="text-align:right;">الراتب الأساسي</th>
+      <th style="text-align:right;">المكافآت</th>
+      <th style="text-align:right;">السلف</th>
+      <th style="text-align:right;">الخصومات</th>
+      <th style="text-align:right;">صافي الراتب</th>
+      <th style="text-align:right;">المدفوع</th>
+      <th style="text-align:right;">المتبقي</th>
+      <th style="text-align:center;">النوع</th>
+      <th style="text-align:center;">حالة الدفع</th>
+      <th style="text-align:center;">آخر دفعة</th>
+    </tr>
+  </thead>
+  <tbody>${tableRows}</tbody>
+</table>
+
+<div class="pdf-footer">
+  <span style="font-weight:700;color:#1e4a46;">نظام الفواتير</span>
+  <span>كشف رواتب فاتورة #${invoiceNumber} — ${clientName}</span>
+  <span>تاريخ التصدير: ${today}</span>
+</div>
+</body>
+</html>`;
+
+    if (typeof html2pdf === 'undefined') {
+        alert('جاري تحميل مكتبة PDF، يرجى المحاولة مرة أخرى بعد ثوانٍ...');
+        return;
+    }
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    html2pdf().set({
+        margin: [8, 8, 8, 8],
+        filename: `كشف_رواتب_فاتورة_${invoiceNumber}_${invoiceDate}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+    }).from(container).save().then(() => {
+        document.body.removeChild(container);
+    });
+};
+</script>

@@ -1408,16 +1408,20 @@ thead th { background:#1e4a46; color:#fff; padding:9px 8px; font-weight:600; whi
 tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
 .pdf-footer {
     margin-top: 20px;
-    padding: 14px 24px;
-    background: #f8fafc;
-    border-radius: 8px;
+    padding: 16px 28px;
+    background: #f1f5f9;
+    border-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #64748b;
+    flex-wrap: wrap;
+    gap: 20px;
+    color: #475569;
     font-size: 12px;
     width: 100%;
-}</style>
+    box-sizing: border-box;
+}
+</style>
 </head>
 <body>
 <div class="pdf-header">

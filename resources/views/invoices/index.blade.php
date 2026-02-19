@@ -910,6 +910,7 @@
     @include('partials.credit-note-modal')
 @endsection
 @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get modal element
@@ -2034,67 +2035,146 @@
             });
         }
 
-        // Export to PDF Function
+        // Export to PDF Function with html2pdf.js
         function exportInvoicesToPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
+            if (typeof html2pdf === 'undefined') {
+                alert('جاري تحميل مكتبة PDF، يرجى المحاولة مرة أخرى بعد ثوانٍ...');
+                return;
+            }
 
-            // Title (using English for now since Arabic needs special font)
-            doc.setFontSize(18);
-            doc.text('Invoices Report - تقرير الفواتير', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+            const companyLogo = '{{ asset("assets/img/logo.png") }}';
+            const today = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+            const todayShort = new Date().toISOString().split('T')[0];
+            
+            const stats = {
+                paid: {{ $stats['paid'] ?? 0 }},
+                pending: {{ $stats['pending'] ?? 0 }},
+                late: {{ $stats['late'] ?? 0 }},
+                cancelled: {{ $stats['cancelled'] ?? 0 }},
+                total: {{ $invoices->total() ?? 0 }}
+            };
 
-            doc.setFontSize(10);
-            const today = new Date();
-            const dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-            doc.text('Report Date: ' + dateStr, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+            // Build table rows from visible table
+            let tableRows = '';
+            document.querySelectorAll('.custom-table tbody tr').forEach((row, i) => {
+                const cells = row.querySelectorAll('td');
+                if (!cells.length) return;
 
-            // Get table data
-            const invoices = @json($invoices->items());
+                const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const invNumber = cells[0]?.innerText.trim() || '-';
+                const clientName = cells[1]?.querySelector('.name')?.innerText.trim() || '-';
+                const serviceName = cells[2]?.innerText.trim() || '-';
+                const issueDate = cells[4]?.innerText.trim() || '-';
+                const basePrice = cells[5]?.innerText.trim() || '-';
+                const taxAmount = cells[6]?.innerText.trim() || '-';
+                const totalPrice = cells[7]?.innerText.trim() || '-';
+                const empCount = cells[8]?.innerText.trim() || '-';
+                const workDays = cells[9]?.innerText.trim() || '-';
+                const statusText = cells[13]?.innerText.trim().split('\n')[0] || '-';
 
-            const tableData = invoices.map(invoice => {
-                const statusMap = {
-                    'paid': 'Paid',
-                    'pending': 'Pending',
-                    'late': 'Late',
-                    'overdue': 'Overdue',
-                    'cancelled': 'Cancelled'
-                };
+                let statusBg = '#e2e8f0', statusColor = '#334155';
+                if (statusText.includes('مدفوعة')) { statusBg='#d1fae5'; statusColor='#065f46'; }
+                else if (statusText.includes('معلقة')) { statusBg='#fef3c7'; statusColor='#92400e'; }
+                else if (statusText.includes('متأخرة')) { statusBg='#fee2e2'; statusColor='#991b1b'; }
+                else if (statusText.includes('ملغاة')) { statusBg='#f3f4f6'; statusColor='#4b5563'; }
 
-                return [
-                    invoice.number || '',
-                    invoice.client?.name || '',
-                    invoice.generation_date || '',
-                    parseFloat(invoice.total_price || 0).toFixed(0) + ' SAR',
-                    parseFloat(invoice.paid_amount || 0).toFixed(0) + ' SAR',
-                    parseFloat(invoice.remaining_amount || 0).toFixed(0) + ' SAR',
-                    statusMap[invoice.payment_status] || invoice.payment_status
-                ];
+                const td = 'padding:7px 8px;border-bottom:1px solid #e2e8f0;font-size:10px;vertical-align:middle;';
+                tableRows += `
+                <tr style="background:${bg};">
+                    <td style="${td}text-align:center;color:#10a37f;font-weight:700;">${invNumber}</td>
+                    <td style="${td}font-weight:600;color:#1e293b;">${clientName}</td>
+                    <td style="${td}color:#475569;">${serviceName}</td>
+                    <td style="${td}text-align:center;color:#64748b;">${issueDate}</td>
+                    <td style="${td}text-align:right;color:#2563eb;">${basePrice}</td>
+                    <td style="${td}text-align:right;color:#d97706;">${taxAmount}</td>
+                    <td style="${td}text-align:right;font-weight:700;color:#059669;">${totalPrice}</td>
+                    <td style="${td}text-align:center;"><span style="background:#e6fffa;color:#319795;padding:4px 8px;border-radius:50%;font-weight:700;font-size:9px;">${empCount}</span></td>
+                    <td style="${td}text-align:center;color:#64748b;">${workDays}</td>
+                    <td style="${td}text-align:center;"><span style="background:${statusBg};color:${statusColor};padding:3px 10px;border-radius:12px;font-size:9px;font-weight:600;">${statusText}</span></td>
+                </tr>`;
             });
 
-            // Add table
-            doc.autoTable({
-                head: [['Invoice #', 'Client', 'Issue Date', 'Total Amount', 'Paid Amount', 'Remaining', 'Status']],
-                body: tableData,
-                startY: 30,
-                styles: {
-                    font: 'helvetica',
-                    fontSize: 9,
-                    halign: 'center'
-                },
-                headStyles: {
-                    fillColor: [30, 74, 70],
-                    textColor: 255,
-                    fontStyle: 'bold'
-                },
-                alternateRowStyles: {
-                    fillColor: [245, 245, 245]
-                }
+            const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تقرير الفواتير</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Tahoma','Arial',sans-serif; direction:rtl; background:#fff; color:#1e293b; font-size:12px; padding:16px; word-spacing:normal; letter-spacing:normal; }
+.pdf-header { background:linear-gradient(135deg,#1e4a46,#2d6a65); color:white; padding:18px 24px; border-radius:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+.pdf-header-title { text-align:right; }
+.pdf-header-title h1 { font-size:22px; font-weight:700; margin-bottom:6px; }
+.pdf-header-title p { font-size:12px; opacity:0.85; }
+.logo-box { display:flex; align-items:center; }
+.stats-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
+.stat-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; text-align:center; }
+.stat-box .sl { font-size:10px; color:#64748b; margin-bottom:4px; }
+.stat-box .sv { font-size:18px; font-weight:700; }
+table { width:100%; border-collapse:collapse; font-size:10px; }
+thead th { background:#1e4a46; color:#fff; padding:9px 8px; font-weight:600; white-space:nowrap; font-size:10px; }
+tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+.pdf-footer { margin-top:16px; padding:12px 20px; background:#f8fafc; border-radius:8px; display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:10px; }
+</style>
+</head>
+<body>
+<div class="pdf-header">
+  <div class="pdf-header-title">
+    <h1>تقرير الفواتير</h1>
+    <p>نظام إدارة الفواتير — تقرير شامل لجميع الفواتير</p>
+  </div>
+  <div class="logo-box">
+    <img src="${companyLogo}" style="height:42px;" onerror="this.style.display='none'">
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-box"><div class="sl">إجمالي الفواتير</div><div class="sv" style="color:#0284c7;">${stats.total}</div></div>
+  <div class="stat-box"><div class="sl">مدفوعة</div><div class="sv" style="color:#059669;">${stats.paid}</div></div>
+  <div class="stat-box"><div class="sl">معلقة</div><div class="sv" style="color:#d97706;">${stats.pending}</div></div>
+  <div class="stat-box"><div class="sl">متأخرة</div><div class="sv" style="color:#dc2626;">${stats.late}</div></div>
+  <div class="stat-box"><div class="sl">ملغاة</div><div class="sv" style="color:#6b7280;">${stats.cancelled}</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:center;">رقم الفاتورة</th>
+      <th style="text-align:right;">العميل</th>
+      <th style="text-align:right;">الخدمة</th>
+      <th style="text-align:center;">تاريخ الإصدار</th>
+      <th style="text-align:right;">المبلغ الأساسي</th>
+      <th style="text-align:right;">الضريبة</th>
+      <th style="text-align:right;">الإجمالي</th>
+      <th style="text-align:center;">الموظفين</th>
+      <th style="text-align:center;">أيام العمل</th>
+      <th style="text-align:center;">الحالة</th>
+    </tr>
+  </thead>
+  <tbody>${tableRows}</tbody>
+</table>
+
+<div class="pdf-footer">
+  <span style="font-weight:700;color:#1e4a46;">نظام إدارة الفواتير</span>
+  <span>تقرير الفواتير — تاريخ التصدير: ${today}</span>
+</div>
+</body>
+</html>`;
+
+            const container = document.createElement('div');
+            container.innerHTML = html;
+            document.body.appendChild(container);
+
+            html2pdf().set({
+                margin: [8, 8, 8, 8],
+                filename: `تقرير_الفواتير_${todayShort}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+            }).from(container).save().then(() => {
+                document.body.removeChild(container);
+                if (window.toastr) toastr.success('تم تصدير الفواتير إلى PDF بنجاح');
             });
-
-            // Save PDF
-            doc.save('invoices_' + new Date().toISOString().split('T')[0] + '.pdf');
-
-            if (window.toastr) toastr.success('Invoices exported to PDF successfully');
         }
 
         // Export to Excel Function

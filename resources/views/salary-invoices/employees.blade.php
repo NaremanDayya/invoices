@@ -1411,15 +1411,21 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
 </head>
 <body>
 <div class="pdf-header">
-  <div class="logos">
-    <img src="${companyLogo}" style="height:38px;" onerror="this.style.display='none'">
-    <div class="divider"></div>
-    ${clientLogoHtml}
+  <div style="text-align:right;">
+    <div style="font-size:20px;font-weight:700;margin-bottom:6px;">كشف رواتب الموظفين</div>
+    <div style="font-size:12px;opacity:0.85;margin-bottom:4px;">
+      <span>فاتورة رقم: ${invoiceNumber}</span>
+      <span style="margin:0 8px;opacity:0.5;">|</span>
+      <span>التاريخ: ${invoiceDate}</span>
+      <span style="margin:0 8px;opacity:0.5;">|</span>
+      <span>العميل: ${clientName}</span>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">${approvalBadge} ${revisionBadge}</div>
   </div>
-  <div style="text-align:left;">
-    <div style="font-size:18px;font-weight:700;margin-bottom:4px;">كشف رواتب الموظفين</div>
-    <div style="font-size:12px;opacity:0.85;">فاتورة #${invoiceNumber} &nbsp;|&nbsp; ${invoiceDate} &nbsp;|&nbsp; ${clientName}</div>
-    <div style="margin-top:8px;display:flex;gap:8px;">${approvalBadge} ${revisionBadge}</div>
+  <div class="logos">
+    ${clientLogoHtml}
+    <div class="divider"></div>
+    <img src="${companyLogo}" style="height:38px;" onerror="this.style.display='none'">
   </div>
 </div>
 

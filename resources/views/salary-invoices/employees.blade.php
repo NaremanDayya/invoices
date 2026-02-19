@@ -639,7 +639,11 @@ document.getElementById('revisionForm')?.addEventListener('submit', async functi
                 text: data.message,
                 confirmButtonText: 'حسناً'
             }).then(() => {
-                location.reload();
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    location.reload();
+                }
             });
         } else {
             Swal.fire({

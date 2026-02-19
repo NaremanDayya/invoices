@@ -231,6 +231,7 @@ class ChatBox extends Component
 
         // Dispatch events for UI updates
         $this->dispatch('messageSent');
+        $this->dispatch('message-sent');
         $this->dispatch('scroll-bottom');
 
         $this->selectedConversation->updated_at = now();

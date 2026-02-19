@@ -39,115 +39,173 @@
             flex-direction: column;
         }
 
-        /* Header Styles */
-        .main-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        /* Modern Topbar Styles */
+        .modern-topbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid #e2e8f0;
         }
 
-        .header-content {
+        .topbar-wrapper {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 1rem 0;
+            min-height: 70px;
         }
 
-        .brand-info {
+        .topbar-brand {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
-        .logo-container {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
+        .brand-text {
+            display: flex;
+            flex-direction: column;
         }
 
-        .system-name {
-            font-weight: 700;
-            color: white;
-            font-size: 1.5rem;
+        .brand-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #1e4a46;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: #64748b;
             margin: 0;
         }
 
-        .system-subtitle {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            margin: 0;
-        }
-
-        .user-info {
+        .topbar-actions {
             display: flex;
             align-items: center;
             gap: 1.5rem;
         }
 
-        .user-details {
+        .current-date {
+            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 1rem;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
         }
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .user-text {
-            color: white;
-        }
-
-        .user-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .user-role {
-            font-size: 0.8rem;
-            opacity: 0.9;
-        }
-
-        .icon-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
-            color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+        .topbar-icon-wrapper {
             position: relative;
         }
 
-        .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ef4444;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 0.7rem;
+        .topbar-icon-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .topbar-icon-btn:hover {
+            background: #f1f5f9;
+            color: #1e4a46;
+        }
+
+        .icon-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border: 2px solid white;
+        }
+
+        .user-profile-section {
+            position: relative;
+        }
+
+        .user-profile-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .user-profile-btn:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+        }
+
+        .profile-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.2;
+        }
+
+        .profile-role {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .dropdown-menu {
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem;
+            min-width: 200px;
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-item:hover {
+            background: #f1f5f9;
+        }
+
+        .dropdown-item.text-danger:hover {
+            background: #fee2e2;
         }
 
         /* Navigation */
@@ -260,7 +318,33 @@
                 border-radius: 0;
             }
 
-            .user-details {
+            .brand-text {
+                display: none;
+            }
+
+            .topbar-wrapper {
+                padding: 0.75rem 0;
+            }
+
+            .topbar-actions {
+                gap: 0.75rem;
+            }
+
+            .current-date {
+                display: none !important;
+            }
+
+            .user-profile-btn {
+                padding: 0.5rem;
+            }
+
+            .profile-info {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .topbar-icon-wrapper {
                 display: none;
             }
         }
@@ -269,70 +353,77 @@
 </head>
 
 <body>
-<!-- Header Section -->
-<header class="main-header">
-    <div class="container">
-        <div class="header-content">
-            <!-- Brand Info -->
-            <div class="brand-info">
-                {{--                <div class="logo-container">--}}
-                {{--                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="h-10 w-auto">--}}
-                {{--                </div>--}}
-                <div>
-                    <h1 class="system-name">نظام إدارة الفواتير</h1>
-                    <p class="system-subtitle">الحل المتكامل لإدارة الفواتير والمستحقات</p>
+<!-- Modern Header Section -->
+<header class="modern-topbar">
+    <div class="container-fluid px-4">
+        <div class="topbar-wrapper">
+            <!-- Left Section: Brand -->
+            <div class="topbar-brand">
+                <i class="fas fa-file-invoice-dollar text-warning me-2" style="font-size: 1.5rem;"></i>
+                <div class="brand-text">
+                    <h1 class="brand-title">نظام فواتيرك</h1>
+                    <p class="brand-subtitle">إدارة الفواتير والمحادثات</p>
                 </div>
             </div>
 
-            <!-- User Controls -->
-            <div class="user-info">
-                <!-- Notifications -->
-                <button class="icon-btn">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">3</span>
-                </button>
-
-                {{--                <!-- Messages -->--}}
-                {{--                <button class="icon-btn">--}}
-                {{--                    <i class="fas fa-envelope"></i>--}}
-                {{--                    <span class="notification-badge">5</span>--}}
-                {{--                </button>--}}
-
-                <!-- User Profile -->
-                <!-- User Profile -->
-                <div class="user-details">
-                    <div class="relative group">
-                        <img src="{{ asset(Auth::user()->personal_image) }}" alt="User Avatar" id="profileImage"
-                             class="user-avatar">
-
-                        <button type="button"
-                                class="absolute -top-2 -right-2 bg-white text-gray-800 rounded-full p-1 hover:bg-gray-200 transition-all duration-200 shadow-md"
-                                onclick="document.getElementById('profilePhotoInput').click()">
-                            <i class="bi bi-pencil-fill text-xs"></i>
-                        </button>
-
-                        <form id="avatarUploadForm" action="{{ route('admin.updatePhoto') }}" method="POST"
-                              enctype="multipart/form-data">
-                            @csrf
-                            <input type="file" id="profilePhotoInput" name="personal_image"
-                                   accept="image/jpeg,image/png,image/gif" style="display: none;">
-                        </form>
-                    </div>
-
-                    <div class="user-text">
-                        <div class="user-name">{{ Auth::user()->name ?? 'المستخدم' }}</div>
-                        <div class="user-role">مدير النظام</div>
-                    </div>
+            <!-- Right Section: User Controls -->
+            <div class="topbar-actions">
+                <!-- Current Date -->
+                <div class="current-date d-none d-md-block">
+                    <i class="bi bi-calendar3 me-2"></i>
+                    <span>{{ now()->translatedFormat('l, d F Y') }}</span>
                 </div>
 
-
-                <!-- Logout -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="icon-btn" title="تسجيل الخروج">
-                        <i class="fas fa-sign-out-alt"></i>
+                <!-- Notifications -->
+                <div class="topbar-icon-wrapper">
+                    <button class="topbar-icon-btn">
+                        <i class="bi bi-bell"></i>
+                        <span class="icon-badge">3</span>
                     </button>
-                </form>
+                </div>
+
+                <!-- Messages Counter -->
+                <livewire:unread-messages-count />
+
+                <!-- User Profile Dropdown -->
+                <div class="user-profile-section">
+                    <div class="dropdown">
+                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{{ asset(Auth::user()->personal_image ?? 'assets/img/default-avatar.png') }}" 
+                                 alt="User Avatar" 
+                                 class="profile-avatar">
+                            <div class="profile-info d-none d-lg-block">
+                                <span class="profile-name">{{ Auth::user()->name ?? 'المستخدم' }}</span>
+                                <span class="profile-role">{{ Auth::user()->getRoleName() ?? 'مدير النظام' }}</span>
+                            </div>
+                            <i class="bi bi-chevron-down ms-2"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="document.getElementById('profilePhotoInput').click(); return false;">
+                                    <i class="bi bi-person-circle me-2"></i>
+                                    تحديث الصورة الشخصية
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-left me-2"></i>
+                                        تسجيل الخروج
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Hidden Photo Upload Form -->
+                    <form id="avatarUploadForm" action="{{ route('admin.updatePhoto') }}" method="POST" enctype="multipart/form-data" style="display: none;">
+                        @csrf
+                        <input type="file" id="profilePhotoInput" name="personal_image" accept="image/jpeg,image/png,image/gif">
+                    </form>
+                </div>
             </div>
         </div>
     </div>

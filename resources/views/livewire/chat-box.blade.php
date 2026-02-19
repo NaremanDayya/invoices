@@ -133,18 +133,15 @@
             </button>
 
             <!-- زر الإرسال -->
-            <button wire:click="sendMessage"
-                    wire:keydown.enter.prevent
+            <button id="send-message-btn"
                     class="btn btn-success"
-                    type="button"
-                {{ empty(trim($message)) ? 'disabled' : '' }}>
+                    type="button">
                 <i class="bi bi-send"></i>
             </button>
 
             <!-- حقل الإدخال الرئيسي -->
             <input type="text"
-                   wire:model="message"
-                   wire:keydown.enter.prevent="sendMessage"
+                   wire:model.defer="message"
                    class="form-control border-success"
                    placeholder="اكتب رسالتك حول الفاتورة..."
                    aria-label="الرسالة"
@@ -786,6 +783,18 @@
                 messageInput.focus();
             }
 
+            // معالج زر الإرسال
+            const sendBtn = document.getElementById('send-message-btn');
+            if (sendBtn) {
+                sendBtn.addEventListener('click', function() {
+                    const messageText = messageInput.value.trim();
+                    if (messageText) {
+                        @this.set('message', messageText);
+                        @this.call('sendMessage');
+                    }
+                });
+            }
+
             // التمرير التلقائي بعد تحديثات Livewire (عند إضافة رسائل جديدة)
             Livewire.hook('morph.updated', ({ el, component }) => {
                 if (el.id === 'messages-list') {
@@ -798,8 +807,11 @@
                 messageInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        if (messageInput.value.trim()) {
-                            Livewire.dispatch('sendMessage');
+                        const messageText = messageInput.value.trim();
+                        if (messageText) {
+                            // Update Livewire model before sending
+                            @this.set('message', messageText);
+                            @this.call('sendMessage');
                         }
                     }
                 });
@@ -852,8 +864,13 @@
             // مسح حقل الإدخال بعد الإرسال
             Livewire.on('message-sent', () => {
                 if (messageInput) {
+                    messageInput.value = '';
                     messageInput.focus();
                 }
+                // Auto-scroll to bottom after sending
+                setTimeout(() => {
+                    scrollToBottom();
+                }, 100);
             });
 
             // ========== وظيفية لصق الصور والمرفقات ==========

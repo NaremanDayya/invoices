@@ -219,6 +219,37 @@ class InvoiceEmployee extends Pivot
         return $this->remaining_amount > 0 && $this->invoice->isApproved();
     }
 
+    /**
+     * Ensure wps_accepted_amount is initialized for employees imported before the column existed.
+     * Calculates it from wps_amount minus already-paid WPS, then persists it.
+     */
+    public function ensureWpsAcceptedAmount()
+    {
+        $currentAmount = (float) ($this->wps_accepted_amount ?? 0);
+
+        if (($this->payment_method === 'wps' || $this->salary_type === 'wps') && $currentAmount <= 0) {
+            $wpsAmount = (float) ($this->wps_amount ?? 0);
+
+            // If wps_amount is also not set, calculate from system percentage
+            if ($wpsAmount <= 0) {
+                $wpsMaxPercentage = Setting::get('wps_max_percentage', 70);
+                $netSalary = (float) ($this->net_salary ?? $this->total_salary ?? 0);
+                $wpsAmount = ($netSalary * $wpsMaxPercentage) / 100;
+            }
+
+            $alreadyPaidWps = (float) $this->payments()->where('payment_mode', 'wps')->sum('payment_amount');
+            $this->wps_accepted_amount = max(0, $wpsAmount - $alreadyPaidWps);
+
+            try {
+                $this->saveQuietly();
+            } catch (\Exception $e) {
+                // Column may not exist yet — value is still set in memory for this request
+            }
+        }
+
+        return (float) ($this->wps_accepted_amount ?? 0);
+    }
+
     public function validatePaymentAmount($amount, $paymentMode = 'monthly')
     {
         if ($amount <= 0) {
@@ -230,7 +261,7 @@ class InvoiceEmployee extends Pivot
         }
 
         if ($paymentMode === 'wps') {
-            $remainingWps = $this->wps_accepted_amount ?? 0;
+            $remainingWps = $this->ensureWpsAcceptedAmount();
 
             if ($amount > $remainingWps) {
                 throw new \Exception(
@@ -284,8 +315,7 @@ class InvoiceEmployee extends Pivot
 
     public function getMaxWpsPaymentAttribute()
     {
-        // Use wps_accepted_amount as the source of truth for remaining WPS allowance
-        $remainingWpsAllowance = $this->wps_accepted_amount ?? 0;
+        $remainingWpsAllowance = $this->ensureWpsAcceptedAmount();
 
         // Return the minimum of remaining WPS allowance and remaining salary amount
         return max(0, min($remainingWpsAllowance, $this->remaining_amount));

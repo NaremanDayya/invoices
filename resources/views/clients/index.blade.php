@@ -520,16 +520,16 @@
                 const taxNumber = cells[3]?.querySelector('code')?.innerText.trim() || cells[3]?.innerText.trim() || '-';
                 const invoicesCount = cells[4]?.innerText.trim() || '0';
 
-                const td = 'padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:middle;';
+                const td = 'padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;';
                 tableRows += `
                 <tr style="background:${bg};">
                     <td style="${td}">
-                        <div style="font-weight:700;color:#1e293b;margin-bottom:4px;font-size:14px;">${clientName}</div>
-                        <div style="font-size:11px;color:#64748b;">${address}</div>
+                        <div style="font-weight:700;color:#1e293b;margin-bottom:4px;font-size:14px;line-height:1.4;word-wrap:break-word;">${clientName}</div>
+                        <div style="font-size:11px;color:#64748b;line-height:1.3;word-wrap:break-word;">${address}</div>
                     </td>
-                    <td style="${td}color:#64748b;">${email}</td>
-                    <td style="${td}color:#64748b;text-align:left;" dir="ltr">${phone}</td>
-                    <td style="${td}text-align:center;"><code style="background:#f1f5f9;padding:4px 10px;border-radius:6px;font-size:12px;">${taxNumber}</code></td>
+                    <td style="${td}color:#64748b;line-height:1.4;">${email}</td>
+                    <td style="${td}color:#64748b;text-align:left;line-height:1.4;" dir="ltr">${phone}</td>
+                    <td style="${td}text-align:center;"><code style="background:#f1f5f9;padding:4px 10px;border-radius:6px;font-size:12px;word-wrap:break-word;">${taxNumber}</code></td>
                     <td style="${td}text-align:center;"><span style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:6px 14px;border-radius:14px;font-size:12px;font-weight:600;">${invoicesCount}</span></td>
                 </tr>`;
             });
@@ -551,9 +551,14 @@ body { font-family:'Tahoma','Arial',sans-serif; direction:rtl; background:#fff; 
 .stat-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; text-align:center; }
 .stat-box .sl { font-size:12px; color:#64748b; margin-bottom:6px; font-weight:500; }
 .stat-box .sv { font-size:24px; font-weight:700; }
-table { width:100%; border-collapse:collapse; font-size:13px; }
+table { width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
 thead th { background:#1e4a46; color:#fff; padding:14px 12px; font-weight:600; white-space:nowrap; font-size:13px; }
-tbody td { padding:12px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+thead th:nth-child(1) { width:25%; }
+thead th:nth-child(2) { width:22%; }
+thead th:nth-child(3) { width:18%; }
+thead th:nth-child(4) { width:20%; }
+thead th:nth-child(5) { width:15%; }
+tbody td { padding:12px; border-bottom:1px solid #e2e8f0; vertical-align:middle; word-wrap:break-word; overflow-wrap:break-word; }
 .pdf-footer { margin-top:20px; padding:16px 24px; background:#f8fafc; border-radius:10px; display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:12px; }
 </style>
 </head>

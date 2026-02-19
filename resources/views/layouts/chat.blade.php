@@ -355,28 +355,28 @@
 <body>
 <!-- Modern Header Section -->
 <header class="modern-topbar">
-    <div class="container-fluid px-4" style="background-color: #3d7a76;">
+    <div class="container-fluid px-4" style="background-color: #326462;">
         <div class="topbar-wrapper">
             <!-- Left Section: Brand -->
             <div class="topbar-brand">
-                <i class="fas fa-file-invoice-dollar text-warning me-2" style="font-size: 1.5rem;"></i>
+                <i class="fas fa-file-invoice-dollar me-2" style="font-size: 1.5rem; color: #fbbd08;"></i>
                 <div class="brand-text">
-                    <h1 class="brand-title">نظام فواتيرك</h1>
-                    <p class="brand-subtitle">إدارة الفواتير والمحادثات</p>
+                    <h1 class="brand-title" style="color: white;">نظام فواتيرك</h1>
+                    <p class="brand-subtitle" style="color: rgba(255, 255, 255, 0.85);">إدارة الفواتير والمحادثات</p>
                 </div>
             </div>
 
             <!-- Right Section: User Controls -->
             <div class="topbar-actions">
                 <!-- Current Date -->
-                <div class="current-date d-none d-md-block">
+                <div class="current-date d-none d-md-block" style="color: rgba(255, 255, 255, 0.9);">
                     <i class="bi bi-calendar3 me-2"></i>
                     <span>{{ now()->translatedFormat('l, d F Y') }}</span>
                 </div>
 
                 <!-- Notifications -->
                 <div class="topbar-icon-wrapper">
-                    <button class="topbar-icon-btn">
+                    <button class="topbar-icon-btn" style="color: white;">
                         <i class="bi bi-bell"></i>
                         <span class="icon-badge">3</span>
                     </button>
@@ -388,15 +388,15 @@
                 <!-- User Profile Dropdown -->
                 <div class="user-profile-section">
                     <div class="dropdown">
-                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3);">
                             <img src="{{ asset(Auth::user()->personal_image ?? 'assets/img/default-avatar.png') }}"
                                  alt="User Avatar"
                                  class="profile-avatar">
                             <div class="profile-info d-none d-lg-block">
-                                <span class="profile-name">{{ Auth::user()->name ?? 'المستخدم' }}</span>
-                                <span class="profile-role">{{ Auth::user()->getRoleName() ?? 'مدير النظام' }}</span>
+                                <span class="profile-name" style="color: white;">{{ Auth::user()->name ?? 'المستخدم' }}</span>
+                                <span class="profile-role" style="color: rgba(255, 255, 255, 0.8);">{{ Auth::user()->getRoleName() ?? 'مدير النظام' }}</span>
                             </div>
-                            <i class="bi bi-chevron-down ms-2"></i>
+                            <i class="bi bi-chevron-down ms-2" style="color: white;"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="userDropdown">
                             <li>

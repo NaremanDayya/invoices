@@ -446,6 +446,21 @@
                 window.addEventListener('selectConversation', function(event) {
                     console.log('المحادثة المختارة:', event.detail.id);
                 });
+
+                // Ensure modal works with Livewire
+                Livewire.hook('morph.updated', ({ el, component }) => {
+                    // Reinitialize Bootstrap modals after Livewire updates
+                    const modalEl = document.getElementById('clientSelectionModal');
+                    if (modalEl && typeof bootstrap !== 'undefined') {
+                        // Dispose old instance if exists
+                        const oldModal = bootstrap.Modal.getInstance(modalEl);
+                        if (oldModal) {
+                            oldModal.dispose();
+                        }
+                        // Create new instance
+                        new bootstrap.Modal(modalEl);
+                    }
+                });
             });
         </script>
         <script>

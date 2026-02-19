@@ -16,7 +16,10 @@
                 </ol>
             </nav>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-dark" onclick="exportSalaryPDF()">
+                <i class="bi bi-file-earmark-pdf me-2"></i>تصدير PDF
+            </button>
             <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-right me-2"></i>رجوع للفاتورة
             </a>
@@ -1380,6 +1383,376 @@ function formatNumber(num) {
 
 // Load WPS settings on page load
 document.addEventListener('DOMContentLoaded', loadWpsSettings);
+</script>
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function exportSalaryPDF() {
+    const invoiceNumber   = '{{ $invoice->number }}';
+    const invoiceDate     = '{{ $invoice->generation_date ?? now()->format("Y-m-d") }}';
+    const clientName      = '{{ $invoice->client->name ?? "" }}';
+    const clientLogo      = '{{ $invoice->client->logo ? asset("storage/" . $invoice->client->logo) : "" }}';
+    const companyLogo     = '{{ asset("assets/img/logo.png") }}';
+    const totalEmployees  = '{{ $summary["total_employees"] }}';
+    const totalSalaries   = '{{ number_format($summary["total_salaries"], 2) }}';
+    const totalPaid       = '{{ number_format($summary["total_paid"], 2) }}';
+    const totalRemaining  = '{{ number_format($summary["total_remaining"], 2) }}';
+    const paidCount       = '{{ $summary["paid_employees"] }}';
+    const partialCount    = '{{ $summary["partially_paid_employees"] }}';
+    const unpaidCount     = '{{ $summary["unpaid_employees"] }}';
+    const wpsCount        = '{{ $summary["wps_employees"] }}';
+    const monthlyCount    = '{{ $summary["monthly_employees"] }}';
+    const approvalStatus  = '{{ $invoice->approval_status }}';
+    const revisionStatus  = '{{ $invoice->revision_status }}';
+    const today           = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Build rows from the live table
+    const tdStyle = 'padding:6px 8px;border-bottom:1px solid #e9ecef;font-size:11px;vertical-align:middle;';
+    const sourceRows = document.querySelectorAll('table tbody tr');
+    let tableRows = '';
+    sourceRows.forEach((row, i) => {
+        const cells = row.querySelectorAll('td');
+        if (!cells.length) return;
+        // Skip checkbox cell if present (first cell with input)
+        const offset = cells[0].querySelector('input[type="checkbox"]') ? 1 : 0;
+        const bg = i % 2 === 0 ? '#ffffff' : '#f8fafb';
+
+        const id           = cells[offset]?.innerText.trim()     || '-';
+        const name         = cells[offset+1]?.innerText.trim()   || '-';
+        const project      = cells[offset+2]?.innerText.trim()   || '-';
+        const workDays     = cells[offset+3]?.innerText.trim()   || '-';
+        const basicSalary  = cells[offset+4]?.innerText.trim()   || '-';
+        const bonuses      = cells[offset+5]?.innerText.trim()   || '-';
+        const advances     = cells[offset+6]?.innerText.trim()   || '-';
+        const monthlyDed   = cells[offset+7]?.innerText.trim()   || '-';
+        const otherDed     = cells[offset+8]?.innerText.trim()   || '-';
+        const netSalary    = cells[offset+9]?.innerText.trim()   || '-';
+        const paid         = cells[offset+10]?.innerText.trim()  || '-';
+        const remaining    = cells[offset+11]?.innerText.trim()  || '-';
+        const salaryType   = cells[offset+12]?.innerText.trim()  || '-';
+        const payStatus    = cells[offset+13]?.innerText.trim()  || '-';
+        const lastPayment  = cells[offset+14]?.innerText.trim()  || '-';
+
+        let statusColor = '#6c757d';
+        if (payStatus.includes('مدفوع') && !payStatus.includes('جزئ')) statusColor = '#198754';
+        else if (payStatus.includes('جزئ')) statusColor = '#fd7e14';
+        else if (payStatus.includes('غير')) statusColor = '#dc3545';
+
+        let typeColor = salaryType.includes('WPS') ? '#0dcaf0' : '#6c757d';
+
+        tableRows += `
+        <tr style="background:${bg};">
+            <td style="${tdStyle}text-align:center;color:#6c757d;font-size:11px;">${id}</td>
+            <td style="${tdStyle}font-weight:700;color:#1e4a46;">${name}</td>
+            <td style="${tdStyle}color:#555;">${project}</td>
+            <td style="${tdStyle}text-align:center;">${workDays}</td>
+            <td style="${tdStyle}text-align:left;color:#0d6efd;font-weight:600;">${basicSalary}</td>
+            <td style="${tdStyle}text-align:left;color:#198754;">${bonuses}</td>
+            <td style="${tdStyle}text-align:left;color:#dc3545;">${advances}</td>
+            <td style="${tdStyle}text-align:left;color:#fd7e14;">${monthlyDed}</td>
+            <td style="${tdStyle}text-align:left;color:#dc3545;">${otherDed}</td>
+            <td style="${tdStyle}text-align:left;font-weight:700;color:#198754;font-size:12px;">${netSalary}</td>
+            <td style="${tdStyle}text-align:left;color:#0dcaf0;font-weight:600;">${paid}</td>
+            <td style="${tdStyle}text-align:left;color:#dc3545;font-weight:600;">${remaining}</td>
+            <td style="${tdStyle}text-align:center;"><span style="background:${typeColor};color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;">${salaryType}</span></td>
+            <td style="${tdStyle}text-align:center;"><span style="background:${statusColor};color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;">${payStatus}</span></td>
+            <td style="${tdStyle}text-align:center;font-size:11px;color:#888;">${lastPayment}</td>
+        </tr>`;
+    });
+
+    const approvalBadge = approvalStatus === 'approved'
+        ? `<span style="background:#198754;color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;">معتمدة</span>`
+        : approvalStatus === 'rejected'
+        ? `<span style="background:#dc3545;color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;">مرفوضة</span>`
+        : `<span style="background:#ffc107;color:#000;padding:3px 10px;border-radius:12px;font-size:11px;">قيد الانتظار</span>`;
+
+    const revisionBadge = revisionStatus === 'revision_approved'
+        ? `<span style="background:#198754;color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;">مراجعة معتمدة</span>`
+        : revisionStatus === 'revision_rejected'
+        ? `<span style="background:#dc3545;color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;">مراجعة مرفوضة</span>`
+        : `<span style="background:#0dcaf0;color:#000;padding:3px 10px;border-radius:12px;font-size:11px;">قيد المراجعة</span>`;
+
+    const clientLogoHtml = clientLogo
+        ? `<img src="${clientLogo}" style="height:50px;max-width:120px;object-fit:contain;" onerror="this.style.display='none'" />`
+        : `<div style="width:50px;height:50px;background:#e9ecef;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#888;">${clientName.charAt(0)}</div>`;
+
+    const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+                font-family: 'Arial', 'Tahoma', sans-serif;
+                direction: rtl;
+                color: #2d3748;
+                background: #fff;
+                font-size: 12px;
+            }
+            .page { padding: 0; }
+
+            /* ── Header ── */
+            .pdf-header {
+                background: linear-gradient(135deg, #1e4a46 0%, #2d6a65 60%, #326462 100%);
+                color: #fff;
+                padding: 20px 28px 16px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .pdf-header .logos { display: flex; align-items: center; gap: 16px; }
+            .pdf-header .company-logo img { height: 52px; object-fit: contain; filter: brightness(0) invert(1); }
+            .pdf-header .divider { width: 1px; height: 50px; background: rgba(255,255,255,0.3); }
+            .pdf-header .client-logo { display: flex; align-items: center; gap: 8px; }
+            .pdf-header .client-logo-label { font-size: 10px; opacity: 0.8; }
+            .pdf-header .title-block { text-align: left; }
+            .pdf-header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+            .pdf-header .subtitle { font-size: 11px; opacity: 0.85; margin-top: 4px; }
+            .pdf-header .accent-bar {
+                height: 3px;
+                background: linear-gradient(90deg, #fbbd08, #f59e0b);
+                margin-top: 14px;
+                border-radius: 2px;
+            }
+
+            /* ── Meta strip ── */
+            .meta-strip {
+                background: #f8fafb;
+                border-bottom: 2px solid #e2e8f0;
+                padding: 10px 28px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .meta-item { display: flex; flex-direction: column; align-items: center; }
+            .meta-item .label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+            .meta-item .value { font-size: 12px; font-weight: 700; color: #1e4a46; margin-top: 2px; }
+
+            /* ── Summary cards ── */
+            .summary-section { padding: 14px 28px 10px; }
+            .summary-title { font-size: 11px; font-weight: 700; color: #1e4a46; margin-bottom: 8px; border-right: 3px solid #fbbd08; padding-right: 8px; }
+            .summary-grid { display: flex; gap: 10px; }
+            .summary-card {
+                flex: 1;
+                border-radius: 8px;
+                padding: 10px 12px;
+                text-align: center;
+                border: 1px solid;
+            }
+            .summary-card .s-label { font-size: 9px; color: #666; margin-bottom: 4px; }
+            .summary-card .s-value { font-size: 15px; font-weight: 800; }
+            .card-blue  { border-color: #bfdbfe; background: #eff6ff; }
+            .card-blue  .s-value { color: #1d4ed8; }
+            .card-green { border-color: #bbf7d0; background: #f0fdf4; }
+            .card-green .s-value { color: #15803d; }
+            .card-red   { border-color: #fecaca; background: #fef2f2; }
+            .card-red   .s-value { color: #b91c1c; }
+            .card-amber { border-color: #fde68a; background: #fffbeb; }
+            .card-amber .s-value { color: #b45309; }
+            .card-cyan  { border-color: #a5f3fc; background: #ecfeff; }
+            .card-cyan  .s-value { color: #0e7490; }
+
+            /* ── Financial bar ── */
+            .financial-bar {
+                margin: 0 28px 12px;
+                background: linear-gradient(135deg, #1e4a46, #326462);
+                border-radius: 10px;
+                padding: 12px 20px;
+                display: flex;
+                justify-content: space-around;
+                color: #fff;
+            }
+            .fin-item { text-align: center; }
+            .fin-item .f-label { font-size: 9px; opacity: 0.8; }
+            .fin-item .f-value { font-size: 14px; font-weight: 800; margin-top: 2px; }
+            .fin-item .f-value.gold { color: #fbbd08; }
+            .fin-item .f-value.green { color: #6ee7b7; }
+            .fin-item .f-value.red   { color: #fca5a5; }
+            .fin-divider { width: 1px; background: rgba(255,255,255,0.2); }
+
+            /* ── Table ── */
+            .table-section { padding: 0 28px 14px; }
+            .table-title { font-size: 11px; font-weight: 700; color: #1e4a46; margin-bottom: 8px; border-right: 3px solid #fbbd08; padding-right: 8px; }
+            table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+            thead tr {
+                background: linear-gradient(135deg, #1e4a46, #326462);
+                color: #fff;
+            }
+            thead th {
+                padding: 8px 7px;
+                text-align: right;
+                font-weight: 600;
+                font-size: 10px;
+                white-space: nowrap;
+                border: none;
+            }
+            thead th:first-child { border-radius: 0 6px 0 0; }
+            thead th:last-child  { border-radius: 6px 0 0 0; }
+            tbody tr:hover { background: #f0fdf4; }
+
+            /* ── Footer ── */
+            .pdf-footer {
+                background: #1e4a46;
+                color: rgba(255,255,255,0.75);
+                padding: 10px 28px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 9px;
+                margin-top: 10px;
+            }
+            .pdf-footer .footer-brand { color: #fbbd08; font-weight: 700; font-size: 10px; }
+            .pdf-footer .footer-center { text-align: center; }
+            .pdf-footer .footer-right  { text-align: left; }
+        </style>
+    </head>
+    <body>
+    <div class="page">
+
+        <!-- ══ HEADER ══ -->
+        <div class="pdf-header">
+            <div class="logos">
+                <div class="company-logo">
+                    <img src="${companyLogo}" onerror="this.style.display='none'" />
+                </div>
+                <div class="divider"></div>
+                <div class="client-logo">
+                    ${clientLogoHtml}
+                    <div>
+                        <div class="client-logo-label">العميل</div>
+                        <div style="font-weight:700;font-size:13px;">${clientName}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="title-block">
+                <h1>كشف رواتب الموظفين</h1>
+                <div class="subtitle">فاتورة رقم: #${invoiceNumber} &nbsp;|&nbsp; تاريخ: ${invoiceDate}</div>
+                <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+                    ${approvalBadge}
+                    ${revisionBadge}
+                </div>
+            </div>
+        </div>
+        <div class="accent-bar" style="height:3px;background:linear-gradient(90deg,#fbbd08,#f59e0b);"></div>
+
+        <!-- ══ META STRIP ══ -->
+        <div class="meta-strip">
+            <div class="meta-item"><span class="label">رقم الفاتورة</span><span class="value">#${invoiceNumber}</span></div>
+            <div class="meta-item"><span class="label">تاريخ الإصدار</span><span class="value">${invoiceDate}</span></div>
+            <div class="meta-item"><span class="label">العميل</span><span class="value">${clientName}</span></div>
+            <div class="meta-item"><span class="label">إجمالي الموظفين</span><span class="value">${totalEmployees}</span></div>
+            <div class="meta-item"><span class="label">تاريخ التصدير</span><span class="value">${today}</span></div>
+        </div>
+
+        <!-- ══ SUMMARY CARDS ══ -->
+        <div class="summary-section">
+            <div class="summary-title">ملخص حالات الدفع</div>
+            <div class="summary-grid">
+                <div class="summary-card card-blue">
+                    <div class="s-label">إجمالي الموظفين</div>
+                    <div class="s-value">${totalEmployees}</div>
+                </div>
+                <div class="summary-card card-green">
+                    <div class="s-label">مدفوع بالكامل</div>
+                    <div class="s-value">${paidCount}</div>
+                </div>
+                <div class="summary-card card-amber">
+                    <div class="s-label">مدفوع جزئياً</div>
+                    <div class="s-value">${partialCount}</div>
+                </div>
+                <div class="summary-card card-red">
+                    <div class="s-label">غير مدفوع</div>
+                    <div class="s-value">${unpaidCount}</div>
+                </div>
+                <div class="summary-card card-cyan">
+                    <div class="s-label">WPS</div>
+                    <div class="s-value">${wpsCount}</div>
+                </div>
+                <div class="summary-card" style="border-color:#e2e8f0;background:#f8fafc;">
+                    <div class="s-label">شهري</div>
+                    <div class="s-value" style="color:#475569;">${monthlyCount}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ FINANCIAL BAR ══ -->
+        <div class="financial-bar">
+            <div class="fin-item">
+                <div class="f-label">إجمالي الرواتب</div>
+                <div class="f-value gold">${totalSalaries} ر.س</div>
+            </div>
+            <div class="fin-divider"></div>
+            <div class="fin-item">
+                <div class="f-label">المبلغ المدفوع</div>
+                <div class="f-value green">${totalPaid} ر.س</div>
+            </div>
+            <div class="fin-divider"></div>
+            <div class="fin-item">
+                <div class="f-label">المبلغ المتبقي</div>
+                <div class="f-value red">${totalRemaining} ر.س</div>
+            </div>
+        </div>
+
+        <!-- ══ EMPLOYEES TABLE ══ -->
+        <div class="table-section">
+            <div class="table-title">تفاصيل الموظفين</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الموظف</th>
+                        <th>المشروع</th>
+                        <th style="text-align:center;">أيام العمل</th>
+                        <th>الراتب الإجمالي</th>
+                        <th>المكافآت</th>
+                        <th>السلف</th>
+                        <th>خصومات الشهر</th>
+                        <th>خصومات أخرى</th>
+                        <th>صافي الراتب</th>
+                        <th>المدفوع</th>
+                        <th>المتبقي</th>
+                        <th style="text-align:center;">النوع</th>
+                        <th style="text-align:center;">حالة الدفع</th>
+                        <th style="text-align:center;">آخر دفعة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ══ FOOTER ══ -->
+        <div class="pdf-footer">
+            <div class="footer-brand">نظام الفواتير</div>
+            <div class="footer-center">كشف رواتب فاتورة #${invoiceNumber} &mdash; ${clientName}</div>
+            <div class="footer-right">تاريخ التصدير: ${today}</div>
+        </div>
+
+    </div>
+    </body>
+    </html>`;
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    const options = {
+        margin: 0,
+        filename: `كشف_رواتب_فاتورة_${invoiceNumber}_${invoiceDate}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+    };
+
+    html2pdf().set(options).from(container).save().then(() => {
+        document.body.removeChild(container);
+    });
+}
 </script>
 @endpush
 @endsection

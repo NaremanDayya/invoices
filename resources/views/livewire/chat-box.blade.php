@@ -98,20 +98,20 @@
         @endforeach
 
         <!-- مؤشر تحميل المزيد -->
-        @if($hasMoreMessages)
-            <div class="load-more-indicator" id="load-more-trigger">
-                <button wire:click="loadMore" class="btn btn-sm btn-outline-success"
-                    {{ $loading ? 'disabled' : '' }}>
-                    @if($loading)
-                        <span class="spinner-border spinner-border-sm ms-2"></span>
-                        جاري التحميل...
-                    @else
-                        <i class="bi bi-arrow-clockwise ms-1"></i>
-                        تحميل رسائل أقدم
-                    @endif
-                </button>
-            </div>
-        @endif
+{{--        @if($hasMoreMessages)--}}
+{{--            <div class="load-more-indicator" id="load-more-trigger">--}}
+{{--                <button wire:click="loadMore" class="btn btn-sm btn-outline-success"--}}
+{{--                    {{ $loading ? 'disabled' : '' }}>--}}
+{{--                    @if($loading)--}}
+{{--                        <span class="spinner-border spinner-border-sm ms-2"></span>--}}
+{{--                        جاري التحميل...--}}
+{{--                    @else--}}
+{{--                        <i class="bi bi-arrow-clockwise ms-1"></i>--}}
+{{--                        تحميل رسائل أقدم--}}
+{{--                    @endif--}}
+{{--                </button>--}}
+{{--            </div>--}}
+{{--        @endif--}}
     </div>
 
     <!-- مؤشر الكتابة -->

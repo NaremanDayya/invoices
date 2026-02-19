@@ -223,20 +223,15 @@ class SalaryInvoiceImportService
         $employeeData['remaining_amount'] = $netSalary;
         $employeeData['payment_method'] = $salaryType;
         $employeeData['payment_status'] = 'unpaid';
-        
-        if ($salaryType === 'wps') {
+
+
             $wpsMaxPercentage = Setting::get('wps_max_percentage', 70);
             $maxWpsAmount = ($netSalary * $wpsMaxPercentage) / 100;
             $employeeData['wps_amount'] = $maxWpsAmount;
             $employeeData['wps_accepted_amount'] = $maxWpsAmount;
             $employeeData['monthly_amount'] = $netSalary - $maxWpsAmount;
             $employeeData['wps_percentage_applied'] = $wpsMaxPercentage;
-        } else {
-            $employeeData['wps_amount'] = 0;
-            $employeeData['wps_accepted_amount'] = 0;
-            $employeeData['monthly_amount'] = $netSalary;
-            $employeeData['wps_percentage_applied'] = null;
-        }
+
 
         return $employeeData;
     }
@@ -290,11 +285,11 @@ class SalaryInvoiceImportService
         }
 
         $value = trim($value);
-        
+
         if ($value === 'شهري' || strtolower($value) === 'monthly') {
             return 'monthly';
         }
-        
+
         if ($value === 'حماية أجور' || $value === 'WPS' || strtolower($value) === 'wps') {
             return 'wps';
         }
@@ -306,7 +301,7 @@ class SalaryInvoiceImportService
     {
         try {
             DB::beginTransaction();
-            
+
             $employee = InvoiceEmployee::findOrFail($employeeId);
 
             if ($paymentMethod === 'wps') {
@@ -315,10 +310,10 @@ class SalaryInvoiceImportService
                 }
 
                 $wpsAmount = (float) $wpsAmount;
-                
+
                 $employee->payment_method = 'wps';
                 $employee->wps_amount = $wpsAmount;
-                
+
                 $employee->validateWpsAmount();
                 $employee->calculateWpsAmount();
 
@@ -334,7 +329,7 @@ class SalaryInvoiceImportService
             }
 
             $employee->save();
-            
+
             DB::commit();
 
             return [

@@ -355,7 +355,7 @@
 <body>
 <!-- Modern Header Section -->
 <header class="modern-topbar">
-    <div class="container-fluid px-4">
+    <div class="container-fluid px-4" style="background-color: #3d7a76;">
         <div class="topbar-wrapper">
             <!-- Left Section: Brand -->
             <div class="topbar-brand">
@@ -389,8 +389,8 @@
                 <div class="user-profile-section">
                     <div class="dropdown">
                         <button class="user-profile-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="{{ asset(Auth::user()->personal_image ?? 'assets/img/default-avatar.png') }}" 
-                                 alt="User Avatar" 
+                            <img src="{{ asset(Auth::user()->personal_image ?? 'assets/img/default-avatar.png') }}"
+                                 alt="User Avatar"
                                  class="profile-avatar">
                             <div class="profile-info d-none d-lg-block">
                                 <span class="profile-name">{{ Auth::user()->name ?? 'المستخدم' }}</span>
@@ -417,7 +417,7 @@
                             </li>
                         </ul>
                     </div>
-                    
+
                     <!-- Hidden Photo Upload Form -->
                     <form id="avatarUploadForm" action="{{ route('admin.updatePhoto') }}" method="POST" enctype="multipart/form-data" style="display: none;">
                         @csrf

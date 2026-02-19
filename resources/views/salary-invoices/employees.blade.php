@@ -873,9 +873,17 @@ document.getElementById('paymentForm').addEventListener('submit', async function
             // If there are validation errors, show them
             if (data.errors) {
                 errorMessage += '\n\n';
-                Object.values(data.errors).forEach(errors => {
-                    errorMessage += errors.join('\n') + '\n';
-                });
+                if (Array.isArray(data.errors)) {
+                    // Payment service errors: [{employee_id, error}]
+                    data.errors.forEach(err => {
+                        errorMessage += (err.error || JSON.stringify(err)) + '\n';
+                    });
+                } else {
+                    // Laravel validation errors: {field: [messages]}
+                    Object.values(data.errors).forEach(msgs => {
+                        errorMessage += (Array.isArray(msgs) ? msgs.join('\n') : msgs) + '\n';
+                    });
+                }
             }
 
             console.error('Payment Error:', data);

@@ -21,55 +21,44 @@ class SalaryPaymentController extends Controller
         $this->chatLogger = $chatLogger;
     }
 
-    public function processPayments(Invoice $invoice, array $payments, int $userId)
+    public function processPayments(Request $request, Invoice $invoice)
     {
-        DB::beginTransaction();
-
         try {
-            $processedPayments = [];
+            $validator = Validator::make($request->all(), [
+                'payments' => 'required|array|min:1',
+                'payments.*.employee_id' => 'required|integer',
+                'payments.*.payment_type' => 'required|in:full,partial',
+                'payments.*.payment_mode' => 'required|in:monthly,wps',
+                'payments.*.amount' => 'required|numeric|min:0.01',
+                'payments.*.notes' => 'nullable|string',
+            ]);
 
-            foreach ($payments as $paymentData) {
-                $employee = InvoiceEmployee::where('invoice_id', $invoice->id)
-                    ->where('id', $paymentData['employee_id'])
-                    ->firstOrFail();
-
-                // Validate WPS payment against wps_accepted_amount
-                if ($paymentData['payment_mode'] === 'wps') {
-                    $remainingWpsAllowed = $employee->wps_accepted_amount ?? 0;
-
-                    if ($paymentData['amount'] > $remainingWpsAllowed) {
-                        throw new \Exception(
-                            "الموظف {$employee->employee_name}: المبلغ المطلوب (" . number_format($paymentData['amount'], 2) . ") يتجاوز الحد المتبقي المسموح به لـ WPS (" . number_format($remainingWpsAllowed, 2) . ")"
-                        );
-                    }
-                }
-
-                // Process the payment
-                $payment = $this->createPayment($employee, $paymentData, $userId);
-                $processedPayments[] = $payment;
-
-                // Deduct from wps_accepted_amount on WPS payments
-                if ($paymentData['payment_mode'] === 'wps') {
-                    $employee->wps_accepted_amount = max(0, ($employee->wps_accepted_amount ?? 0) - $paymentData['amount']);
-                    $employee->save();
-                }
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'خطأ في البيانات المدخلة',
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
-            DB::commit();
+            $result = $this->paymentService->processPayments(
+                $invoice,
+                $request->input('payments'),
+                auth()->id()
+            );
 
-            return [
-                'success' => true,
-                'message' => 'تم معالجة الدفعات بنجاح',
-                'payments' => $processedPayments
-            ];
+            if ($result['success']) {
+                return response()->json($result);
+            }
+
+            return response()->json($result, 422);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
-            return [
+            return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ];
+                'message' => 'حدث خطأ أثناء معالجة الدفع',
+                'error_details' => $e->getMessage()
+            ], 500);
         }
     }
     public function getPaymentSummary($invoiceId)

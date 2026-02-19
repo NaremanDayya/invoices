@@ -190,6 +190,12 @@ class ChatBox extends Component
         $this->dispatch('scroll-bottom');
     }
 
+    public function sendQuickReply($text)
+    {
+        $this->message = $text;
+        $this->sendMessage();
+    }
+
     public function sendMessage()
     {
         $this->validate(['message' => 'required|string|max:1000']);

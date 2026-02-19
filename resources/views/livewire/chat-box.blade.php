@@ -167,7 +167,7 @@
             @endphp
 
             @foreach($suggestions as $suggestion)
-                <button wire:click="$set('message', '{{ $suggestion }}')"
+                <button wire:click="sendQuickReply('{{ $suggestion }}')"
                         class="btn btn-sm btn-light border">
                     {{ $suggestion }}
                 </button>

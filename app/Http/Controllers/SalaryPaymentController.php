@@ -33,19 +33,13 @@ class SalaryPaymentController extends Controller
                     ->where('id', $paymentData['employee_id'])
                     ->firstOrFail();
 
-                // Calculate current WPS paid amount for this employee
-                $currentWpsPaid = InvoicePayment::where('invoice_employee_id', $employee->id)
-                    ->where('payment_mode', 'wps')
-                    ->sum('amount');
-
-                $maxWpsAllowed = ($employee->total_salary * $this->wpsMaxPercentage) / 100;
-                $remainingWpsAllowed = $maxWpsAllowed - $currentWpsPaid;
-
-                // Validate WPS payment
+                // Validate WPS payment against wps_accepted_amount
                 if ($paymentData['payment_mode'] === 'wps') {
+                    $remainingWpsAllowed = $employee->wps_accepted_amount ?? 0;
+
                     if ($paymentData['amount'] > $remainingWpsAllowed) {
                         throw new \Exception(
-                            "الموظف {$employee->employee_name}: المبلغ المطلوب ({$paymentData['amount']}) يتجاوز الحد المتبقي المسموح به لـ WPS ({$remainingWpsAllowed})"
+                            "الموظف {$employee->employee_name}: المبلغ المطلوب (" . number_format($paymentData['amount'], 2) . ") يتجاوز الحد المتبقي المسموح به لـ WPS (" . number_format($remainingWpsAllowed, 2) . ")"
                         );
                     }
                 }
@@ -54,9 +48,9 @@ class SalaryPaymentController extends Controller
                 $payment = $this->createPayment($employee, $paymentData, $userId);
                 $processedPayments[] = $payment;
 
-                // Update employee's wps_paid field if you store it
+                // Deduct from wps_accepted_amount on WPS payments
                 if ($paymentData['payment_mode'] === 'wps') {
-                    $employee->wps_paid = ($employee->wps_paid ?? 0) + $paymentData['amount'];
+                    $employee->wps_accepted_amount = max(0, ($employee->wps_accepted_amount ?? 0) - $paymentData['amount']);
                     $employee->save();
                 }
             }

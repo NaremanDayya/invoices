@@ -33,6 +33,7 @@ class InvoiceEmployee extends Pivot
         'payment_method',
         'wps_percentage',
         'wps_amount',
+        'wps_accepted_amount',
         'monthly_amount',
         'wps_percentage_applied',
         'payment_status',
@@ -57,6 +58,7 @@ class InvoiceEmployee extends Pivot
         'absence_deduction' => 'decimal:2',
         'wps_percentage' => 'decimal:2',
         'wps_amount' => 'decimal:2',
+        'wps_accepted_amount' => 'decimal:2',
         'monthly_amount' => 'decimal:2',
         'wps_percentage_applied' => 'decimal:2',
         'paid_amount' => 'decimal:2',
@@ -228,16 +230,12 @@ class InvoiceEmployee extends Pivot
         }
 
         if ($paymentMode === 'wps') {
-            $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
-            // IMPORTANT: Calculate WPS limit as percentage of NET SALARY (not remaining)
-            $netSalary = $this->net_salary ?? $this->total_salary;
-            $maxWpsAmount = ($netSalary * $maxWpsPercentage) / 100;
-            
-            // Check total WPS payments (already paid + current payment)
-            $totalWpsPayments = $this->payments()->where('payment_mode', 'wps')->sum('payment_amount') + $amount;
-            
-            if ($totalWpsPayments > $maxWpsAmount) {
-                throw new \Exception("إجمالي مدفوعات WPS (" . number_format($totalWpsPayments, 0) . " ريال) لا يمكن أن يتجاوز {$maxWpsPercentage}% من صافي الراتب (الحد الأقصى: " . number_format($maxWpsAmount, 0) . " ريال)");
+            $remainingWps = $this->wps_accepted_amount ?? 0;
+
+            if ($amount > $remainingWps) {
+                throw new \Exception(
+                    "مبلغ WPS المطلوب (" . number_format($amount, 2) . " ريال) يتجاوز المبلغ المتبقي المسموح به (" . number_format($remainingWps, 2) . " ريال)"
+                );
             }
         }
 
@@ -261,7 +259,12 @@ class InvoiceEmployee extends Pivot
         $this->total_paid += $amount;
         $this->remaining_amount = $this->total_salary - $this->total_paid;
         $this->last_payment_date = now();
-        
+
+        // Deduct from wps_accepted_amount on WPS payments
+        if ($paymentMode === 'wps') {
+            $this->wps_accepted_amount = max(0, ($this->wps_accepted_amount ?? 0) - $amount);
+        }
+
         $this->updatePaymentStatus();
         $this->save();
 
@@ -281,15 +284,9 @@ class InvoiceEmployee extends Pivot
 
     public function getMaxWpsPaymentAttribute()
     {
-        $maxWpsPercentage = Setting::get('wps_max_percentage', 70);
-        // Calculate max WPS as percentage of NET SALARY
-        $netSalary = $this->net_salary ?? $this->total_salary;
-        $maxWpsTotal = ($netSalary * $maxWpsPercentage) / 100;
-        
-        // Subtract already paid WPS amounts
-        $alreadyPaidWps = $this->payments()->where('payment_mode', 'wps')->sum('payment_amount');
-        $remainingWpsAllowance = $maxWpsTotal - $alreadyPaidWps;
-        
+        // Use wps_accepted_amount as the source of truth for remaining WPS allowance
+        $remainingWpsAllowance = $this->wps_accepted_amount ?? 0;
+
         // Return the minimum of remaining WPS allowance and remaining salary amount
         return max(0, min($remainingWpsAllowance, $this->remaining_amount));
     }

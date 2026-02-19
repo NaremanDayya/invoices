@@ -31,15 +31,10 @@ class UnreadMessagesCount extends Component
 
     public function updateCount()
     {
-        // Count messages in conversations where I am a participant
-        // Sent by someone else
-        // And NOT in my message_reads
+        // Count distinct conversations that have unread messages
+        // (not total unread messages)
         
         $myId = Auth::id();
-        
-        // This query assumes we can get conversations via User relationship or just all messages where I am receiver
-        // Since we are moving to group chat, 'receiver_id' might be unreliable if it was 1-on-1 before.
-        // Assuming we rely on Conversation->users()
         
         $this->count = Message::whereHas('conversation.users', function($q) use ($myId) {
                 $q->where('users.id', $myId);
@@ -48,7 +43,8 @@ class UnreadMessagesCount extends Component
             ->whereDoesntHave('reads', function($q) use ($myId) {
                 $q->where('user_id', $myId);
             })
-            ->count();
+            ->distinct('conversation_id')
+            ->count('conversation_id');
     }
 
     public function broadcastedNotificationReceived($event)

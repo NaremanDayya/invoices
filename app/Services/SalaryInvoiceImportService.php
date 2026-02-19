@@ -116,33 +116,52 @@ class SalaryInvoiceImportService
             }
 
             $invoiceWorkDays = $invoice->work_days ?? 0;
-            
+
+            Log::info('Salary Import: Work days validation', [
+                'invoice_id' => $invoiceId,
+                'invoice_work_days' => $invoiceWorkDays,
+                'total_employee_work_days' => $totalEmployeeWorkDays,
+            ]);
+
             if ($invoiceWorkDays > 0 && $totalEmployeeWorkDays > $invoiceWorkDays) {
-                throw new \Exception("إجمالي أيام عمل الموظفين ({$totalEmployeeWorkDays}) يتجاوز أيام عمل الفاتورة ({$invoiceWorkDays}). يجب أن يكون إجمالي أيام عمل الموظفين مساوياً أو أقل من أيام عمل الفاتورة.");
+                throw new \Exception("إجمالي أيام عمل الموظفين ({$totalEmployeeWorkDays}) يتجاوز أيام عمل الفاتورة ({$invoiceWorkDays}). الحد الأقصى المسموح هو {$invoiceWorkDays} يوم عمل.");
             }
+
+            // Calculate extra paid days (remaining days that can be used next month)
+            $extraPaidDays = ($invoiceWorkDays > 0) ? max(0, $invoiceWorkDays - $totalEmployeeWorkDays) : 0;
 
             $invoice->update([
                 'type' => 'salary_invoice',
                 'base_price' => $totalSalaries,
                 'total_price' => $totalNetSalaries,
-                'employees_count' => count($employees)
+                'employees_count' => count($employees),
+                'work_days_difference' => $extraPaidDays,
             ]);
 
             DB::commit();
 
             Log::info('Salary Import: Success', [
                 'invoice_id' => $invoiceId,
-                'imported' => count($employees)
+                'imported' => count($employees),
+                'extra_paid_days' => $extraPaidDays,
             ]);
+
+            $message = 'تم استيراد ' . count($employees) . ' موظف بنجاح';
+            if ($extraPaidDays > 0) {
+                $message .= ". يوجد {$extraPaidDays} يوم عمل إضافي مدفوع يمكن ترحيله للشهر القادم.";
+            }
 
             return [
                 'success' => true,
-                'message' => 'تم استيراد ' . count($employees) . ' موظف بنجاح',
+                'message' => $message,
                 'data' => [
                     'employees_count' => count($employees),
                     'total_salaries' => $totalSalaries,
                     'total_deductions' => $totalDeductions,
-                    'total_net_salaries' => $totalNetSalaries
+                    'total_net_salaries' => $totalNetSalaries,
+                    'invoice_work_days' => $invoiceWorkDays,
+                    'total_employee_work_days' => $totalEmployeeWorkDays,
+                    'extra_paid_days' => $extraPaidDays,
                 ]
             ];
 
@@ -209,10 +228,12 @@ class SalaryInvoiceImportService
             $wpsMaxPercentage = Setting::get('wps_max_percentage', 70);
             $maxWpsAmount = ($netSalary * $wpsMaxPercentage) / 100;
             $employeeData['wps_amount'] = $maxWpsAmount;
+            $employeeData['wps_accepted_amount'] = $maxWpsAmount;
             $employeeData['monthly_amount'] = $netSalary - $maxWpsAmount;
             $employeeData['wps_percentage_applied'] = $wpsMaxPercentage;
         } else {
             $employeeData['wps_amount'] = 0;
+            $employeeData['wps_accepted_amount'] = 0;
             $employeeData['monthly_amount'] = $netSalary;
             $employeeData['wps_percentage_applied'] = null;
         }
@@ -300,9 +321,14 @@ class SalaryInvoiceImportService
                 
                 $employee->validateWpsAmount();
                 $employee->calculateWpsAmount();
+
+                // Set wps_accepted_amount minus any already-paid WPS
+                $alreadyPaidWps = $employee->payments()->where('payment_mode', 'wps')->sum('payment_amount');
+                $employee->wps_accepted_amount = max(0, $wpsAmount - $alreadyPaidWps);
             } else {
                 $employee->payment_method = 'monthly';
                 $employee->wps_amount = 0;
+                $employee->wps_accepted_amount = 0;
                 $employee->monthly_amount = $employee->net_salary;
                 $employee->wps_percentage_applied = null;
             }

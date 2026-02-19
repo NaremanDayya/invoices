@@ -520,17 +520,17 @@
                 const taxNumber = cells[3]?.querySelector('code')?.innerText.trim() || cells[3]?.innerText.trim() || '-';
                 const invoicesCount = cells[4]?.innerText.trim() || '0';
 
-                const td = 'padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;';
+                const td = 'padding:12px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:middle;white-space:nowrap;';
                 tableRows += `
                 <tr style="background:${bg};">
-                    <td style="${td}">
-                        <div style="font-weight:700;color:#1e293b;margin-bottom:4px;font-size:14px;line-height:1.4;word-wrap:break-word;">${clientName}</div>
-                        <div style="font-size:11px;color:#64748b;line-height:1.3;word-wrap:break-word;">${address}</div>
+                    <td style="${td}white-space:normal;min-width:180px;">
+                        <div style="font-weight:700;color:#1e293b;margin-bottom:3px;font-size:14px;">${clientName}</div>
+                        <div style="font-size:11px;color:#94a3b8;">${address}</div>
                     </td>
-                    <td style="${td}color:#64748b;line-height:1.4;">${email}</td>
-                    <td style="${td}color:#64748b;text-align:left;line-height:1.4;" dir="ltr">${phone}</td>
-                    <td style="${td}text-align:center;"><code style="background:#f1f5f9;padding:4px 10px;border-radius:6px;font-size:12px;word-wrap:break-word;">${taxNumber}</code></td>
-                    <td style="${td}text-align:center;"><span style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:6px 14px;border-radius:14px;font-size:12px;font-weight:600;">${invoicesCount}</span></td>
+                    <td style="${td}color:#64748b;">${email}</td>
+                    <td style="${td}color:#64748b;text-align:left;direction:ltr;">${phone}</td>
+                    <td style="${td}text-align:center;direction:ltr;"><span style="background:#f1f5f9;padding:4px 10px;border-radius:6px;font-size:12px;font-family:monospace;">${taxNumber}</span></td>
+                    <td style="${td}text-align:center;"><span style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:5px 14px;border-radius:12px;font-size:12px;font-weight:700;">${invoicesCount}</span></td>
                 </tr>`;
             });
 
@@ -540,26 +540,22 @@
 <meta charset="UTF-8">
 <title>تقرير العملاء</title>
 <style>
+@page { size: A3 landscape; margin: 10mm; }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Tahoma','Arial',sans-serif; direction:rtl; background:#fff; color:#1e293b; font-size:14px; padding:20px; word-spacing:normal; letter-spacing:normal; }
+body { font-family:'Tahoma','Arial',sans-serif; direction:rtl; background:#fff; color:#1e293b; font-size:14px; padding:24px; word-spacing:4px; letter-spacing:0.3px; line-height:1.6; width:1100px; }
 .pdf-header { background:linear-gradient(135deg,#1e4a46,#2d6a65); color:white; padding:24px 32px; border-radius:14px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
 .pdf-header-title { text-align:right; }
-.pdf-header-title h1 { font-size:28px; font-weight:700; margin-bottom:8px; }
-.pdf-header-title p { font-size:14px; opacity:0.9; }
+.pdf-header-title h1 { font-size:28px; font-weight:700; margin-bottom:8px; word-spacing:6px; }
+.pdf-header-title p { font-size:14px; opacity:0.85; word-spacing:4px; }
 .logo-box { display:flex; align-items:center; }
 .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
 .stat-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; text-align:center; }
-.stat-box .sl { font-size:12px; color:#64748b; margin-bottom:6px; font-weight:500; }
+.stat-box .sl { font-size:13px; color:#64748b; margin-bottom:6px; word-spacing:3px; }
 .stat-box .sv { font-size:24px; font-weight:700; }
-table { width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
-thead th { background:#1e4a46; color:#fff; padding:14px 12px; font-weight:600; white-space:nowrap; font-size:13px; }
-thead th:nth-child(1) { width:25%; }
-thead th:nth-child(2) { width:22%; }
-thead th:nth-child(3) { width:18%; }
-thead th:nth-child(4) { width:20%; }
-thead th:nth-child(5) { width:15%; }
-tbody td { padding:12px; border-bottom:1px solid #e2e8f0; vertical-align:middle; word-wrap:break-word; overflow-wrap:break-word; }
-.pdf-footer { margin-top:20px; padding:16px 24px; background:#f8fafc; border-radius:10px; display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:12px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead th { background:#1e4a46; color:#fff; padding:12px 14px; font-weight:600; white-space:nowrap; font-size:13px; }
+tbody td { padding:12px 14px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+.pdf-footer { margin-top:20px; padding:14px 24px; background:#f8fafc; border-radius:10px; display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:12px; }
 </style>
 </head>
 <body>
@@ -583,9 +579,9 @@ tbody td { padding:12px; border-bottom:1px solid #e2e8f0; vertical-align:middle;
 <table>
   <thead>
     <tr>
-      <th style="text-align:right;">العميل</th>
+      <th style="text-align:right;min-width:180px;">العميل</th>
       <th style="text-align:right;">البريد الإلكتروني</th>
-      <th style="text-align:left;" dir="ltr">الهاتف</th>
+      <th style="text-align:left;direction:ltr;">الهاتف</th>
       <th style="text-align:center;">الرقم الضريبي</th>
       <th style="text-align:center;">الفواتير</th>
     </tr>
@@ -605,10 +601,10 @@ tbody td { padding:12px; border-bottom:1px solid #e2e8f0; vertical-align:middle;
             document.body.appendChild(container);
 
             html2pdf().set({
-                margin: [12, 12, 12, 12],
+                margin: [8, 8, 8, 8],
                 filename: `تقرير_العملاء_${todayShort}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
+                html2canvas: { scale: 2, useCORS: true, logging: false, width: 1100 },
                 jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
             }).from(container).save().then(() => {
                 document.body.removeChild(container);

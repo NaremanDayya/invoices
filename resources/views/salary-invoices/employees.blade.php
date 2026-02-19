@@ -1482,10 +1482,11 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
     }
 
     const container = document.createElement('div');
-    container.style.position = 'absolute';
+    container.style.position = 'fixed';
     container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.visibility = 'hidden';
+    container.style.top = '0';
+    container.style.opacity = '0';
+    container.style.zIndex = '-9999';
     container.style.pointerEvents = 'none';
     container.innerHTML = html;
     document.body.appendChild(container);

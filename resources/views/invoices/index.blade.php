@@ -911,6 +911,7 @@
 @endsection
 @push('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get modal element
@@ -2061,16 +2062,20 @@
                 if (!cells.length) return;
 
                 const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-                const invNumber = cells[0]?.innerText.trim() || '-';
-                const clientName = cells[1]?.querySelector('.name')?.innerText.trim() || '-';
-                const serviceName = cells[2]?.innerText.trim() || '-';
+                // Extract invoice number cleanly (avoid salary badge text)
+                const invNumberEl = cells[0]?.querySelector('.inv-number');
+                const invNumber = invNumberEl ? invNumberEl.innerText.trim() : (cells[0]?.innerText.trim().split('\n')[0] || '-');
+                const isSalary = cells[0]?.querySelector('.badge') !== null;
+                const clientName = cells[1]?.querySelector('.name')?.innerText.trim() || cells[1]?.innerText.trim() || '-';
+                const serviceName = cells[2]?.innerText.trim().replace(/\s+/g, ' ') || '-';
                 const issueDate = cells[4]?.innerText.trim() || '-';
                 const basePrice = cells[5]?.innerText.trim() || '-';
                 const taxAmount = cells[6]?.innerText.trim() || '-';
                 const totalPrice = cells[7]?.innerText.trim() || '-';
                 const empCount = cells[8]?.innerText.trim() || '-';
                 const workDays = cells[9]?.innerText.trim() || '-';
-                const statusText = cells[13]?.innerText.trim().split('\n')[0] || '-';
+                // Status is at index 13 (after: inv#, client, service, details, date, base, tax, total, emp, days, delay, credit, response, status, actions)
+                const statusText = cells[13]?.innerText.trim().split('\n')[0].trim() || '-';
 
                 let statusBg = '#e2e8f0', statusColor = '#334155';
                 if (statusText.includes('مدفوعة')) { statusBg='#d1fae5'; statusColor='#065f46'; }
@@ -2079,16 +2084,17 @@
                 else if (statusText.includes('ملغاة')) { statusBg='#f3f4f6'; statusColor='#4b5563'; }
 
                 const td = 'padding:7px 8px;border-bottom:1px solid #e2e8f0;font-size:10px;vertical-align:middle;';
+                const salaryTag = isSalary ? `<span style="background:#f3e8ff;color:#7c3aed;font-size:8px;padding:1px 5px;border-radius:6px;margin-right:4px;">رواتب</span>` : '';
                 tableRows += `
                 <tr style="background:${bg};">
-                    <td style="${td}text-align:center;color:#10a37f;font-weight:700;">${invNumber}</td>
+                    <td style="${td}text-align:center;color:#10a37f;font-weight:700;">${invNumber}${salaryTag}</td>
                     <td style="${td}font-weight:600;color:#1e293b;">${clientName}</td>
                     <td style="${td}color:#475569;">${serviceName}</td>
                     <td style="${td}text-align:center;color:#64748b;">${issueDate}</td>
                     <td style="${td}text-align:right;color:#2563eb;">${basePrice}</td>
                     <td style="${td}text-align:right;color:#d97706;">${taxAmount}</td>
                     <td style="${td}text-align:right;font-weight:700;color:#059669;">${totalPrice}</td>
-                    <td style="${td}text-align:center;"><span style="background:#e6fffa;color:#319795;padding:4px 8px;border-radius:50%;font-weight:700;font-size:9px;">${empCount}</span></td>
+                    <td style="${td}text-align:center;"><span style="background:#e6fffa;color:#319795;padding:2px 7px;border-radius:50%;font-weight:700;font-size:9px;">${empCount}</span></td>
                     <td style="${td}text-align:center;color:#64748b;">${workDays}</td>
                     <td style="${td}text-align:center;"><span style="background:${statusBg};color:${statusColor};padding:3px 10px;border-radius:12px;font-size:9px;font-weight:600;">${statusText}</span></td>
                 </tr>`;
@@ -2179,47 +2185,66 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
 
         // Export to Excel Function
         function exportInvoicesToExcel() {
-            const invoices = @json($invoices->items());
+            if (typeof XLSX === 'undefined') {
+                alert('جاري تحميل مكتبة Excel، يرجى المحاولة مرة أخرى بعد ثوانٍ...');
+                return;
+            }
 
-            const statusMap = {
-                'paid': 'مدفوعة',
-                'pending': 'قيد الانتظار',
-                'late': 'متأخرة',
-                'overdue': 'متأخرة',
-                'cancelled': 'ملغاة'
-            };
+            const todayShort = new Date().toISOString().split('T')[0];
 
-            const excelData = invoices.map(invoice => ({
-                'رقم الفاتورة': invoice.number || '',
-                'العميل': invoice.client?.name || '',
-                'الخدمة': invoice.service?.name || '',
-                'تاريخ الإصدار': invoice.generation_date || '',
-                'تاريخ الاستحقاق': invoice.last_generation_date || '',
-                'إجمالي العمالة': (invoice.total_workers || 0) + (invoice.total_supervisors || 0) + (invoice.total_managers || 0) + (invoice.total_users || 0),
-                'أيام العمل': invoice.work_days || 0,
-                'المبلغ الأساسي': parseFloat(invoice.base_price || 0).toFixed(0),
-                'الضريبة': parseFloat(invoice.tax_amount || 0).toFixed(0),
-                'المبلغ الإجمالي': parseFloat(invoice.total_price || 0).toFixed(0),
-                'المبلغ المدفوع': parseFloat(invoice.paid_amount || 0).toFixed(0),
-                'المبلغ المتبقي': parseFloat(invoice.remaining_amount || 0).toFixed(0),
-                'حالة السداد': statusMap[invoice.payment_status] || invoice.payment_status,
-                'حالة الفاتورة': invoice.invoice_status || ''
-            }));
+            // Clone the visible table
+            const originalTable = document.querySelector('.custom-table');
+            const clonedTable = originalTable.cloneNode(true);
 
-            const ws = XLSX.utils.json_to_sheet(excelData);
+            // Remove last header (actions)
+            clonedTable.querySelectorAll('thead tr').forEach(row => {
+                const cells = row.querySelectorAll('th');
+                if (cells.length) cells[cells.length - 1].remove();
+            });
+
+            // Clean body rows
+            clonedTable.querySelectorAll('tbody tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (!cells.length) return;
+
+                // Flatten invoice number cell (remove badge)
+                const invNum = cells[0]?.querySelector('.inv-number');
+                if (invNum) {
+                    const isSal = cells[0].querySelector('.badge') !== null;
+                    cells[0].innerHTML = invNum.innerText.trim() + (isSal ? ' (رواتب)' : '');
+                }
+
+                // Flatten client cell
+                const nameEl = cells[1]?.querySelector('.name');
+                if (nameEl) cells[1].innerHTML = nameEl.innerText.trim();
+
+                // Flatten service details cell — keep plain text only
+                if (cells[3]) cells[3].innerText = cells[3].innerText.trim().replace(/\s+/g, ' ');
+
+                // Remove last cell (actions)
+                cells[cells.length - 1].remove();
+            });
+
             const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(clonedTable);
+
+            // Auto-size columns
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            const colWidths = [];
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                let maxLen = 10;
+                for (let R = range.s.r; R <= range.e.r; R++) {
+                    const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                    if (cell && cell.v) maxLen = Math.max(maxLen, String(cell.v).length + 4);
+                }
+                colWidths.push({ wch: Math.min(maxLen, 40) });
+            }
+            ws['!cols'] = colWidths;
+
             XLSX.utils.book_append_sheet(wb, ws, 'الفواتير');
+            XLSX.writeFile(wb, `تقرير_الفواتير_${todayShort}.xlsx`);
 
-            // Set column widths
-            ws['!cols'] = [
-                { wch: 15 }, { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 15 },
-                { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 },
-                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }
-            ];
-
-            XLSX.writeFile(wb, 'invoices_' + new Date().toISOString().split('T')[0] + '.xlsx');
-
-            if (window.toastr) toastr.success('Invoices exported to Excel successfully');
+            if (window.toastr) toastr.success('تم تصدير الفواتير إلى Excel بنجاح');
         }
     </script>
 @endpush

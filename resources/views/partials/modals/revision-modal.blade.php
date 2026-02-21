@@ -55,16 +55,17 @@
                                   placeholder="أدخل ملاحظاتك على المراجعة..."></textarea>
                         <div class="form-text" id="revisionNotesHint">اختياري عند القبول، إلزامي عند الرفض.</div>
                     </div>
+                    <div class="modal-footer border-0 px-0 pb-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>إلغاء
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitRevisionBtn">
+                            <i class="bi bi-send me-1"></i>إرسال المراجعة
+                        </button>
+                    </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle me-1"></i>إلغاء
-                </button>
-                <button type="button" class="btn btn-primary" id="submitRevisionBtn">
-                    <i class="bi bi-send me-1"></i>إرسال المراجعة
-                </button>
-            </div>
+            <div class="modal-footer" style="display:none;"></div>
         </div>
     </div>
 </div>

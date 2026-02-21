@@ -1107,7 +1107,13 @@
         document.getElementById('revisionForm')?.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const revisionStatus = document.querySelector('input[name="revision_status"]:checked').value;
+            const checkedRadio = document.querySelector('input[name="revision_status"]:checked');
+            if (!checkedRadio) {
+                Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى اختيار قرار المراجعة', confirmButtonText: 'حسناً' });
+                return;
+            }
+
+            const revisionStatus = checkedRadio.value;
             const revisionNotes = document.getElementById('revisionNotes').value;
 
             if (revisionStatus === 'revision_rejected' && !revisionNotes.trim()) {

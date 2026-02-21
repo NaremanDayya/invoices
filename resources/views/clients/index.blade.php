@@ -511,6 +511,7 @@
                 const clientCell = cells[0];
                 let clientName = '-';
                 let clientLocation = '-';
+                let clientLogoSrc = '';
 
                 if (clientCell) {
                     const clientNameEl = clientCell.querySelector('.client-name');
@@ -520,6 +521,12 @@
                     if (addressEl) {
                         clientLocation = addressEl.innerText.trim() || '-';
                     }
+
+                    // Extract logo src if present
+                    const logoImg = clientCell.querySelector('img.client-avatar');
+                    if (logoImg) {
+                        clientLogoSrc = logoImg.src || '';
+                    }
                 }
 
                 const email = cells[1]?.innerText.trim() || '-';
@@ -527,15 +534,24 @@
                 const taxNumber = cells[3]?.querySelector('code')?.innerText.trim() || cells[3]?.innerText.trim() || '-';
                 const invoicesCount = cells[4]?.innerText.trim() || '0';
 
-                const td = 'padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:11px;vertical-align:middle;';
+                const logoHtml = clientLogoSrc
+                    ? `<img src="${clientLogoSrc}" style="width:28px;height:28px;border-radius:6px;object-fit:cover;margin-left:8px;vertical-align:middle;" onerror="this.style.display='none'">`
+                    : `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-weight:700;font-size:11px;margin-left:8px;vertical-align:middle;">${clientName.charAt(0)}</span>`;
+
+                const td = 'padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:11px;vertical-align:middle;text-align:center;';
                 tableRows += `
                 <tr style="background:${bg};">
-                    <td style="${td}font-weight:700;color:#1e293b;white-space:nowrap;">${clientName}</td>
+                    <td style="${td}text-align:right;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            ${logoHtml}
+                            <span style="font-weight:700;color:#1e293b;white-space:nowrap;">${clientName}</span>
+                        </div>
+                    </td>
                     <td style="${td}color:#64748b;">${clientLocation}</td>
                     <td style="${td}color:#64748b;">${email}</td>
-                    <td style="${td}color:#64748b;text-align:left;" dir="ltr">${phone}</td>
-                    <td style="${td}text-align:center;"><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:10px;">${taxNumber}</code></td>
-                    <td style="${td}text-align:center;"><span style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;">${invoicesCount}</span></td>
+                    <td style="${td}color:#64748b;" dir="ltr">${phone}</td>
+                    <td style="${td}"><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:10px;">${taxNumber}</code></td>
+                    <td style="${td}"><span style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;">${invoicesCount}</span></td>
                 </tr>`;
             });
 

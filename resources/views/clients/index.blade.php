@@ -513,22 +513,12 @@
                 let clientLocation = '-';
 
                 if (clientCell) {
-                    // Try to get client name from the link
                     const clientNameEl = clientCell.querySelector('.client-name');
                     clientName = clientNameEl?.innerText.trim() || '-';
 
-                    // Extract location from address or create a cleaner format
                     const addressEl = clientCell.querySelector('small');
                     if (addressEl) {
-                        const fullAddress = addressEl.innerText.trim();
-                        // If the address contains a dash or comma, show only the city/area part
-                        if (fullAddress.includes('-')) {
-                            clientLocation = fullAddress.split('-')[0].trim();
-                        } else if (fullAddress.includes('،')) {
-                            clientLocation = fullAddress.split('،')[0].trim();
-                        } else {
-                            clientLocation = fullAddress;
-                        }
+                        clientLocation = addressEl.innerText.trim() || '-';
                     }
                 }
 
@@ -537,17 +527,15 @@
                 const taxNumber = cells[3]?.querySelector('code')?.innerText.trim() || cells[3]?.innerText.trim() || '-';
                 const invoicesCount = cells[4]?.innerText.trim() || '0';
 
-                const td = 'padding:8px;border-bottom:1px solid #e2e8f0;font-size:10px;vertical-align:middle;';
+                const td = 'padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:11px;vertical-align:middle;';
                 tableRows += `
                 <tr style="background:${bg};">
-                 <td style="${td}">
-    <div style="font-weight:700;color:#1e293b;margin-bottom:2px;">${clientName}</div>
-    ${clientLocation !== '-' ? `<div style="font-size:9px;color:#64748b;">${clientLocation}</div>` : ''}
-</td>
+                    <td style="${td}font-weight:700;color:#1e293b;white-space:nowrap;">${clientName}</td>
+                    <td style="${td}color:#64748b;">${clientLocation}</td>
                     <td style="${td}color:#64748b;">${email}</td>
                     <td style="${td}color:#64748b;text-align:left;" dir="ltr">${phone}</td>
-                    <td style="${td}text-align:center;"><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:9px;">${taxNumber}</code></td>
-                    <td style="${td}text-align:center;"><span style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:4px 10px;border-radius:12px;font-size:9px;font-weight:600;">${invoicesCount}</span></td>
+                    <td style="${td}text-align:center;"><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:10px;">${taxNumber}</code></td>
+                    <td style="${td}text-align:center;"><span style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;">${invoicesCount}</span></td>
                 </tr>`;
             });
 
@@ -595,7 +583,8 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
 <table>
   <thead>
     <tr>
-      <th style="text-align:right;">العميل</th>
+      <th style="text-align:right;">اسم العميل</th>
+      <th style="text-align:right;">العنوان</th>
       <th style="text-align:right;">البريد الإلكتروني</th>
       <th style="text-align:left;" dir="ltr">الهاتف</th>
       <th style="text-align:center;">الرقم الضريبي</th>

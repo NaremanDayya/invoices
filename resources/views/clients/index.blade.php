@@ -167,6 +167,11 @@
             <i class="bi bi-file-pdf"></i>
             <span>تصدير PDF</span>
         </button>
+        <button class="btn btn-outline-primary rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
+                onclick="exportClientsToExcel()">
+            <i class="bi bi-file-earmark-excel"></i>
+            <span>تصدير Excel</span>
+        </button>
         <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
                 data-bs-toggle="modal" data-bs-target="#createClientModal">
             <i class="bi bi-plus-lg"></i>
@@ -481,6 +486,7 @@
 
 @push('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
     <script>
         function exportClientsToPDF() {
             if (typeof html2pdf === 'undefined') {
@@ -599,10 +605,10 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
 <table>
   <thead>
     <tr>
-      <th style="text-align:right;">اسم العميل</th>
-      <th style="text-align:right;">العنوان</th>
-      <th style="text-align:right;">البريد الإلكتروني</th>
-      <th style="text-align:left;" dir="ltr">الهاتف</th>
+      <th style="text-align:center;">اسم العميل</th>
+      <th style="text-align:center;">العنوان</th>
+      <th style="text-align:center;">البريد الإلكتروني</th>
+      <th style="text-align:center;">الهاتف</th>
       <th style="text-align:center;">الرقم الضريبي</th>
       <th style="text-align:center;">الفواتير</th>
     </tr>
@@ -631,6 +637,62 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
                 document.body.removeChild(container);
                 if (window.toastr) toastr.success('تم تصدير العملاء إلى PDF بنجاح');
             });
+        }
+        function exportClientsToExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('جاري تحميل مكتبة Excel، يرجى المحاولة مرة أخرى بعد ثوانٍ...');
+                return;
+            }
+
+            const todayShort = new Date().toISOString().split('T')[0];
+
+            // Clone the table
+            const originalTable = document.querySelector('.custom-table');
+            const clonedTable = originalTable.cloneNode(true);
+
+            // Remove the last header (actions column)
+            clonedTable.querySelectorAll('thead tr').forEach(row => {
+                const cells = row.querySelectorAll('th');
+                if (cells.length) cells[cells.length - 1].remove();
+            });
+
+            // Process body rows: flatten name+address cell, remove actions cell
+            clonedTable.querySelectorAll('tbody tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (!cells.length || cells.length < 6) return;
+
+                // Replace first cell (name+address combined) with just the name text
+                const nameEl = cells[0].querySelector('.client-name');
+                cells[0].innerHTML = nameEl ? nameEl.innerText.trim() : cells[0].innerText.trim();
+
+                // Remove last cell (actions)
+                cells[cells.length - 1].remove();
+
+                // Clean invoice badge cell - keep just the number
+                const badge = row.querySelectorAll('td')[4];
+                if (badge) badge.innerText = badge.innerText.trim();
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(clonedTable);
+
+            // Auto-size columns
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            const colWidths = [];
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                let maxLen = 10;
+                for (let R = range.s.r; R <= range.e.r; R++) {
+                    const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                    if (cell && cell.v) maxLen = Math.max(maxLen, String(cell.v).length + 4);
+                }
+                colWidths.push({ wch: Math.min(maxLen, 40) });
+            }
+            ws['!cols'] = colWidths;
+
+            XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+            XLSX.writeFile(wb, `تقرير_العملاء_${todayShort}.xlsx`);
+
+            if (window.toastr) toastr.success('تم تصدير العملاء إلى Excel بنجاح');
         }
     </script>
 @endpush

@@ -52,6 +52,7 @@ class PaymentsController extends Controller
             'completed' => Payment::where('status', 'completed')->count(),
             'pending' => Payment::where('status', 'pending')->count(),
             'cancelled' => Payment::where('status', 'cancelled')->count(),
+            'total_amount' => Payment::where('status', 'completed')->sum('amount'),
         ];
 
         return view('payments.index', compact('payments', 'clients', 'stats'));

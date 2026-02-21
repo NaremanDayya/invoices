@@ -282,7 +282,7 @@
                                     <span class="text-muted">—</span>
                                 @endif
                             </td>
-                            <td dir="ltr" style="text-align: left;">
+                            <td dir="ltr" style="text-align: center;">
                                 @if($client->phone)
                                     <span class="text-muted">{{ $client->phone }}</span>
                                 @else

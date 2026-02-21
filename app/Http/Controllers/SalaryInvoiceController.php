@@ -100,9 +100,13 @@ class SalaryInvoiceController extends Controller
 
     public function showEmployees($invoiceId)
     {
-        $invoice = Invoice::with(['invoiceEmployees' => function($query) {
-            $query->orderBy('id', 'desc');
-        }])->findOrFail($invoiceId);
+        $invoice = Invoice::with([
+            'invoiceEmployees' => function($query) {
+                $query->orderBy('id', 'desc');
+            },
+            'revisionStatuses.revisedBy',
+            'revisionStatuses.approvedBy',
+        ])->findOrFail($invoiceId);
 
         if (!$invoice->isSalaryInvoice()) {
             abort(404, 'هذه الفاتورة ليست فاتورة رواتب');

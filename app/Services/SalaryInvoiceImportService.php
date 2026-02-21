@@ -136,6 +136,10 @@ class SalaryInvoiceImportService
                 'total_price' => $totalNetSalaries,
                 'employees_count' => count($employees),
                 'work_days_difference' => $extraPaidDays,
+                'revision_status' => 'pending',
+                'revision_notes' => null,
+                'revision_by' => null,
+                'revision_at' => null,
             ]);
 
             DB::commit();

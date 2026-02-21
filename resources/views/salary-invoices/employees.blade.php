@@ -19,6 +19,18 @@
                 <i class="bi bi-check-circle me-2"></i>اعتماد
             </button>
         @endif
+        <button type="button"
+                class="btn btn-outline-info position-relative"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#revisionHistoryOffcanvas"
+                title="سجل المراجعات">
+            <i class="bi bi-clock-history"></i>
+            @if($invoice->revisionStatuses->count() > 0)
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.65rem;">
+                    {{ $invoice->revisionStatuses->count() }}
+                </span>
+            @endif
+        </button>
         <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-right me-2"></i>رجوع
         </a>
@@ -481,6 +493,104 @@
     @include('partials.modals.salary-payment')
     @include('partials.modals.batch-payment')
     @include('partials.modals.revision-modal')
+
+    {{-- Revision History Offcanvas --}}
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="revisionHistoryOffcanvas" aria-labelledby="revisionHistoryLabel" style="width:420px;">
+        <div class="offcanvas-header border-0 pb-0" style="background:linear-gradient(135deg,#1e4a46,#2d6a65);">
+            <div>
+                <h5 class="offcanvas-title text-white fw-bold" id="revisionHistoryLabel">
+                    <i class="bi bi-clock-history me-2"></i>سجل المراجعات
+                </h5>
+                <p class="text-white opacity-75 small mb-0">فاتورة #{{ $invoice->number }}</p>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            {{-- Current Status Banner --}}
+            <div class="px-4 py-3 border-bottom"
+                 style="background:{{ $invoice->revision_status === 'revision_approved' ? '#f0fdf4' : ($invoice->revision_status === 'revision_rejected' ? '#fef2f2' : '#fffbeb') }};">
+                <div class="d-flex align-items-center gap-2">
+                    @if($invoice->revision_status === 'revision_approved')
+                        <span class="badge rounded-pill px-3 py-2 fs-6" style="background:#d1fae5;color:#065f46;">
+                            <i class="bi bi-patch-check-fill me-1"></i>مراجعة معتمدة
+                        </span>
+                    @elseif($invoice->revision_status === 'revision_rejected')
+                        <span class="badge rounded-pill px-3 py-2 fs-6" style="background:#fee2e2;color:#991b1b;">
+                            <i class="bi bi-patch-exclamation-fill me-1"></i>مراجعة مرفوضة
+                        </span>
+                    @else
+                        <span class="badge rounded-pill px-3 py-2 fs-6" style="background:#fef3c7;color:#92400e;">
+                            <i class="bi bi-hourglass-split me-1"></i>قيد المراجعة
+                        </span>
+                    @endif
+                    <small class="text-muted">الحالة الحالية</small>
+                </div>
+            </div>
+
+            {{-- Timeline --}}
+            <div class="px-4 py-3">
+                @if($invoice->revisionStatuses->count() > 0)
+                    <p class="text-muted small mb-3 fw-semibold">{{ $invoice->revisionStatuses->count() }} سجل مراجعة</p>
+                    <div class="revision-timeline">
+                        @foreach($invoice->revisionStatuses->sortByDesc('created_at') as $revision)
+                            @php
+                                $isApproved = $revision->revision_status === 'approved';
+                                $iconColor  = $isApproved ? '#059669' : '#dc2626';
+                                $iconBg     = $isApproved ? '#d1fae5' : '#fee2e2';
+                                $icon       = $isApproved ? 'patch-check-fill' : 'patch-exclamation-fill';
+                                $label      = $isApproved ? 'قبول المراجعة' : 'رفض المراجعة';
+                            @endphp
+                            <div class="revision-item d-flex gap-3 mb-4 position-relative">
+                                {{-- Timeline dot --}}
+                                <div class="flex-shrink-0 d-flex flex-column align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         style="width:38px;height:38px;background:{{ $iconBg }};color:{{ $iconColor }};font-size:1.1rem;flex-shrink:0;">
+                                        <i class="bi bi-{{ $icon }}"></i>
+                                    </div>
+                                    @if(!$loop->last)
+                                        <div style="width:2px;flex:1;background:#e2e8f0;margin-top:4px;min-height:24px;"></div>
+                                    @endif
+                                </div>
+                                {{-- Content --}}
+                                <div class="flex-grow-1 pb-2">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <span class="fw-bold" style="color:{{ $iconColor }};font-size:0.9rem;">{{ $label }}</span>
+                                        <small class="text-muted" style="font-size:0.75rem;white-space:nowrap;">
+                                            {{ $revision->created_at->diffForHumans() }}
+                                        </small>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1 mb-2">
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
+                                             style="width:20px;height:20px;font-size:0.65rem;font-weight:700;">
+                                            {{ mb_substr($revision->revisedBy->name ?? 'N', 0, 1) }}
+                                        </div>
+                                        <small class="text-muted">{{ $revision->revisedBy->name ?? 'غير معروف' }}</small>
+                                        <small class="text-muted">·</small>
+                                        <small class="text-muted">{{ $revision->created_at->format('Y-m-d H:i') }}</small>
+                                    </div>
+                                    @if($revision->revision_notes)
+                                        <div class="rounded-3 p-2 small"
+                                             style="background:{{ $isApproved ? '#f0fdf4' : '#fef2f2' }};color:#475569;border-right:3px solid {{ $iconColor }};">
+                                            <i class="bi bi-chat-quote me-1" style="color:{{ $iconColor }};"></i>
+                                            {{ $revision->revision_notes }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-5">
+                        <div class="mb-3" style="width:64px;height:64px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+                            <i class="bi bi-clock-history fs-3 text-muted"></i>
+                        </div>
+                        <p class="text-muted mb-0">لا يوجد سجل مراجعات بعد</p>
+                        <small class="text-muted">ستظهر هنا المراجعات بعد إتمامها</small>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('styles')

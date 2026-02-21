@@ -137,10 +137,22 @@
 @endpush
 
 @section('page_actions')
-    <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2" id="addEmployee">
-        <i class="bi bi-person-plus-fill"></i>
-        <span>إضافة موظف</span>
-    </button>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-success rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
+                onclick="exportEmployeesToPDF()">
+            <i class="bi bi-file-pdf"></i>
+            <span>تصدير PDF</span>
+        </button>
+        <button class="btn btn-outline-primary rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
+                onclick="exportEmployeesToExcel()">
+            <i class="bi bi-file-earmark-excel"></i>
+            <span>تصدير Excel</span>
+        </button>
+        <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2" id="addEmployee">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>إضافة موظف</span>
+        </button>
+    </div>
 @endsection
 
 @section('content')
@@ -517,11 +529,198 @@
 @endpush
 
 @push('scripts')
-    @include('components.export-scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setupExportDropdown('exportDropdown', 'employees-table-container', 'employees-table', 'تقرير_الموظفين');
-        });
+        function exportEmployeesToPDF() {
+            if (typeof html2pdf === 'undefined') {
+                alert('جاري تحميل مكتبة PDF، يرجى المحاولة مرة أخرى بعد ثوانٍ...');
+                return;
+            }
+
+            const companyLogo = '{{ asset("assets/img/logo.png") }}';
+            const today = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+            const todayShort = new Date().toISOString().split('T')[0];
+
+            const stats = {
+                total:   {{ $stats['total'] }},
+                paid:    {{ $stats['paid'] }},
+                partial: {{ $stats['partially_paid'] }},
+                unpaid:  {{ $stats['unpaid'] }},
+                wps:     {{ $stats['wps'] }},
+                monthly: {{ $stats['monthly'] }}
+            };
+
+            let tableRows = '';
+            document.querySelectorAll('#employees-table tbody tr').forEach((row, i) => {
+                const cells = row.querySelectorAll('td');
+                if (!cells.length || cells.length < 10) return;
+
+                const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const empId      = cells[0]?.innerText.trim() || '-';
+                const invNumber  = cells[1]?.innerText.trim() || '-';
+                const clientName = cells[2]?.innerText.trim() || '-';
+                const empName    = cells[3]?.querySelector('span.fw-bold')?.innerText.trim() || cells[3]?.innerText.trim() || '-';
+                const project    = cells[4]?.innerText.trim() || '-';
+                const totalSal   = cells[5]?.innerText.trim() || '-';
+                const paid       = cells[6]?.innerText.trim() || '-';
+                const remaining  = cells[7]?.innerText.trim() || '-';
+                const salType    = cells[8]?.innerText.trim() || '-';
+                const payStatus  = cells[9]?.innerText.trim() || '-';
+
+                let statusBg = '#e2e8f0', statusColor = '#334155';
+                if (payStatus.includes('مدفوع') && !payStatus.includes('جزئ')) { statusBg='#d1fae5'; statusColor='#065f46'; }
+                else if (payStatus.includes('جزئ')) { statusBg='#fed7aa'; statusColor='#92400e'; }
+                else if (payStatus.includes('غير')) { statusBg='#fee2e2'; statusColor='#991b1b'; }
+
+                const typeBg    = salType.includes('WPS') ? '#cffafe' : '#e2e8f0';
+                const typeColor = salType.includes('WPS') ? '#0e7490' : '#334155';
+
+                const td = 'padding:7px 9px;border-bottom:1px solid #e2e8f0;font-size:11px;vertical-align:middle;';
+                tableRows += `
+                <tr style="background:${bg};">
+                    <td style="${td}text-align:center;color:#64748b;">${empId}</td>
+                    <td style="${td}text-align:center;color:#10a37f;font-weight:700;">${invNumber}</td>
+                    <td style="${td}color:#475569;">${clientName}</td>
+                    <td style="${td}font-weight:600;color:#1e293b;">${empName}</td>
+                    <td style="${td}color:#475569;">${project}</td>
+                    <td style="${td}text-align:right;color:#2563eb;font-weight:600;">${totalSal}</td>
+                    <td style="${td}text-align:right;color:#059669;font-weight:600;">${paid}</td>
+                    <td style="${td}text-align:right;color:#dc2626;font-weight:600;">${remaining}</td>
+                    <td style="${td}text-align:center;"><span style="background:${typeBg};color:${typeColor};padding:2px 8px;border-radius:10px;font-size:10px;">${salType}</span></td>
+                    <td style="${td}text-align:center;"><span style="background:${statusBg};color:${statusColor};padding:2px 8px;border-radius:10px;font-size:10px;">${payStatus}</span></td>
+                </tr>`;
+            });
+
+            const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تقرير الموظفين</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Tahoma','Arial',sans-serif; direction:rtl; background:#fff; color:#1e293b; font-size:12px; padding:16px; }
+.pdf-header { background:linear-gradient(135deg,#1e4a46,#2d6a65); color:white; padding:18px 24px; border-radius:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+.stats-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:14px; }
+.stat-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; }
+.stat-box .sl { font-size:10px; color:#64748b; margin-bottom:4px; }
+.stat-box .sv { font-size:16px; font-weight:700; }
+table { width:100%; border-collapse:collapse; font-size:11px; }
+thead th { background:#1e4a46; color:#fff; padding:9px 8px; font-weight:600; white-space:nowrap; text-align:center; }
+tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+.pdf-footer { margin-top:16px; padding:12px 20px; background:#f8fafc; border-radius:8px; display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:10px; }
+</style>
+</head>
+<body>
+<div class="pdf-header">
+  <div style="text-align:right;">
+    <div style="font-size:20px;font-weight:700;margin-bottom:6px;">تقرير الموظفين</div>
+    <div style="font-size:12px;opacity:0.85;">نظام إدارة الفواتير — ${today}</div>
+  </div>
+  <img src="${companyLogo}" style="height:42px;" onerror="this.style.display='none'">
+</div>
+
+<div class="stats-grid">
+  <div class="stat-box"><div class="sl">إجمالي الموظفين</div><div class="sv" style="color:#0284c7;">${stats.total}</div></div>
+  <div class="stat-box"><div class="sl">مدفوع</div><div class="sv" style="color:#059669;">${stats.paid}</div></div>
+  <div class="stat-box"><div class="sl">مدفوع جزئياً</div><div class="sv" style="color:#d97706;">${stats.partial}</div></div>
+  <div class="stat-box"><div class="sl">غير مدفوع</div><div class="sv" style="color:#dc2626;">${stats.unpaid}</div></div>
+  <div class="stat-box"><div class="sl">WPS</div><div class="sv" style="color:#0891b2;">${stats.wps}</div></div>
+  <div class="stat-box"><div class="sl">شهري</div><div class="sv" style="color:#4b5563;">${stats.monthly}</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>رقم الفاتورة</th>
+      <th>العميل</th>
+      <th>اسم الموظف</th>
+      <th>المشروع</th>
+      <th>إجمالي الراتب</th>
+      <th>المدفوع</th>
+      <th>المتبقي</th>
+      <th>نوع الراتب</th>
+      <th>حالة الدفع</th>
+    </tr>
+  </thead>
+  <tbody>${tableRows}</tbody>
+</table>
+
+<div class="pdf-footer">
+  <span style="font-weight:700;color:#1e4a46;">نظام إدارة الفواتير</span>
+  <span>تقرير الموظفين — تاريخ التصدير: ${today}</span>
+</div>
+</body>
+</html>`;
+
+            const container = document.createElement('div');
+            container.innerHTML = html;
+            document.body.appendChild(container);
+
+            html2pdf().set({
+                margin: [8, 8, 8, 8],
+                filename: `تقرير_الموظفين_${todayShort}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+            }).from(container).save().then(() => {
+                document.body.removeChild(container);
+                if (window.toastr) toastr.success('تم تصدير الموظفين إلى PDF بنجاح');
+            });
+        }
+
+        function exportEmployeesToExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('جاري تحميل مكتبة Excel، يرجى المحاولة مرة أخرى بعد ثوانٍ...');
+                return;
+            }
+
+            const todayShort = new Date().toISOString().split('T')[0];
+
+            const originalTable = document.getElementById('employees-table');
+            const clonedTable = originalTable.cloneNode(true);
+
+            // Remove last header (actions)
+            clonedTable.querySelectorAll('thead tr').forEach(row => {
+                const cells = row.querySelectorAll('th');
+                if (cells.length) cells[cells.length - 1].remove();
+            });
+
+            // Clean body rows
+            clonedTable.querySelectorAll('tbody tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (!cells.length) return;
+
+                // Flatten employee name cell (strip avatar)
+                const nameSpan = cells[3]?.querySelector('span.fw-bold');
+                if (nameSpan) cells[3].innerHTML = nameSpan.innerText.trim();
+
+                // Remove last cell (actions)
+                cells[cells.length - 1].remove();
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(clonedTable);
+
+            // Auto-size columns
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            const colWidths = [];
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                let maxLen = 10;
+                for (let R = range.s.r; R <= range.e.r; R++) {
+                    const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                    if (cell && cell.v) maxLen = Math.max(maxLen, String(cell.v).length + 4);
+                }
+                colWidths.push({ wch: Math.min(maxLen, 40) });
+            }
+            ws['!cols'] = colWidths;
+
+            XLSX.utils.book_append_sheet(wb, ws, 'الموظفين');
+            XLSX.writeFile(wb, `تقرير_الموظفين_${todayShort}.xlsx`);
+
+            if (window.toastr) toastr.success('تم تصدير الموظفين إلى Excel بنجاح');
+        }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>

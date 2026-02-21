@@ -71,20 +71,12 @@
 
 @section('page_actions')
     <div class="d-flex gap-2">
-        <form method="GET" action="{{ route('clients.monthly-report.export', $client) }}" class="d-inline">
-            <input type="hidden" name="month" value="{{ $month }}">
-            <input type="hidden" name="format" value="pdf">
-            <button type="submit" class="btn btn-danger rounded-xl px-4 py-2 fw-bold">
-                <i class="bi bi-file-pdf me-2"></i>تصدير PDF
-            </button>
-        </form>
-        <form method="GET" action="{{ route('clients.monthly-report.export', $client) }}" class="d-inline">
-            <input type="hidden" name="month" value="{{ $month }}">
-            <input type="hidden" name="format" value="excel">
-            <button type="submit" class="btn btn-success rounded-xl px-4 py-2 fw-bold">
-                <i class="bi bi-file-excel me-2"></i>تصدير Excel
-            </button>
-        </form>
+        <button type="button" class="btn btn-danger rounded-xl px-4 py-2 fw-bold" onclick="exportMonthlyReportPDF()">
+            <i class="bi bi-file-pdf me-2"></i>تصدير PDF
+        </button>
+        <button type="button" class="btn btn-success rounded-xl px-4 py-2 fw-bold" onclick="exportMonthlyReportExcel()">
+            <i class="bi bi-file-excel me-2"></i>تصدير Excel
+        </button>
         <a href="{{ route('clients.show', $client) }}" class="btn btn-secondary rounded-xl px-4 py-2 fw-bold">
             <i class="bi bi-arrow-right me-2"></i>رجوع
         </a>
@@ -245,3 +237,216 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+    function exportMonthlyReportPDF() {
+        if (typeof html2pdf === 'undefined') {
+            alert('جاري تحميل مكتبة PDF، يرجى المحاولة مرة أخرى بعد ثوانٍ...');
+            return;
+        }
+
+        const clientName   = '{{ $client->name }}';
+        const clientLogo   = '{{ $client->logo ? asset("storage/" . $client->logo) : "" }}';
+        const companyLogo  = '{{ asset("assets/img/logo.png") }}';
+        const month        = '{{ $month }}';
+        const periodStart  = '{{ \Carbon\Carbon::parse($period["start"])->locale("ar")->translatedFormat("d F Y") }}';
+        const periodEnd    = '{{ \Carbon\Carbon::parse($period["end"])->locale("ar")->translatedFormat("d F Y") }}';
+        const today        = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+        const todayShort   = new Date().toISOString().split('T')[0];
+
+        const summary = {
+            total_invoices:  {{ $summary['total_invoices'] }},
+            total_invoiced:  {{ $summary['total_invoiced'] }},
+            total_paid:      {{ $summary['total_paid'] }},
+            total_remaining: {{ $summary['total_remaining'] }}
+        };
+
+        const clientLogoHtml = clientLogo
+            ? `<img src="${clientLogo}" style="height:50px;width:auto;object-fit:contain;border-radius:8px;" onerror="this.style.display='none'" />`
+            : `<div style="width:50px;height:50px;background:#e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#475569;">${clientName.charAt(0)}</div>`;
+
+        // Build table rows from the visible table
+        let tableRows = '';
+        document.querySelectorAll('.table tbody tr').forEach((row, i) => {
+            const cells = row.querySelectorAll('td');
+            if (!cells.length) return;
+
+            const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+            const invNumber   = cells[0]?.innerText.trim() || '-';
+            const date        = cells[1]?.innerText.trim() || '-';
+            const totalAmount = cells[2]?.innerText.trim() || '-';
+            const paidAmount  = cells[3]?.innerText.trim() || '-';
+            const remaining   = cells[4]?.innerText.trim() || '-';
+            const creditNotes = cells[5]?.innerText.trim() || '-';
+            const status      = cells[6]?.innerText.trim() || '-';
+
+            let statusBg = '#e2e8f0', statusColor = '#334155';
+            if (status.includes('مدفوعة') && !status.includes('جزئ')) { statusBg='#d1fae5'; statusColor='#065f46'; }
+            else if (status.includes('جزئ')) { statusBg='#fef3c7'; statusColor='#92400e'; }
+            else if (status.includes('معلقة')) { statusBg='#fee2e2'; statusColor='#991b1b'; }
+
+            const td = 'padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:11px;vertical-align:middle;text-align:center;';
+            tableRows += `
+            <tr style="background:${bg};">
+                <td style="${td}color:#10a37f;font-weight:700;">${invNumber}</td>
+                <td style="${td}color:#64748b;">${date}</td>
+                <td style="${td}font-weight:600;color:#1e293b;">${totalAmount}</td>
+                <td style="${td}color:#059669;font-weight:600;">${paidAmount}</td>
+                <td style="${td}color:#dc2626;font-weight:600;">${remaining}</td>
+                <td style="${td}color:#d97706;">${creditNotes}</td>
+                <td style="${td}"><span style="background:${statusBg};color:${statusColor};padding:3px 12px;border-radius:12px;font-size:10px;font-weight:600;">${status}</span></td>
+            </tr>`;
+        });
+
+        function fmtNum(n) { return new Intl.NumberFormat('ar-SA').format(n); }
+
+        const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>التقرير الشهري - ${clientName}</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Tahoma','Arial',sans-serif; direction:rtl; background:#fff; color:#1e293b; font-size:12px; padding:16px; }
+.pdf-header { background:linear-gradient(135deg,#1e4a46,#2d6a65); color:white; padding:20px 28px; border-radius:12px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; }
+.header-right { text-align:right; }
+.header-right h1 { font-size:22px; font-weight:700; margin-bottom:6px; }
+.header-right p { font-size:12px; opacity:0.85; }
+.logos { display:flex; align-items:center; gap:16px; }
+.divider { width:1px; height:45px; background:rgba(255,255,255,0.3); }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+.stat-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; text-align:center; }
+.stat-box .sl { font-size:10px; color:#64748b; margin-bottom:4px; }
+.stat-box .sv { font-size:20px; font-weight:700; }
+.totals-bar { background:linear-gradient(135deg,#1e4a46,#2d6a65); border-radius:10px; padding:14px 24px; display:flex; justify-content:space-around; align-items:center; color:white; margin-bottom:16px; }
+.fi { text-align:center; }
+.fi .fl { font-size:10px; opacity:0.8; margin-bottom:3px; }
+.fi .fv { font-size:17px; font-weight:700; }
+.fi .fv.gold { color:#fbbf24; }
+.fi .fv.green { color:#6ee7b7; }
+.fi .fv.red { color:#fca5a5; }
+table { width:100%; border-collapse:collapse; font-size:11px; }
+thead th { background:#1e4a46; color:#fff; padding:10px 10px; font-weight:600; white-space:nowrap; font-size:11px; text-align:center; }
+tbody td { padding:8px 10px; border-bottom:1px solid #e2e8f0; vertical-align:middle; text-align:center; }
+.pdf-footer { margin-top:20px; padding:14px 24px; background:#f1f5f9; border-radius:10px; display:flex; justify-content:space-between; align-items:center; color:#475569; font-size:11px; }
+</style>
+</head>
+<body>
+<div class="pdf-header">
+  <div class="header-right">
+    <h1>التقرير الشهري للعميل</h1>
+    <p style="margin-bottom:4px;">العميل: ${clientName}</p>
+    <p>الفترة: ${periodStart} - ${periodEnd}</p>
+  </div>
+  <div class="logos">
+    ${clientLogoHtml}
+    <div class="divider"></div>
+    <img src="${companyLogo}" style="height:42px;" onerror="this.style.display='none'">
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-box"><div class="sl">عدد الفواتير</div><div class="sv" style="color:#0284c7;">${summary.total_invoices}</div></div>
+  <div class="stat-box"><div class="sl">إجمالي المبلغ</div><div class="sv" style="color:#1e293b;">${fmtNum(summary.total_invoiced)} ر.س</div></div>
+  <div class="stat-box"><div class="sl">المبلغ المدفوع</div><div class="sv" style="color:#059669;">${fmtNum(summary.total_paid)} ر.س</div></div>
+  <div class="stat-box"><div class="sl">المبلغ المتبقي</div><div class="sv" style="color:#dc2626;">${fmtNum(summary.total_remaining)} ر.س</div></div>
+</div>
+
+<div class="totals-bar">
+  <div class="fi"><div class="fl">إجمالي الفواتير</div><div class="fv gold">${fmtNum(summary.total_invoiced)} ر.س</div></div>
+  <div style="width:1px;height:36px;background:rgba(255,255,255,0.2);"></div>
+  <div class="fi"><div class="fl">المدفوع</div><div class="fv green">${fmtNum(summary.total_paid)} ر.س</div></div>
+  <div style="width:1px;height:36px;background:rgba(255,255,255,0.2);"></div>
+  <div class="fi"><div class="fl">المتبقي</div><div class="fv red">${fmtNum(summary.total_remaining)} ر.س</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>رقم الفاتورة</th>
+      <th>التاريخ</th>
+      <th>المبلغ الإجمالي</th>
+      <th>المدفوع</th>
+      <th>المتبقي</th>
+      <th>إشعارات دائنة</th>
+      <th>الحالة</th>
+    </tr>
+  </thead>
+  <tbody>${tableRows}</tbody>
+</table>
+
+<div class="pdf-footer">
+  <span style="font-weight:700;color:#1e4a46;">نظام إدارة الفواتير</span>
+  <span>التقرير الشهري — ${clientName} — ${month}</span>
+  <span>تاريخ التصدير: ${today}</span>
+</div>
+</body>
+</html>`;
+
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        document.body.appendChild(container);
+
+        html2pdf().set({
+            margin: [10, 10, 10, 10],
+            filename: `التقرير_الشهري_${clientName}_${month}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        }).from(container).save().then(() => {
+            document.body.removeChild(container);
+            if (window.toastr) toastr.success('تم تصدير التقرير الشهري إلى PDF بنجاح');
+        }).catch(err => {
+            console.error('PDF export error:', err);
+            document.body.removeChild(container);
+            alert('حدث خطأ أثناء تصدير PDF');
+        });
+    }
+
+    function exportMonthlyReportExcel() {
+        if (typeof XLSX === 'undefined') {
+            alert('جاري تحميل مكتبة Excel، يرجى المحاولة مرة أخرى بعد ثوانٍ...');
+            return;
+        }
+
+        const clientName = '{{ $client->name }}';
+        const month      = '{{ $month }}';
+
+        const table = document.querySelector('.table');
+        if (!table) {
+            alert('لم يتم العثور على جدول للتصدير');
+            return;
+        }
+
+        const tempTable = table.cloneNode(true);
+        tempTable.querySelectorAll('.no-print, .btn, .dropdown').forEach(el => el.remove());
+
+        const ws = XLSX.utils.table_to_sheet(tempTable);
+
+        // Auto-size columns
+        const wscols = [];
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            let max_length = 0;
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                const cell = ws[XLSX.utils.encode_cell({c: C, r: R})];
+                if (cell && cell.v) {
+                    const cell_length = cell.v.toString().length;
+                    if (cell_length > max_length) max_length = cell_length;
+                }
+            }
+            wscols.push({wch: Math.min(max_length + 2, 50)});
+        }
+        ws['!cols'] = wscols;
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'التقرير الشهري');
+        XLSX.writeFile(wb, `التقرير_الشهري_${clientName}_${month}.xlsx`);
+
+        if (window.toastr) toastr.success('تم تصدير التقرير الشهري إلى Excel بنجاح');
+    }
+</script>
+@endpush

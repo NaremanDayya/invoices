@@ -221,7 +221,7 @@
         <form method="GET" action="{{ route('clients.index') }}" class="d-flex align-items-center gap-3">
             <div class="search-wrapper flex-grow-1">
                 <i class="bi bi-search"></i>
-                <input type="text" name="search" value="{{ request('search') }}" 
+                <input type="text" name="search" value="{{ request('search') }}"
                        class="form-control" placeholder="البحث عن عميل بالاسم، البريد، أو الهاتف..."
                        style="font-size: 0.9rem;">
             </div>
@@ -292,7 +292,7 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('invoices.index', ['client_id' => $client->id]) }}" 
+                                <a href="{{ route('invoices.index', ['client_id' => $client->id]) }}"
                                    class="invoice-badge"
                                    title="عرض فواتير {{ $client->name }}">
                                     <i class="bi bi-file-earmark-text-fill"></i>
@@ -301,7 +301,7 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('clients.monthly-report', $client) }}" 
+                                    <a href="{{ route('clients.monthly-report', $client) }}"
                                        class="btn-action"
                                        title="التقرير الشهري">
                                         <i class="bi bi-file-earmark-bar-graph text-info"></i>
@@ -491,7 +491,7 @@
             const companyLogo = '{{ asset("assets/img/logo.png") }}';
             const today = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
             const todayShort = new Date().toISOString().split('T')[0];
-            
+
             const stats = {
                 total: {{ $clients->total() ?? 0 }},
                 active: {{ $clients->where('invoices_count', '>', 0)->count() }},
@@ -506,15 +506,32 @@
                 if (!cells.length || cells.length < 6) return;
 
                 const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-                
-                // Extract client name (from the link inside first td)
-                const clientNameEl = cells[0]?.querySelector('.client-name');
-                const clientName = clientNameEl?.innerText.trim() || '-';
-                
-                // Extract address if exists
-                const addressEl = cells[0]?.querySelector('small');
-                const address = addressEl?.innerText.trim() || '-';
-                
+
+                // Extract client name and location from the data structure
+                const clientCell = cells[0];
+                let clientName = '-';
+                let clientLocation = '-';
+
+                if (clientCell) {
+                    // Try to get client name from the link
+                    const clientNameEl = clientCell.querySelector('.client-name');
+                    clientName = clientNameEl?.innerText.trim() || '-';
+
+                    // Extract location from address or create a cleaner format
+                    const addressEl = clientCell.querySelector('small');
+                    if (addressEl) {
+                        const fullAddress = addressEl.innerText.trim();
+                        // If the address contains a dash or comma, show only the city/area part
+                        if (fullAddress.includes('-')) {
+                            clientLocation = fullAddress.split('-')[0].trim();
+                        } else if (fullAddress.includes('،')) {
+                            clientLocation = fullAddress.split('،')[0].trim();
+                        } else {
+                            clientLocation = fullAddress;
+                        }
+                    }
+                }
+
                 const email = cells[1]?.innerText.trim() || '-';
                 const phone = cells[2]?.innerText.trim() || '-';
                 const taxNumber = cells[3]?.querySelector('code')?.innerText.trim() || cells[3]?.innerText.trim() || '-';
@@ -523,10 +540,10 @@
                 const td = 'padding:8px;border-bottom:1px solid #e2e8f0;font-size:10px;vertical-align:middle;';
                 tableRows += `
                 <tr style="background:${bg};">
-                    <td style="${td}">
-                        <div style="font-weight:700;color:#1e293b;margin-bottom:2px;">${clientName}</div>
-                        <div style="font-size:9px;color:#64748b;">${address}</div>
-                    </td>
+                 <td style="${td}">
+    <div style="font-weight:700;color:#1e293b;margin-bottom:2px;">${clientName}</div>
+    ${clientLocation !== '-' ? `<div style="font-size:9px;color:#64748b;">${clientLocation}</div>` : ''}
+</td>
                     <td style="${td}color:#64748b;">${email}</td>
                     <td style="${td}color:#64748b;text-align:left;" dir="ltr">${phone}</td>
                     <td style="${td}text-align:center;"><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:9px;">${taxNumber}</code></td>

@@ -128,28 +128,11 @@
                                 @endif
                                 <span class="conv-name">{{ $client?->name ?? 'عميل غير معروف' }}</span>
                             </div>
-
                         </div>
 
-                        <!-- الصف الثاني: المعاينة + الشارات -->
+                        <!-- الصف الثاني: المعاينة -->
                         <div class="conv-row-mid">
-                            <p class="conv-preview">{{ Str::limit($conversation->latest_message_text ?? 'ابدأ المحادثة...', 45) }}</p>
-                            @if($isUnread)
-                                <div class="conv-badges">
-                                    @if($isInvoiceType)
-                                        <span class="conv-badge badge-invoice" title="رسائل غير مقروءة في هذه الفاتورة">{{ $unreadCount }}</span>
-                                    @else
-                                        @if($privateUnread > 0)
-                                            <span class="conv-badge badge-private" title="رسائل خاصة غير مقروءة">{{ $privateUnread }}</span>
-                                        @endif
-                                        @if($invoiceUnread > 0)
-                                            <span class="conv-badge badge-invoice" title="رسائل فواتير غير مقروءة">
-                                                <i class="bi bi-receipt"></i> {{ $invoiceUnread }}
-                                            </span>
-                                        @endif
-                                    @endif
-                                </div>
-                            @endif
+                            <p class="conv-preview">{{ Str::limit($conversation->latest_message_text ?? 'ابدأ المحادثة...', 55) }}</p>
                         </div>
 
                         <!-- الصف الثالث: معلومات الفاتورة/العميل -->
@@ -190,6 +173,13 @@
                             @endif
                         </div>
                     </div>
+
+                    <!-- شارة عدد الرسائل غير المقروءة -->
+                    @if($isUnread)
+                        <div class="conv-unread-circle {{ $isInvoiceType ? 'circle-invoice' : 'circle-private' }}">
+                            {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                        </div>
+                    @endif
                 </a>
 
                 @if(!$loop->last)
@@ -313,7 +303,7 @@
             .conversation-item {
                 display: flex;
                 flex-direction: row;
-                align-items: flex-start;
+                align-items: center;
                 gap: 12px;
                 padding: 12px 14px;
                 border-radius: 12px;
@@ -322,6 +312,7 @@
                 color: inherit !important;
                 transition: background 0.2s, border-color 0.2s;
                 cursor: pointer;
+                position: relative;
             }
 
             .conversation-item:hover {
@@ -433,13 +424,11 @@
                 flex-shrink: 0;
             }
 
-            /* Row 2: preview + unread badges */
+            /* Row 2: preview */
             .conv-row-mid {
                 display: flex;
                 flex-direction: row-reverse;
-                justify-content: space-between;
-                align-items: flex-start;
-                gap: 6px;
+                align-items: center;
             }
 
             .conv-preview {
@@ -454,25 +443,30 @@
                 text-align: right;
             }
 
-            .conv-badges {
-                display: flex;
-                gap: 4px;
+            /* ── Unread Circle Badge ── */
+            .conv-unread-circle {
                 flex-shrink: 0;
-            }
-
-            .conv-badge {
-                display: inline-flex;
+                min-width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                display: flex;
                 align-items: center;
-                gap: 3px;
-                font-size: 0.68rem;
-                font-weight: 700;
-                padding: 2px 7px;
-                border-radius: 20px;
-                line-height: 1.4;
+                justify-content: center;
+                font-size: 0.72rem;
+                font-weight: 800;
+                color: white;
+                line-height: 1;
+                padding: 0 5px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             }
 
-            .badge-private { background: #dc3545; color: white; }
-            .badge-invoice { background: #7c3aed; color: white; }
+            .conv-unread-circle.circle-private {
+                background: linear-gradient(135deg, #2d5f5d, #3d9d8f);
+            }
+
+            .conv-unread-circle.circle-invoice {
+                background: linear-gradient(135deg, #7c3aed, #9d5cf5);
+            }
 
             /* Row 3: info badges */
             .conv-row-info {

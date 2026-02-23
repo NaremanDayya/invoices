@@ -121,13 +121,14 @@
                     <div class="conv-body">
                         <!-- الصف الأول: الاسم + الوقت -->
                         <div class="conv-row-top">
+                            <span class="conv-time">{{ $latestMessageTime }}</span>
                             <div class="conv-name-wrap">
                                 <span class="conv-name">{{ $client?->name ?? 'عميل غير معروف' }}</span>
                                 @if($isInvoiceType && $conversation->invoice)
                                     <span class="conv-inv-num">#{{ $conversation->invoice->number ?? '' }}</span>
                                 @endif
                             </div>
-                            <span class="conv-time">{{ $latestMessageTime }}</span>
+
                         </div>
 
                         <!-- الصف الثاني: المعاينة + الشارات -->

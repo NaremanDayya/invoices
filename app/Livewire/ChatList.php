@@ -203,13 +203,14 @@ class ChatList extends Component
                 ->whereColumn('conversation_id', 'conversations.id')
         ]);
 
-        // Add unread count for this conversation using chat_receivers table
+        // Add unread count per conversation: messages sent by others, not yet read by this user
         $query->addSelect([
             'unread_count' => \DB::table('messages')
                 ->join('chat_receivers', 'messages.id', '=', 'chat_receivers.message_id')
                 ->whereColumn('messages.conversation_id', 'conversations.id')
                 ->where('chat_receivers.receiver_id', $user->id)
                 ->where('chat_receivers.is_read', false)
+                ->where('messages.sender_id', '!=', $user->id)
                 ->selectRaw('COUNT(*)')
         ]);
 
@@ -221,7 +222,8 @@ class ChatList extends Component
                     ->join('chat_receivers', 'messages.id', '=', 'chat_receivers.message_id')
                     ->whereColumn('messages.conversation_id', 'conversations.id')
                     ->where('chat_receivers.receiver_id', $user->id)
-                    ->where('chat_receivers.is_read', false);
+                    ->where('chat_receivers.is_read', false)
+                    ->where('messages.sender_id', '!=', $user->id);
             });
         }
 
@@ -262,10 +264,10 @@ class ChatList extends Component
 
         $conversationIds = $conversations->pluck('id');
 
-        // Get latest messages
+        // ── 1. Latest message per conversation (single bulk query) ──────────────
         $latestMessages = Message::whereIn('conversation_id', $conversationIds)
-            ->whereIn('id', function ($query) use ($conversationIds) {
-                $query->select(\DB::raw('MAX(id)'))
+            ->whereIn('id', function ($q) use ($conversationIds) {
+                $q->select(\DB::raw('MAX(id)'))
                     ->from('messages')
                     ->whereIn('conversation_id', $conversationIds)
                     ->groupBy('conversation_id');
@@ -274,73 +276,68 @@ class ChatList extends Component
             ->get()
             ->keyBy('conversation_id');
 
-        // For invoice conversations: get per-conversation unread count (already in unread_count subquery)
-        // For private conversations: also fetch invoice sub-chat unread counts grouped by client
-        $privateConvIds = $conversations->where('type', 'private')->pluck('client_id')->filter()->unique()->values();
+        // ── 2. Unread counts per conversation (single bulk query) ───────────────
+        // Excludes messages sent by the auth user — only counts messages from others.
+        $unreadPerConversation = \DB::table('messages as m')
+            ->join('chat_receivers as cr', function ($join) use ($user) {
+                $join->on('cr.message_id', '=', 'm.id')
+                     ->where('cr.receiver_id', '=', $user->id)
+                     ->where('cr.is_read', '=', false);
+            })
+            ->whereIn('m.conversation_id', $conversationIds)
+            ->where('m.sender_id', '!=', $user->id)
+            ->selectRaw('m.conversation_id, COUNT(*) as unread_count')
+            ->groupBy('m.conversation_id')
+            ->pluck('unread_count', 'conversation_id');
+
+        // ── 3. Invoice sub-chat unread counts per client (for private chats) ────
+        // One extra query only when private conversations are present.
+        $clientIds = $conversations
+            ->where('type', 'private')
+            ->pluck('client_id')
+            ->filter()
+            ->unique()
+            ->values();
 
         $invoiceUnreadByClient = collect();
-        if ($privateConvIds->isNotEmpty()) {
+        if ($clientIds->isNotEmpty()) {
             $invoiceUnreadByClient = \DB::table('conversations as c')
                 ->join('messages as m', 'm.conversation_id', '=', 'c.id')
-                ->join('chat_receivers as cr', function($join) use ($user) {
+                ->join('chat_receivers as cr', function ($join) use ($user) {
                     $join->on('cr.message_id', '=', 'm.id')
                          ->where('cr.receiver_id', '=', $user->id)
                          ->where('cr.is_read', '=', false);
                 })
-                ->whereIn('c.client_id', $privateConvIds)
+                ->whereIn('c.client_id', $clientIds)
                 ->where('c.type', 'invoice')
                 ->whereNotNull('c.invoice_id')
-                ->select('c.client_id', \DB::raw('COUNT(*) as invoice_unread_count'))
+                ->where('m.sender_id', '!=', $user->id)
+                ->selectRaw('c.client_id, COUNT(*) as invoice_unread_count')
                 ->groupBy('c.client_id')
                 ->pluck('invoice_unread_count', 'client_id');
         }
 
-        // For invoice conversations: get per-invoice unread count directly
-        $invoiceConvIds = $conversations->where('type', 'invoice')->pluck('id');
-        $invoiceConvUnread = collect();
-        if ($invoiceConvIds->isNotEmpty()) {
-            $invoiceConvUnread = \DB::table('messages as m')
-                ->join('chat_receivers as cr', function($join) use ($user) {
-                    $join->on('cr.message_id', '=', 'm.id')
-                         ->where('cr.receiver_id', '=', $user->id)
-                         ->where('cr.is_read', '=', false);
-                })
-                ->whereIn('m.conversation_id', $invoiceConvIds)
-                ->select('m.conversation_id', \DB::raw('COUNT(*) as unread_count'))
-                ->groupBy('m.conversation_id')
-                ->pluck('unread_count', 'conversation_id');
-        }
-
-        // Map the collection to add data
-        $conversations->each(function ($conversation) use ($latestMessages, $invoiceUnreadByClient, $invoiceConvUnread) {
+        // ── 4. Decorate each conversation ───────────────────────────────────────
+        $conversations->each(function ($conversation) use ($latestMessages, $unreadPerConversation, $invoiceUnreadByClient) {
             $latestMessage = $latestMessages->get($conversation->id);
 
-            // Calculate attributes
-            $conversation->latest_message_text = $latestMessage ? $latestMessage->message : '';
-            $conversation->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
-            $conversation->latest_message_sender_id = $latestMessage ? $latestMessage->sender_id : null;
-
-            if ($conversation->type === 'group') {
-                $conversation->receiver_name = $conversation->label ?? 'Group Chat';
-            } else {
-                $conversation->receiver_name = $conversation->getReceiver()?->name ?? 'Unknown';
-            }
-
-            $conversation->is_last_message_read = $conversation->isLastMessageReadByUser();
+            $conversation->latest_message_text      = $latestMessage?->message ?? '';
+            $conversation->latest_message_time      = $latestMessage?->created_at;
+            $conversation->latest_message_sender_id = $latestMessage?->sender_id;
 
             if ($conversation->type === 'invoice') {
-                // For invoice chats: use the per-conversation unread count
-                $ownUnread = (int) ($invoiceConvUnread->get($conversation->id) ?? $conversation->unread_count ?? 0);
-                $conversation->unread_count = $ownUnread;
-                $conversation->invoice_unread_count = $ownUnread;
+                // Invoice chat: unread = messages in this conversation not read by user
+                $own = (int) ($unreadPerConversation->get($conversation->id) ?? 0);
+                $conversation->unread_count         = $own;
                 $conversation->private_unread_count = 0;
+                $conversation->invoice_unread_count = $own;
             } else {
-                // For private chats: own unread + invoice sub-chat unread
-                $ownUnread = (int) ($conversation->unread_count ?? 0);
-                $invoiceUnread = (int) ($invoiceUnreadByClient->get($conversation->client_id) ?? 0);
-                $conversation->unread_count = $ownUnread + $invoiceUnread;
-                $conversation->invoice_unread_count = $invoiceUnread;
-                $conversation->private_unread_count = $ownUnread;
+                // Private chat: own private unread + unread across all invoice sub-chats for this client
+                $own     = (int) ($unreadPerConversation->get($conversation->id) ?? 0);
+                $invoice = (int) ($invoiceUnreadByClient->get($conversation->client_id) ?? 0);
+                $conversation->unread_count         = $own + $invoice;
+                $conversation->private_unread_count = $own;
+                $conversation->invoice_unread_count = $invoice;
             }
         });
 

@@ -156,7 +156,7 @@
                                     <h6 class="mb-0 fw-bold text-dark">{{ $client?->name ?? 'عميل غير معروف' }}</h6>
                                     @if($isInvoiceType && $conversation->invoice)
                                         <span class="badge bg-secondary-subtle text-secondary" style="font-size:0.65rem;">
-                                            #{{ $conversation->invoice->invoice_number ?? '' }}
+                                            #{{ $conversation->invoice->number ?? '' }}
                                         </span>
                                     @endif
                                 </div>

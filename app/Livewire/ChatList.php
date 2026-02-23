@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Client;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -267,7 +268,7 @@ class ChatList extends Component
         // ── 1. Latest message per conversation (single bulk query) ──────────────
         $latestMessages = Message::whereIn('conversation_id', $conversationIds)
             ->whereIn('id', function ($q) use ($conversationIds) {
-                $q->select(\DB::raw('MAX(id)'))
+                $q->select(DB::raw('MAX(id)'))
                     ->from('messages')
                     ->whereIn('conversation_id', $conversationIds)
                     ->groupBy('conversation_id');
@@ -355,6 +356,7 @@ class ChatList extends Component
         if (!$this->allConversations) {
             $this->allConversations = $this->getConversations($this->page);
         }
+        dd($this->allConversations);
 
         return view('livewire.chat-list', [
             'conversations' => $this->allConversations ?? collect(),

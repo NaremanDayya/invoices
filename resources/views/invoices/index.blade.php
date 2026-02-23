@@ -162,6 +162,9 @@
 @endpush
 
 @section('page_actions')
+    @php
+    $user = \Illuminate\Support\Facades\Auth::user();
+    @endphp
     <div class="d-flex gap-2">
         <div class="dropdown">
             <button class="btn btn-outline-success rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2 dropdown-toggle"
@@ -182,7 +185,7 @@
                 </li>
             </ul>
         </div>
-        @if(Auth::user()->hasPermission('add_invoices'))
+        @if($user->hasPermission('add_invoices'))
         <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
                 data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
             <i class="bi bi-plus-lg"></i>

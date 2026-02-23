@@ -172,11 +172,13 @@
             <i class="bi bi-file-earmark-excel"></i>
             <span>تصدير Excel</span>
         </button>
+        @if(auth()->user()->hasPermission('add_clients'))
         <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
                 data-bs-toggle="modal" data-bs-target="#createClientModal">
             <i class="bi bi-plus-lg"></i>
             <span>عميل جديد</span>
         </button>
+        @endif
     </div>
 @endsection
 
@@ -311,6 +313,7 @@
                                        title="التقرير الشهري">
                                         <i class="bi bi-file-earmark-bar-graph text-info"></i>
                                     </a>
+                                    @if(auth()->user()->hasPermission('add_clients'))
                                     <button class="btn-action"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editClientModal{{ $client->id }}"
@@ -326,6 +329,7 @@
                                             <i class="bi bi-trash text-danger"></i>
                                         </button>
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

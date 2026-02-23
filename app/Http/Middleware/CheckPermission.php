@@ -14,9 +14,9 @@ class CheckPermission
             return redirect()->route('login');
         }
 
-        // if (!auth()->user()->hasPermission($permission)) {
-        //     abort(403, 'ليس لديك صلاحية للوصول إلى هذه الصفحة');
-        // }
+        if (!auth()->user()->hasPermission($permission)) {
+            abort(403, 'ليس لديك صلاحية للوصول إلى هذه الصفحة');
+        }
 
         return $next($request);
     }

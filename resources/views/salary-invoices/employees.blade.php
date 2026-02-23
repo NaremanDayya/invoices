@@ -9,12 +9,12 @@
         <button type="button" class="btn btn-success" onclick="exportSalaryPDF()">
             <i class="bi bi-file-earmark-pdf me-2"></i>تصدير PDF
         </button>
-        @if($invoice->revision_status == 'pending')
+        @if($invoice->revision_status == 'pending' && auth()->user()->hasPermission('preview_invoice_employees'))
             <button type="button" class="btn btn-warning" onclick="openRevisionModal()">
                 <i class="bi bi-pencil-square me-2"></i>مراجعة
             </button>
         @endif
-        @if($invoice->approval_status !== 'approved')
+        @if($invoice->approval_status !== 'approved' && auth()->user()->hasPermission('approve_invoice_employees'))
             <button type="button" class="btn btn-primary" onclick="approveInvoice()">
                 <i class="bi bi-check-circle me-2"></i>اعتماد
             </button>
@@ -317,7 +317,7 @@
                         </select>
                     </div>
                     <div class="col-md-3 text-md-end">
-                        @if($invoice->approval_status === 'approved')
+                        @if($invoice->approval_status === 'approved' && auth()->user()->hasPermission('add_invoice_employee_payment'))
                             <button type="button" class="btn btn-success" id="processBatchBtn"
                                     data-bs-toggle="modal" data-bs-target="#batchPaymentModal" disabled>
                                 <i class="bi bi-cash-coin me-2"></i>
@@ -453,7 +453,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex gap-1 justify-content-center">
-                                        @if($invoice->approval_status === 'approved' && $employee->payment_status !== 'paid')
+                                        @if($invoice->approval_status === 'approved' && $employee->payment_status !== 'paid' && auth()->user()->hasPermission('add_invoice_employee_payment'))
                                             <button type="button"
                                                     class="btn btn-sm btn-success"
                                                     data-bs-toggle="modal"

@@ -99,9 +99,16 @@
                             <div class="text-end">
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">{{ $latestMessageTime }}</small>
                                 @if($isUnread)
-                                    <span class="badge bg-danger rounded-pill px-2 mt-1">
-                                        {{ $unreadCount }}
-                                    </span>
+                                    <div class="d-flex gap-1 justify-content-end mt-1">
+                                        <span class="badge bg-danger rounded-pill px-2" title="إجمالي الرسائل غير المقروءة">
+                                            {{ $unreadCount }}
+                                        </span>
+                                        @if(($conversation->invoice_unread_count ?? 0) > 0)
+                                            <span class="badge rounded-pill px-2" style="background:#7c3aed; font-size:0.7rem;" title="رسائل غير مقروءة في فواتير العميل">
+                                                <i class="bi bi-receipt"></i> {{ $conversation->invoice_unread_count }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 @endif
                             </div>
 

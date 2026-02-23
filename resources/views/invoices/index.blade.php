@@ -182,11 +182,13 @@
                 </li>
             </ul>
         </div>
+        @if(auth()->user()->hasPermission('add_invoices'))
         <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
                 data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
             <i class="bi bi-plus-lg"></i>
             <span>فاتورة جديدة</span>
         </button>
+        @endif
     </div>
 @endsection
 
@@ -450,13 +452,21 @@
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="{{ route('invoices.show', $invoice->id) }}" class="btn-action" title="عرض"><i class="bi bi-eye"></i></a>
-                                <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn-action" title="تعديل"><i class="bi bi-pencil"></i></a>
-                                @if($invoice->type !== 'salary_invoice')
+                                @if(auth()->user()->hasPermission('add_invoices'))
+                                    <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn-action" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                @endif
+                                @if($invoice->type !== 'salary_invoice' && auth()->user()->hasPermission('import_invoice_employees'))
                                     <button type="button" class="btn-action text-purple-600" title="استيراد رواتب" onclick="openSalaryImportModal({{ $invoice->id }})" style="color: #7c3aed;"><i class="bi bi-upload"></i></button>
                                 @endif
-                                <button type="button" class="btn-action text-success" title="إضافة دفعة" onclick="openPaymentModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->paid_amount ?? 0 }})"><i class="bi bi-cash-coin"></i></button>
-                                <button type="button" class="btn-action text-warning" title="إشعار دائن" onclick="openCreditNoteModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->base_price }}, {{ $invoice->tax_rate }}, {{ $invoice->employees_count ?? 0 }}, {{ $invoice->work_days_count ?? 0 }})"><i class="bi bi-file-earmark-text"></i></button>
-                                <button type="button" class="btn-action text-danger" title="حذف" onclick="confirmDelete({{ $invoice->id }})"><i class="bi bi-trash"></i></button>
+                                @if(auth()->user()->hasPermission('add_invoice_payment'))
+                                    <button type="button" class="btn-action text-success" title="إضافة دفعة" onclick="openPaymentModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->paid_amount ?? 0 }})"><i class="bi bi-cash-coin"></i></button>
+                                @endif
+                                @if(auth()->user()->hasPermission('add_credit_note'))
+                                    <button type="button" class="btn-action text-warning" title="إشعار دائن" onclick="openCreditNoteModal({{ $invoice->id }}, '{{ $invoice->number }}', {{ $invoice->total_price }}, {{ $invoice->base_price }}, {{ $invoice->tax_rate }}, {{ $invoice->employees_count ?? 0 }}, {{ $invoice->work_days_count ?? 0 }})"><i class="bi bi-file-earmark-text"></i></button>
+                                @endif
+                                @if(auth()->user()->hasPermission('add_invoices'))
+                                    <button type="button" class="btn-action text-danger" title="حذف" onclick="confirmDelete({{ $invoice->id }})"><i class="bi bi-trash"></i></button>
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -10,13 +10,11 @@ class BladeServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Blade::if('permission', function ($permission) {
-            // return auth()->check() && auth()->user()->hasPermission($permission);
-            return true; // Always return true - permission checks disabled
+            return auth()->check() && auth()->user()->hasPermission($permission);
         });
 
         Blade::if('anypermission', function (...$permissions) {
-            // return auth()->check() && auth()->user()->hasAnyPermission($permissions);
-            return true; // Always return true - permission checks disabled
+            return auth()->check() && auth()->user()->hasAnyPermission($permissions);
         });
 
         Blade::if('role', function ($role) {

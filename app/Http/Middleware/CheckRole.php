@@ -14,9 +14,9 @@ class CheckRole
             return redirect()->route('login');
         }
 
-        // if (!auth()->user()->hasAnyRole($roles)) {
-        //     abort(403, 'ليس لديك صلاحية للوصول إلى هذه الصفحة');
-        // }
+        if (!auth()->user()->hasAnyRole($roles)) {
+            abort(403, 'ليس لديك صلاحية للوصول إلى هذه الصفحة');
+        }
 
         return $next($request);
     }

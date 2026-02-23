@@ -28,8 +28,7 @@ class Role extends Model
 
     public function hasPermission(string $permissionName): bool
     {
-        // return $this->permissions()->where('name', $permissionName)->exists();
-        return true; // Always return true - permission checks disabled
+        return $this->permissions()->where('name', $permissionName)->exists();
     }
 
     public function givePermissionTo(Permission|string $permission): void

@@ -57,7 +57,7 @@ class Conversation extends Model
     public function getUnreadMessagesCountAttribute()
     {
         if (array_key_exists('unread_count', $this->attributes)) {
-            return $this->attributes['unread_count'];
+            return (int) $this->attributes['unread_count'];
         }
 
         return $this->unreadMessagesCount();
@@ -81,9 +81,15 @@ class Conversation extends Model
     }
     public function unreadMessagesCount(): int
     {
-        return $unreadMessages = Message::where('conversation_id', '=', $this->id)
-            ->where('receiver_id', Auth::user()->id)
-            ->whereNull('read_at')->count();
+        return \DB::table('messages as m')
+            ->join('chat_receivers as cr', function ($join) {
+                $join->on('cr.message_id', '=', 'm.id')
+                     ->where('cr.receiver_id', '=', Auth::id())
+                     ->where('cr.is_read', '=', false);
+            })
+            ->where('m.conversation_id', $this->id)
+            ->where('m.sender_id', '!=', Auth::id())
+            ->count();
     }
 
     public function isLastMessageReadByUser()

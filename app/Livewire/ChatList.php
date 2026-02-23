@@ -263,7 +263,7 @@ class ChatList extends Component
             $user = Auth::user();
         }
 
-        $conversationIds = $conversations->pluck('id');
+        $conversationIds = $conversations->pluck('id')->toArray();
 
         // ── 1. Latest message per conversation (single bulk query) ──────────────
         $latestMessages = Message::whereIn('conversation_id', $conversationIds)
@@ -356,8 +356,6 @@ class ChatList extends Component
         if (!$this->allConversations) {
             $this->allConversations = $this->getConversations($this->page);
         }
-        dd($this->allConversations);
-
         return view('livewire.chat-list', [
             'conversations' => $this->allConversations ?? collect(),
         ]);

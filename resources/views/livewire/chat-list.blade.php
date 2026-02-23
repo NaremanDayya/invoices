@@ -5,9 +5,9 @@
             <div>
                 <h4 class="mb-0 text-dark">
                     <i class="bi bi-chat-left-text-fill text-primary ms-2"></i>
-                    مناقشات الفواتير
+                    المحادثات
                 </h4>
-                <p class="text-muted mb-0 small">تواصل مع العملاء بخصوص الفواتير</p>
+                <p class="text-muted mb-0 small">المحادثات الخاصة ومناقشات الفواتير</p>
             </div>
         </div>
 
@@ -22,6 +22,24 @@
                         <span class="input-group-text bg-light">
                             <i class="bi bi-search text-muted"></i>
                         </span>
+                    </div>
+                </div>
+
+                <!-- فلتر نوع المحادثة -->
+                <div class="col-12">
+                    <div class="chat-type-tabs d-flex gap-1">
+                        <button wire:click="$set('chatType', 'all')"
+                                class="chat-type-btn flex-fill {{ $chatType === 'all' ? 'active' : '' }}">
+                            <i class="bi bi-grid-fill ms-1"></i> الكل
+                        </button>
+                        <button wire:click="$set('chatType', 'private')"
+                                class="chat-type-btn flex-fill {{ $chatType === 'private' ? 'active' : '' }}">
+                            <i class="bi bi-person-fill ms-1"></i> خاص
+                        </button>
+                        <button wire:click="$set('chatType', 'invoice')"
+                                class="chat-type-btn flex-fill {{ $chatType === 'invoice' ? 'active' : '' }}">
+                            <i class="bi bi-receipt ms-1"></i> فواتير
+                        </button>
                     </div>
                 </div>
 
@@ -63,35 +81,43 @@
         @else
             @foreach($conversations as $conversation)
                 @php
-                    $unreadCount = $conversation->unread_count ?? 0;
-                    $isUnread = $unreadCount > 0;
+                    $unreadCount    = (int) ($conversation->unread_count ?? 0);
+                    $privateUnread  = (int) ($conversation->private_unread_count ?? 0);
+                    $invoiceUnread  = (int) ($conversation->invoice_unread_count ?? 0);
+                    $isUnread       = $unreadCount > 0;
+                    $isInvoiceType  = $conversation->type === 'invoice';
                     $latestMessageTime = $conversation->latest_message_time
                         ? \Carbon\Carbon::parse($conversation->latest_message_time)->locale('ar')->diffForHumans()
                         : 'لا توجد رسائل';
                     $client = $conversation->client ?? null;
-                    
-                    // Improved metrics using correct Invoice fields
+
+                    // Client-level metrics (used for private chats)
                     $activeInvoices = $client?->invoices?->where('is_cancelled', false) ?? collect();
-                    $invoiceCount = $activeInvoices->count();
-                    $totalAmount = $activeInvoices->sum('total_price');
-                    $paidAmount = $activeInvoices->where('payment_status', 'paid')->sum('paid_amount');
-                    $pendingAmount = $totalAmount - $paidAmount;
-                    $hasPending = $pendingAmount > 0;
+                    $invoiceCount   = $activeInvoices->count();
+                    $totalAmount    = $activeInvoices->sum('total_price');
+                    $paidAmount     = $activeInvoices->where('payment_status', 'paid')->sum('paid_amount');
+                    $pendingAmount  = $totalAmount - $paidAmount;
+                    $hasPending     = $pendingAmount > 0;
                 @endphp
 
                 <a href="{{ route('client.chat', ['client' => $client?->id ?? 'unknown', 'conversation' => $conversation->id]) }}"
-                   class="conversation-item {{ $isUnread ? 'unread' : '' }} text-decoration-none"
+                   class="conversation-item {{ $isUnread ? 'unread' : '' }} {{ $isInvoiceType ? 'invoice-type' : 'private-type' }} text-decoration-none"
                    style="cursor: pointer; display: block; text-decoration: none; color: inherit;"
-                   data-name="{{ $client?->name ?? '' }}">
+                   data-name="{{ $client?->name ?? '' }}"
+                   data-type="{{ $conversation->type }}">
 
 
                     <!-- صورة رمزية للعميل -->
                     <div class="conversation-avatar">
-                        <div class="avatar-placeholder-sm bg-primary shadow-sm">
-                            {{ mb_substr($client?->name ?? 'عم', 0, 2) }}
+                        <div class="avatar-placeholder-sm shadow-sm {{ $isInvoiceType ? 'avatar-invoice' : 'avatar-private' }}">
+                            @if($isInvoiceType)
+                                <i class="bi bi-receipt"></i>
+                            @else
+                                {{ mb_substr($client?->name ?? 'عم', 0, 2) }}
+                            @endif
                         </div>
-                        <!-- حالة الاتصال -->
-                        <div class="online-status {{ rand(0, 1) ? 'online' : 'offline' }}"></div>
+                        <div class="chat-type-indicator {{ $isInvoiceType ? 'type-invoice' : 'type-private' }}"
+                             title="{{ $isInvoiceType ? 'محادثة فاتورة' : 'محادثة خاصة' }}"></div>
                     </div>
 
                     <div class="conversation-details">
@@ -100,51 +126,86 @@
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">{{ $latestMessageTime }}</small>
                                 @if($isUnread)
                                     <div class="d-flex gap-1 justify-content-end mt-1">
-                                        <span class="badge bg-danger rounded-pill px-2" title="إجمالي الرسائل غير المقروءة">
-                                            {{ $unreadCount }}
-                                        </span>
-                                        @if(($conversation->invoice_unread_count ?? 0) > 0)
-                                            <span class="badge rounded-pill px-2" style="background:#7c3aed; font-size:0.7rem;" title="رسائل غير مقروءة في فواتير العميل">
-                                                <i class="bi bi-receipt"></i> {{ $conversation->invoice_unread_count }}
+                                        @if($isInvoiceType)
+                                            {{-- Invoice chat: single badge for this invoice's unread --}}
+                                            <span class="badge unread-badge-invoice rounded-pill px-2"
+                                                  title="رسائل غير مقروءة في هذه الفاتورة">
+                                                <i class="bi bi-receipt me-1"></i>{{ $unreadCount }}
                                             </span>
+                                        @else
+                                            {{-- Private chat: separate badges for private vs invoice sub-chats --}}
+                                            @if($privateUnread > 0)
+                                                <span class="badge unread-badge-private rounded-pill px-2"
+                                                      title="رسائل خاصة غير مقروءة">
+                                                    <i class="bi bi-chat-fill me-1"></i>{{ $privateUnread }}
+                                                </span>
+                                            @endif
+                                            @if($invoiceUnread > 0)
+                                                <span class="badge unread-badge-invoice rounded-pill px-2"
+                                                      title="رسائل فواتير غير مقروءة">
+                                                    <i class="bi bi-receipt me-1"></i>{{ $invoiceUnread }}
+                                                </span>
+                                            @endif
                                         @endif
                                     </div>
                                 @endif
                             </div>
 
                             <div>
-                                <h6 class="mb-0 fw-bold text-dark">{{ $client?->name ?? 'عميل غير معروف' }}</h6>
+                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                    <h6 class="mb-0 fw-bold text-dark">{{ $client?->name ?? 'عميل غير معروف' }}</h6>
+                                    @if($isInvoiceType && $conversation->invoice)
+                                        <span class="badge bg-secondary-subtle text-secondary" style="font-size:0.65rem;">
+                                            #{{ $conversation->invoice->invoice_number ?? '' }}
+                                        </span>
+                                    @endif
+                                </div>
                                 <p class="conversation-preview mb-0 text-muted small mt-1">
                                     {{ $conversation->latest_message_text ?? 'ابدأ المحادثة...' }}
                                 </p>
                             </div>
                         </div>
 
-                        <!-- معلومات الفاتورة - محسنة للعرض -->
+                        <!-- معلومات الفاتورة / العميل -->
                         <div class="invoice-info mt-2" style="flex-direction: row-reverse;">
-                            <!-- المبلغ الإجمالي -->
-                            <span class="badge bg-light text-dark border-0 shadow-sm py-1 px-2">
-                                <i class="bi bi-cash-coin ms-1 text-primary"></i>
-                                <span class="fw-bold">{{ number_format($totalAmount, 0) }}</span> ر.س
-                            </span>
-
-                            <!-- عدد الفواتير -->
-                            <span class="badge bg-light text-muted border-0 shadow-sm py-1 px-2">
-                                <i class="bi bi-receipt ms-1"></i>
-                                {{ $invoiceCount }}
-                            </span>
-
-                            <!-- حالة المديونية -->
-                            @if($hasPending)
-                                <span class="badge bg-warning-subtle text-warning-emphasis border-0 shadow-sm py-1 px-2">
-                                    <i class="bi bi-clock-history ms-1"></i>
-                                    {{ number_format($pendingAmount, 0) }} معلق
-                                </span>
+                            @if($isInvoiceType)
+                                {{-- Invoice chat: show this invoice's amount and payment status --}}
+                                @if($conversation->invoice)
+                                    <span class="badge bg-light text-dark border-0 shadow-sm py-1 px-2">
+                                        <i class="bi bi-cash-coin ms-1 text-primary"></i>
+                                        <span class="fw-bold">{{ number_format($conversation->invoice->total_price ?? 0, 0) }}</span> ر.س
+                                    </span>
+                                    @if(($conversation->invoice->payment_status ?? '') === 'paid')
+                                        <span class="badge bg-success-subtle text-success-emphasis border-0 shadow-sm py-1 px-2">
+                                            <i class="bi bi-check-circle-fill ms-1"></i> مدفوع
+                                        </span>
+                                    @else
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border-0 shadow-sm py-1 px-2">
+                                            <i class="bi bi-clock-history ms-1"></i> معلق
+                                        </span>
+                                    @endif
+                                @endif
                             @else
-                                <span class="badge bg-success-subtle text-success-emphasis border-0 shadow-sm py-1 px-2">
-                                    <i class="bi bi-check-circle-fill ms-1"></i>
-                                    خالص
+                                {{-- Private chat: show client summary --}}
+                                <span class="badge bg-light text-dark border-0 shadow-sm py-1 px-2">
+                                    <i class="bi bi-cash-coin ms-1 text-primary"></i>
+                                    <span class="fw-bold">{{ number_format($totalAmount, 0) }}</span> ر.س
                                 </span>
+                                <span class="badge bg-light text-muted border-0 shadow-sm py-1 px-2">
+                                    <i class="bi bi-receipt ms-1"></i>
+                                    {{ $invoiceCount }}
+                                </span>
+                                @if($hasPending)
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border-0 shadow-sm py-1 px-2">
+                                        <i class="bi bi-clock-history ms-1"></i>
+                                        {{ number_format($pendingAmount, 0) }} معلق
+                                    </span>
+                                @else
+                                    <span class="badge bg-success-subtle text-success-emphasis border-0 shadow-sm py-1 px-2">
+                                        <i class="bi bi-check-circle-fill ms-1"></i>
+                                        خالص
+                                    </span>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -293,6 +354,86 @@
                 background: rgba(45, 95, 93, 0.08);
             }
 
+            .conversation-item.invoice-type.unread {
+                border-right-color: #7c3aed;
+                background: rgba(124, 58, 237, 0.04);
+            }
+
+            .conversation-item.invoice-type.unread:hover {
+                background: rgba(124, 58, 237, 0.07);
+            }
+
+            .avatar-invoice {
+                background: linear-gradient(135deg, #7c3aed, #9d5cf5) !important;
+                font-size: 1.1rem;
+            }
+
+            .avatar-private {
+                background: linear-gradient(135deg, #2d5f5d, #3d7a76) !important;
+            }
+
+            .chat-type-indicator {
+                position: absolute;
+                bottom: 2px;
+                left: 2px;
+                right: auto;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                border: 2px solid white;
+            }
+
+            .chat-type-indicator.type-invoice {
+                background-color: #7c3aed;
+            }
+
+            .chat-type-indicator.type-private {
+                background-color: #2d5f5d;
+            }
+
+            .unread-badge-private {
+                background: #dc3545;
+                color: white;
+                font-size: 0.7rem;
+            }
+
+            .unread-badge-invoice {
+                background: #7c3aed;
+                color: white;
+                font-size: 0.7rem;
+            }
+
+            .chat-type-tabs {
+                background: rgba(0,0,0,0.15);
+                border-radius: 8px;
+                padding: 3px;
+            }
+
+            .chat-type-btn {
+                background: transparent;
+                border: none;
+                color: rgba(255,255,255,0.75);
+                border-radius: 6px;
+                padding: 5px 8px;
+                font-size: 0.78rem;
+                font-weight: 500;
+                transition: all 0.2s;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+
+            .chat-type-btn:hover {
+                background: rgba(255,255,255,0.15);
+                color: white;
+            }
+
+            .chat-type-btn.active {
+                background: white;
+                color: #2d5f5d;
+                font-weight: 700;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+            }
+
             .conversation-avatar {
                 position: relative;
                 margin-left: 15px;
@@ -316,26 +457,6 @@
                 justify-content: center;
                 color: white;
                 font-weight: bold;
-                background: linear-gradient(135deg, #2d5f5d, #3d7a76);
-            }
-
-            .online-status {
-                position: absolute;
-                bottom: 2px;
-                left: 2px;
-                right: auto;
-                width: 12px;
-                height: 12px;
-                border-radius: 50%;
-                border: 2px solid white;
-            }
-
-            .online-status.online {
-                background-color: #28a745;
-            }
-
-            .online-status.offline {
-                background-color: #6c757d;
             }
 
             .conversation-details {

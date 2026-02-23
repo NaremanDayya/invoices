@@ -56,20 +56,17 @@ class InvoiceChat extends Component
             $this->selectedConversation = $newConversation;
         }
 
-        // Mark unread messages as read for this user
+        // Mark unread messages as read for this user via chat_receivers table
         if ($this->selectedConversation) {
-            // Updated logic for marking read: Find messages where I am a recipient (or global logic)
-            // For now, keep as is but aware that receiver_id might be null in group chats.
-            
-            // If it's an invoice chat, it's likely 2 people for now, or group?
-            // If group, receiver_id in messages table might be null.
-            // But 'InvoiceChat' creation above sets receiver_id.
-            // Let's assume standard behavior for now.
-            
-            Message::where('conversation_id', $this->selectedConversation->id)
-                ->where('receiver_id', Auth::id())
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
+            \DB::table('chat_receivers')
+                ->join('messages', 'messages.id', '=', 'chat_receivers.message_id')
+                ->where('messages.conversation_id', $this->selectedConversation->id)
+                ->where('chat_receivers.receiver_id', Auth::id())
+                ->where('chat_receivers.is_read', false)
+                ->update([
+                    'chat_receivers.is_read' => true,
+                    'chat_receivers.read_at' => now(),
+                ]);
         }
     }
 

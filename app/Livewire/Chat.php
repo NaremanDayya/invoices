@@ -58,12 +58,17 @@ class Chat extends Component
             $this->selectedConversation = $newConversation;
         }
 
-        // Mark messages read
-        if($this->selectedConversation) {
-            Message::where('conversation_id', $this->selectedConversation->id)
-                ->where('receiver_id', Auth::id())
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
+        // Mark messages read via chat_receivers table
+        if ($this->selectedConversation) {
+            \DB::table('chat_receivers')
+                ->join('messages', 'messages.id', '=', 'chat_receivers.message_id')
+                ->where('messages.conversation_id', $this->selectedConversation->id)
+                ->where('chat_receivers.receiver_id', Auth::id())
+                ->where('chat_receivers.is_read', false)
+                ->update([
+                    'chat_receivers.is_read' => true,
+                    'chat_receivers.read_at' => now(),
+                ]);
         }
     }
     public function render()

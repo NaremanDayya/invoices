@@ -31,20 +31,24 @@ class UnreadMessagesCount extends Component
 
     public function updateCount()
     {
-        // Count distinct conversations that have unread messages
-        // (not total unread messages)
-        
         $myId = Auth::id();
-        
-        $this->count = Message::whereHas('conversation.users', function($q) use ($myId) {
-                $q->where('users.id', $myId);
+
+        // Count distinct conversations (both private and invoice) that have
+        // unread messages for the current user via chat_receivers table.
+        $this->count = \DB::table('conversations as c')
+            ->join('messages as m', 'm.conversation_id', '=', 'c.id')
+            ->join('chat_receivers as cr', function ($join) use ($myId) {
+                $join->on('cr.message_id', '=', 'm.id')
+                     ->where('cr.receiver_id', '=', $myId)
+                     ->where('cr.is_read', '=', false);
             })
-            ->where('sender_id', '!=', $myId)
-            ->whereDoesntHave('reads', function($q) use ($myId) {
-                $q->where('user_id', $myId);
+            ->join('conversation_participants as cp', function ($join) use ($myId) {
+                $join->on('cp.conversation_id', '=', 'c.id')
+                     ->where('cp.user_id', '=', $myId);
             })
-            ->distinct('conversation_id')
-            ->count('conversation_id');
+            ->whereIn('c.type', ['private', 'invoice'])
+            ->distinct('c.id')
+            ->count('c.id');
     }
 
     public function broadcastedNotificationReceived($event)

@@ -182,7 +182,7 @@
                 </li>
             </ul>
         </div>
-        @if(auth()->user()->hasPermission('add_invoices'))
+        @if(Auth::user()->hasPermission('add_invoices'))
         <button class="btn bg-primary-accent border-0 rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
                 data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
             <i class="bi bi-plus-lg"></i>
@@ -2056,7 +2056,7 @@
             const companyLogo = '{{ asset("assets/img/logo.png") }}';
             const today = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
             const todayShort = new Date().toISOString().split('T')[0];
-            
+
             const stats = {
                 paid: {{ $stats['paid'] ?? 0 }},
                 pending: {{ $stats['pending'] ?? 0 }},

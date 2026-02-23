@@ -101,109 +101,89 @@
                 @endphp
 
                 <a href="{{ route('client.chat', ['client' => $client?->id ?? 'unknown', 'conversation' => $conversation->id]) }}"
-                   class="conversation-item {{ $isUnread ? 'unread' : '' }} {{ $isInvoiceType ? 'invoice-type' : 'private-type' }} text-decoration-none"
-                   style="cursor: pointer; display: block; text-decoration: none; color: inherit;"
+                   class="conversation-item {{ $isUnread ? 'unread' : '' }} {{ $isInvoiceType ? 'invoice-type' : 'private-type' }}"
                    data-name="{{ $client?->name ?? '' }}"
                    data-type="{{ $conversation->type }}">
 
-
-                    <!-- صورة رمزية للعميل -->
-                    <div class="conversation-avatar">
-                        <div class="avatar-placeholder-sm shadow-sm {{ $isInvoiceType ? 'avatar-invoice' : 'avatar-private' }}">
+                    <!-- الأفاتار -->
+                    <div class="conv-avatar">
+                        <div class="conv-avatar-inner {{ $isInvoiceType ? 'avatar-invoice' : 'avatar-private' }}">
                             @if($isInvoiceType)
                                 <i class="bi bi-receipt"></i>
                             @else
                                 {{ mb_substr($client?->name ?? 'عم', 0, 2) }}
                             @endif
                         </div>
-                        <div class="chat-type-indicator {{ $isInvoiceType ? 'type-invoice' : 'type-private' }}"
-                             title="{{ $isInvoiceType ? 'محادثة فاتورة' : 'محادثة خاصة' }}"></div>
+                        <span class="conv-type-dot {{ $isInvoiceType ? 'dot-invoice' : 'dot-private' }}"></span>
                     </div>
 
-                    <div class="conversation-details">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <div class="text-end">
-                                <small class="text-muted d-block" style="font-size: 0.7rem;">{{ $latestMessageTime }}</small>
-                                @if($isUnread)
-                                    <div class="d-flex gap-1 justify-content-end mt-1">
-                                        @if($isInvoiceType)
-                                            {{-- Invoice chat: single badge for this invoice's unread --}}
-                                            <span class="badge unread-badge-invoice rounded-pill px-2"
-                                                  title="رسائل غير مقروءة في هذه الفاتورة">
-                                                <i class="bi bi-receipt me-1"></i>{{ $unreadCount }}
-                                            </span>
-                                        @else
-                                            {{-- Private chat: separate badges for private vs invoice sub-chats --}}
-                                            @if($privateUnread > 0)
-                                                <span class="badge unread-badge-private rounded-pill px-2"
-                                                      title="رسائل خاصة غير مقروءة">
-                                                    <i class="bi bi-chat-fill me-1"></i>{{ $privateUnread }}
-                                                </span>
-                                            @endif
-                                            @if($invoiceUnread > 0)
-                                                <span class="badge unread-badge-invoice rounded-pill px-2"
-                                                      title="رسائل فواتير غير مقروءة">
-                                                    <i class="bi bi-receipt me-1"></i>{{ $invoiceUnread }}
-                                                </span>
-                                            @endif
-                                        @endif
-                                    </div>
+                    <!-- التفاصيل -->
+                    <div class="conv-body">
+                        <!-- الصف الأول: الاسم + الوقت -->
+                        <div class="conv-row-top">
+                            <div class="conv-name-wrap">
+                                <span class="conv-name">{{ $client?->name ?? 'عميل غير معروف' }}</span>
+                                @if($isInvoiceType && $conversation->invoice)
+                                    <span class="conv-inv-num">#{{ $conversation->invoice->number ?? '' }}</span>
                                 @endif
                             </div>
-
-                            <div>
-                                <div class="d-flex align-items-center gap-1 flex-wrap">
-                                    <h6 class="mb-0 fw-bold text-dark">{{ $client?->name ?? 'عميل غير معروف' }}</h6>
-                                    @if($isInvoiceType && $conversation->invoice)
-                                        <span class="badge bg-secondary-subtle text-secondary" style="font-size:0.65rem;">
-                                            #{{ $conversation->invoice->number ?? '' }}
-                                        </span>
-                                    @endif
-                                </div>
-                                <p class="conversation-preview mb-0 text-muted small mt-1">
-                                    {{ $conversation->latest_message_text ?? 'ابدأ المحادثة...' }}
-                                </p>
-                            </div>
+                            <span class="conv-time">{{ $latestMessageTime }}</span>
                         </div>
 
-                        <!-- معلومات الفاتورة / العميل -->
-                        <div class="invoice-info mt-2" style="flex-direction: row-reverse;">
+                        <!-- الصف الثاني: المعاينة + الشارات -->
+                        <div class="conv-row-mid">
+                            <p class="conv-preview">{{ Str::limit($conversation->latest_message_text ?? 'ابدأ المحادثة...', 45) }}</p>
+                            @if($isUnread)
+                                <div class="conv-badges">
+                                    @if($isInvoiceType)
+                                        <span class="conv-badge badge-invoice" title="رسائل غير مقروءة في هذه الفاتورة">{{ $unreadCount }}</span>
+                                    @else
+                                        @if($privateUnread > 0)
+                                            <span class="conv-badge badge-private" title="رسائل خاصة غير مقروءة">{{ $privateUnread }}</span>
+                                        @endif
+                                        @if($invoiceUnread > 0)
+                                            <span class="conv-badge badge-invoice" title="رسائل فواتير غير مقروءة">
+                                                <i class="bi bi-receipt"></i> {{ $invoiceUnread }}
+                                            </span>
+                                        @endif
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- الصف الثالث: معلومات الفاتورة/العميل -->
+                        <div class="conv-row-info">
                             @if($isInvoiceType)
-                                {{-- Invoice chat: show this invoice's amount and payment status --}}
                                 @if($conversation->invoice)
-                                    <span class="badge bg-light text-dark border-0 shadow-sm py-1 px-2">
-                                        <i class="bi bi-cash-coin ms-1 text-primary"></i>
-                                        <span class="fw-bold">{{ number_format($conversation->invoice->total_price ?? 0, 0) }}</span> ر.س
+                                    <span class="conv-info-badge">
+                                        <i class="bi bi-cash-coin text-primary"></i>
+                                        {{ number_format($conversation->invoice->total_price ?? 0, 0) }} ر.س
                                     </span>
                                     @if(($conversation->invoice->payment_status ?? '') === 'paid')
-                                        <span class="badge bg-success-subtle text-success-emphasis border-0 shadow-sm py-1 px-2">
-                                            <i class="bi bi-check-circle-fill ms-1"></i> مدفوع
+                                        <span class="conv-info-badge badge-paid">
+                                            <i class="bi bi-check-circle-fill"></i> مدفوع
                                         </span>
                                     @else
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border-0 shadow-sm py-1 px-2">
-                                            <i class="bi bi-clock-history ms-1"></i> معلق
+                                        <span class="conv-info-badge badge-pending">
+                                            <i class="bi bi-clock-history"></i> معلق
                                         </span>
                                     @endif
                                 @endif
                             @else
-                                {{-- Private chat: show client summary --}}
-                                <span class="badge bg-light text-dark border-0 shadow-sm py-1 px-2">
-                                    <i class="bi bi-cash-coin ms-1 text-primary"></i>
-                                    <span class="fw-bold">{{ number_format($totalAmount, 0) }}</span> ر.س
+                                <span class="conv-info-badge">
+                                    <i class="bi bi-cash-coin text-primary"></i>
+                                    {{ number_format($totalAmount, 0) }} ر.س
                                 </span>
-                                <span class="badge bg-light text-muted border-0 shadow-sm py-1 px-2">
-                                    <i class="bi bi-receipt ms-1"></i>
-                                    {{ $invoiceCount }}
+                                <span class="conv-info-badge">
+                                    <i class="bi bi-receipt text-muted"></i> {{ $invoiceCount }}
                                 </span>
                                 @if($hasPending)
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border-0 shadow-sm py-1 px-2">
-                                        <i class="bi bi-clock-history ms-1"></i>
-                                        {{ number_format($pendingAmount, 0) }} معلق
+                                    <span class="conv-info-badge badge-pending">
+                                        <i class="bi bi-clock-history"></i> {{ number_format($pendingAmount, 0) }} معلق
                                     </span>
                                 @else
-                                    <span class="badge bg-success-subtle text-success-emphasis border-0 shadow-sm py-1 px-2">
-                                        <i class="bi bi-check-circle-fill ms-1"></i>
-                                        خالص
+                                    <span class="conv-info-badge badge-paid">
+                                        <i class="bi bi-check-circle-fill"></i> خالص
                                     </span>
                                 @endif
                             @endif
@@ -328,30 +308,29 @@
                 padding: 15px;
             }
 
+            /* ── Conversation Card ── */
             .conversation-item {
                 display: flex;
-                align-items: center;
-                padding: 12px;
-                border-radius: 10px;
-                transition: all 0.3s;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 12px 14px;
+                border-radius: 12px;
                 border: 1px solid transparent;
-                text-align: right;
+                text-decoration: none !important;
+                color: inherit !important;
+                transition: background 0.2s, border-color 0.2s;
+                cursor: pointer;
             }
 
             .conversation-item:hover {
                 background: #f0fdf4;
                 border-color: #d1fae5;
-                transform: translateX(-5px);
             }
 
             .conversation-item.unread {
                 background: rgba(45, 95, 93, 0.05);
                 border-right: 3px solid #2d5f5d;
-                border-left: none;
-            }
-
-            .conversation-item.unread:hover {
-                background: rgba(45, 95, 93, 0.08);
             }
 
             .conversation-item.invoice-type.unread {
@@ -359,50 +338,173 @@
                 background: rgba(124, 58, 237, 0.04);
             }
 
-            .conversation-item.invoice-type.unread:hover {
-                background: rgba(124, 58, 237, 0.07);
+            /* ── Avatar ── */
+            .conv-avatar {
+                position: relative;
+                flex-shrink: 0;
             }
 
-            .avatar-invoice {
-                background: linear-gradient(135deg, #7c3aed, #9d5cf5) !important;
-                font-size: 1.1rem;
+            .conv-avatar-inner {
+                width: 46px;
+                height: 46px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: 700;
+                font-size: 0.95rem;
             }
 
             .avatar-private {
-                background: linear-gradient(135deg, #2d5f5d, #3d7a76) !important;
+                background: linear-gradient(135deg, #2d5f5d, #3d7a76);
             }
 
-            .chat-type-indicator {
+            .avatar-invoice {
+                background: linear-gradient(135deg, #7c3aed, #9d5cf5);
+                font-size: 1.1rem;
+            }
+
+            .conv-type-dot {
                 position: absolute;
-                bottom: 2px;
-                left: 2px;
-                right: auto;
-                width: 12px;
-                height: 12px;
+                bottom: -2px;
+                left: -2px;
+                width: 13px;
+                height: 13px;
                 border-radius: 50%;
                 border: 2px solid white;
             }
 
-            .chat-type-indicator.type-invoice {
-                background-color: #7c3aed;
+            .dot-private  { background: #2d5f5d; }
+            .dot-invoice  { background: #7c3aed; }
+
+            /* ── Body ── */
+            .conv-body {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                text-align: right;
             }
 
-            .chat-type-indicator.type-private {
-                background-color: #2d5f5d;
+            /* Row 1: name + time */
+            .conv-row-top {
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+                gap: 6px;
             }
 
-            .unread-badge-private {
-                background: #dc3545;
-                color: white;
-                font-size: 0.7rem;
+            .conv-name-wrap {
+                display: flex;
+                flex-direction: row-reverse;
+                align-items: center;
+                gap: 5px;
+                min-width: 0;
             }
 
-            .unread-badge-invoice {
-                background: #7c3aed;
-                color: white;
-                font-size: 0.7rem;
+            .conv-name {
+                font-weight: 700;
+                font-size: 0.9rem;
+                color: #1a1a2e;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 120px;
             }
 
+            .conv-inv-num {
+                font-size: 0.68rem;
+                background: #ede9fe;
+                color: #7c3aed;
+                border-radius: 4px;
+                padding: 1px 5px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .conv-time {
+                font-size: 0.68rem;
+                color: #9ca3af;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            /* Row 2: preview + unread badges */
+            .conv-row-mid {
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .conv-preview {
+                font-size: 0.8rem;
+                color: #6b7280;
+                margin: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                flex: 1;
+                min-width: 0;
+                text-align: right;
+            }
+
+            .conv-badges {
+                display: flex;
+                gap: 4px;
+                flex-shrink: 0;
+            }
+
+            .conv-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                font-size: 0.68rem;
+                font-weight: 700;
+                padding: 2px 7px;
+                border-radius: 20px;
+                line-height: 1.4;
+            }
+
+            .badge-private { background: #dc3545; color: white; }
+            .badge-invoice { background: #7c3aed; color: white; }
+
+            /* Row 3: info badges */
+            .conv-row-info {
+                display: flex;
+                flex-direction: row-reverse;
+                flex-wrap: wrap;
+                gap: 5px;
+                margin-top: 2px;
+            }
+
+            .conv-info-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                font-size: 0.72rem;
+                background: #f3f4f6;
+                color: #374151;
+                border-radius: 6px;
+                padding: 2px 7px;
+                white-space: nowrap;
+            }
+
+            .conv-info-badge.badge-paid {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .conv-info-badge.badge-pending {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+            /* ── Filter Tabs ── */
             .chat-type-tabs {
                 background: rgba(0,0,0,0.15);
                 border-radius: 8px;
@@ -432,46 +534,6 @@
                 color: #2d5f5d;
                 font-weight: 700;
                 box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-            }
-
-            .conversation-avatar {
-                position: relative;
-                margin-left: 15px;
-                margin-right: 0;
-            }
-
-            .company-logo-sm {
-                width: 50px;
-                height: 50px;
-                border-radius: 10px;
-                object-fit: cover;
-                border: 2px solid #10b981;
-            }
-
-            .avatar-placeholder-sm {
-                width: 50px;
-                height: 50px;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-weight: bold;
-            }
-
-            .conversation-details {
-                flex: 1;
-                text-align: right;
-            }
-
-            .conversation-preview {
-                font-size: 0.85rem;
-                color: #6c757d;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
             }
 
             .invoice-info {

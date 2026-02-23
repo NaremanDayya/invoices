@@ -181,7 +181,7 @@ class ChatList extends Component
         $query = Conversation::with([
             'client:id,name',
             'users',
-            'invoice:id,invoice_number,total_price,payment_status'
+            'invoice:id,number,total_price,payment_status'
         ])
             ->whereHas('users', function($q) use ($user) {
                  $q->where('users.id', $user->id);

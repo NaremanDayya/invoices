@@ -175,6 +175,8 @@ Route::middleware(['auth', 'permission:give_permissions_to_roles'])->group(funct
     Route::get('/roles/{role}/edit', [\App\Http\Controllers\RolePermissionController::class, 'edit'])->name('roles.edit');
     Route::put('/roles/{role}/permissions', [\App\Http\Controllers\RolePermissionController::class, 'updatePermissions'])->name('roles.update-permissions');
     Route::get('/permissions', [\App\Http\Controllers\RolePermissionController::class, 'permissions'])->name('roles.permissions');
+    Route::post('/roles/{role}/assign-user', [\App\Http\Controllers\RolePermissionController::class, 'assignUser'])->name('roles.assign-user');
+    Route::delete('/roles/{role}/remove-user/{user}', [\App\Http\Controllers\RolePermissionController::class, 'removeUser'])->name('roles.remove-user');
 });
 
 // Projects Routes

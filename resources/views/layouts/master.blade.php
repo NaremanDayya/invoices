@@ -593,8 +593,8 @@
             // Flatpickr localization
             flatpickr.localize(flatpickr.l10ns.ar);
 
-            // Initialize Select2 on all select elements
-            $('select').select2({
+            // Initialize Select2 on all select elements (excluding .no-select2)
+            $('select:not(.no-select2)').select2({
                 theme: 'bootstrap-5',
                 dir: 'rtl',
                 language: {

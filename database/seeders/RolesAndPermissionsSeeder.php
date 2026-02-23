@@ -51,6 +51,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 'display_name_ar' => 'إضافة دفعات رواتب الموظفين',
                 'description' => 'القدرة على إضافة دفعات رواتب للموظفين'
             ],
+            [
+                'name' => 'preview_invoice_employees',
+                'display_name_ar' => 'مراجعة موظفي الفواتير',
+                'description' => 'القدرة على مراجعة بيانات موظفي الفواتير'
+            ],
         ];
 
         foreach ($permissions as $permission) {

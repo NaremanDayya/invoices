@@ -356,7 +356,6 @@ class ChatList extends Component
         if (!$this->allConversations) {
             $this->allConversations = $this->getConversations($this->page);
         }
-        dd($this->allConversations);
         return view('livewire.chat-list', [
             'conversations' => $this->allConversations ?? collect(),
         ]);

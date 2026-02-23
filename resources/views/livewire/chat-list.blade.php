@@ -123,10 +123,10 @@
                         <div class="conv-row-top">
                             <span class="conv-time">{{ $latestMessageTime }}</span>
                             <div class="conv-name-wrap">
-                                <span class="conv-name">{{ $client?->name ?? 'عميل غير معروف' }}</span>
                                 @if($isInvoiceType && $conversation->invoice)
                                     <span class="conv-inv-num">#{{ $conversation->invoice->number ?? '' }}</span>
                                 @endif
+                                <span class="conv-name">{{ $client?->name ?? 'عميل غير معروف' }}</span>
                             </div>
 
                         </div>

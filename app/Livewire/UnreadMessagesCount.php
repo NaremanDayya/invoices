@@ -47,8 +47,8 @@ class UnreadMessagesCount extends Component
                      ->where('cp.user_id', '=', $myId);
             })
             ->whereIn('c.type', ['private', 'invoice'])
-            ->distinct('c.id')
-            ->count('c.id');
+            ->selectRaw('COUNT(DISTINCT c.id) as cnt')
+            ->value('cnt') ?? 0;
     }
 
     public function broadcastedNotificationReceived($event)

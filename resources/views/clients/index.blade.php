@@ -250,6 +250,7 @@
                 <thead>
                     <tr>
                         <th>العميل</th>
+                        <th>العنوان</th>
                         <th>البريد الإلكتروني</th>
                         <th>الهاتف</th>
                         <th>الرقم الضريبي</th>
@@ -276,6 +277,13 @@
                                         @endif
                                     </div>
                                 </div>
+                            </td>
+                            <td>
+                                @if($client->address)
+                                    <span class="text-muted" title="{{ $client->address }}">{{ Str::limit($client->address, 50) }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
                             </td>
                             <td>
                                 @if($client->email)
@@ -398,7 +406,7 @@
                                 </div>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5">
+                            <td colspan="7" class="text-center py-5">
                                 <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 200px;">
                                     <div class="mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
                                         <i class="bi bi-people fs-1 text-muted"></i>

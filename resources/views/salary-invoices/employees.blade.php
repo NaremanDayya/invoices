@@ -385,6 +385,7 @@
                             <th class="text-center">النوع</th>
                             <th class="text-center">الحالة</th>
                             <th class="text-center">آخر دفعة</th>
+                            <th class="text-center">فترة الاستجابة</th>
                             <th class="text-center"></th>
                         </tr>
                         </thead>
@@ -450,6 +451,23 @@
                                 </td>
                                 <td class="text-center text-muted small">
                                     {{ $employee->last_payment_date ? \Carbon\Carbon::parse($employee->last_payment_date)->format('Y-m-d') : '-' }}
+                                </td>
+                                <td class="text-center">
+                                    @php
+                                        $responsePeriod = null;
+                                        if ($invoice->approved_at && $employee->last_payment_date) {
+                                            $approvalDate = \Carbon\Carbon::parse($invoice->approved_at);
+                                            $lastPayDate = \Carbon\Carbon::parse($employee->last_payment_date);
+                                            $responsePeriod = $approvalDate->diffInDays($lastPayDate);
+                                        }
+                                    @endphp
+                                    @if($responsePeriod !== null)
+                                        <span class="badge {{ $responsePeriod > 30 ? 'bg-danger' : ($responsePeriod > 14 ? 'bg-warning text-dark' : 'bg-success') }}" title="الفرق بين تاريخ اعتماد الفاتورة وآخر دفعة للموظف">
+                                            <i class="bi bi-clock me-1"></i>{{ $responsePeriod }} يوم
+                                        </span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex gap-1 justify-content-center">

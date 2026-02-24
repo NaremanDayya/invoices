@@ -159,7 +159,7 @@
     <div class="stats-grid">
         <div class="stat-mini-card">
             <div class="stat-info">
-                <h3>{{ $stats['completed'] ?? 120 }}</h3>
+                <h3>{{ $stats['completed'] ?? 0 }}</h3>
                 <p>مكتملة</p>
             </div>
             <div class="stat-icon-box" style="background: #e6fffa; color: #319795;">
@@ -168,7 +168,7 @@
         </div>
         <div class="stat-mini-card">
             <div class="stat-info">
-                <h3>{{ $stats['pending'] ?? 15 }}</h3>
+                <h3>{{ $stats['pending'] ?? 0 }}</h3>
                 <p>قيد الانتظار</p>
             </div>
             <div class="stat-icon-box" style="background: #fffaf0; color: #dd6b20;">
@@ -177,7 +177,7 @@
         </div>
         <div class="stat-mini-card">
             <div class="stat-info">
-                <h3 class="text-danger">{{ $stats['cancelled'] ?? 2 }}</h3>
+                <h3 class="text-danger">{{ $stats['cancelled'] ?? 0 }}</h3>
                 <p>ملغاة</p>
             </div>
             <div class="stat-icon-box" style="background: #fff5f5; color: #e53e3e;">
@@ -186,7 +186,7 @@
         </div>
         <div class="stat-mini-card">
             <div class="stat-info">
-                <h3>{{ number_format($stats['total_amount'] ?? 450000) }}</h3>
+                <h3>{{ number_format($stats['total_amount'] ?? 0) }}</h3>
                 <p>إجمالي المبالغ</p>
             </div>
             <div class="stat-icon-box" style="background: #ebf8ff; color: #3182ce;">
@@ -196,22 +196,25 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-xl border border-gray-100 p-3 mb-4 d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-3 flex-grow-1">
-            <div class="search-box ms-0" style="width: 300px; background: #fcfcfc; border: 1px solid #f0f0f0;">
-                <i class="bi bi-search text-muted"></i>
-                <input type="text" placeholder="بحث برقم الدفع أو العميل..." style="font-size: 0.85rem;">
+    <form method="GET" action="{{ route('payments.index') }}" id="paymentFilterForm">
+        <div class="bg-white rounded-xl border border-gray-100 p-3 mb-4 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                <div class="search-box ms-0" style="width: 300px; background: #fcfcfc; border: 1px solid #f0f0f0;">
+                    <i class="bi bi-search text-muted"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="بحث برقم الدفع أو العميل..." style="font-size: 0.85rem;" onchange="this.form.submit()">
+                </div>
+                <select name="status" class="form-select border-0 bg-light rounded-xl" style="width: 150px; font-size: 0.85rem;" onchange="this.form.submit()">
+                    <option value="">جميع الحالات</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتملة</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>معلقة</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
+                </select>
             </div>
-            <select class="form-select border-0 bg-light rounded-xl" style="width: 150px; font-size: 0.85rem;">
-                <option selected>جميع الحالات</option>
-                <option>مكتملة</option>
-                <option>معلقة</option>
-            </select>
+            <div class="d-flex gap-2">
+                @include('components.export-dropdown')
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            @include('components.export-dropdown')
-        </div>
-    </div>
+    </form>
 
     <!-- Payments Table -->
     <div class="table-card" id="payments-table-container">
@@ -231,27 +234,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $items = $payments->isEmpty() ? collect([]) : $payments;
-                        if($items->isEmpty()){
-                            for($i=1; $i<=5; $i++){
-                                $items->push((object)[
-                                    'id' => $i,
-                                    'number' => 'PAY-00'.($i),
-                                    'invoice' => (object)[
-                                        'number' => 'INV-00'.($i),
-                                        'client' => (object)['name' => 'شركة النور للمقاولات']
-                                    ],
-                                    'payment_date' => now()->subDays($i),
-                                    'formatted_amount' => number_format(15000 * $i).' ر.س',
-                                    'payment_method' => 'تحويل بنكي',
-                                    'status' => 'completed',
-                                    'reference_number' => 'REF-987654321'.$i,
-                                ]);
-                            }
-                        }
-                    @endphp
-                    @foreach($items as $payment)
+                    @forelse($payments as $payment)
                     <tr>
                         <td><span class="pay-number">{{ $payment->number }}</span></td>
                         <td>
@@ -259,18 +242,27 @@
                         </td>
                         <td><span class="text-muted">{{ $payment->invoice->number ?? '—' }}</span></td>
                         <td>
-                            <div>{{ is_string($payment->payment_date) ? $payment->payment_date : $payment->payment_date->format('Y-m-d') }}</div>
+                            <div>{{ $payment->payment_date ? $payment->payment_date->format('Y-m-d') : '—' }}</div>
                             @if(isset($payment->late_days) && $payment->late_days > 0)
                                 <small class="badge bg-danger mt-1">
                                     <i class="bi bi-exclamation-triangle-fill me-1"></i>متأخر {{ $payment->late_days }} يوم
                                 </small>
                             @endif
                         </td>
-                        <td><span class="payment-amount">{{ $payment->formatted_amount }}</span></td>
+                        <td><span class="payment-amount">{{ number_format($payment->amount, 0) }} ر.س</span></td>
                         <td>
+                            @php
+                                $methodMap = [
+                                    'bank_transfer' => 'تحويل بنكي',
+                                    'direct_bank_transfer' => 'تحويل بنكي مباشر',
+                                    'bank_wage_protection_transfer' => 'حماية أجور',
+                                    'cash' => 'نقدي',
+                                    'check' => 'شيك',
+                                ];
+                            @endphp
                             <span class="badge bg-light text-dark border rounded-pill px-3">
                                 <i class="bi bi-wallet2 me-1"></i>
-                                {{ $payment->payment_method ?? 'تحويل' }}
+                                {{ $methodMap[$payment->payment_method] ?? $payment->payment_method ?? '—' }}
                             </span>
                         </td>
                         <td>
@@ -279,6 +271,7 @@
                                     'completed' => ['class' => 'completed', 'label' => 'مكتملة', 'icon' => 'check-circle-fill'],
                                     'pending' => ['class' => 'pending', 'label' => 'معلقة', 'icon' => 'hourglass-split'],
                                     'failed' => ['class' => 'failed', 'label' => 'فشلت', 'icon' => 'x-circle-fill'],
+                                    'cancelled' => ['class' => 'failed', 'label' => 'ملغاة', 'icon' => 'x-circle-fill'],
                                 ];
                                 $s = $statusMap[$payment->status] ?? $statusMap['pending'];
                             @endphp
@@ -298,11 +291,33 @@
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 150px;">
+                                <div class="mb-3" style="width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-cash-stack fs-2 text-muted"></i>
+                                </div>
+                                <h6 class="text-muted mb-1">لا يوجد دفعات</h6>
+                                <p class="text-muted small mb-0">لم يتم تسجيل أي دفعات بعد</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+
+    <!-- Pagination -->
+    @if($payments->hasPages())
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="text-muted small">
+                عرض {{ $payments->firstItem() ?? 0 }} إلى {{ $payments->lastItem() ?? 0 }} من {{ $payments->total() ?? 0 }} دفعة
+            </div>
+            {{ $payments->appends(request()->query())->links() }}
+        </div>
+    @endif
 
     <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deletePaymentModal" tabindex="-1" aria-hidden="true">

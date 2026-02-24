@@ -286,45 +286,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        // Logic for actual or fake data
-                        $items = $invoices->isEmpty() ? collect([]) : $invoices;
-                        if($items->isEmpty()){
-                            for($i=1; $i<=5; $i++){
-                                $items->push((object)[
-                                    'id' => $i,
-                                    'number' => 'INV-00'.($i),
-                                    'type' => 'regular',
-                                    'client' => (object)['name' => $i == 1 ? 'شركة النور للمقاولات' : ($i == 2 ? 'مؤسسة الفجر التجارية' : 'شركة البناء الحديث'), 'phone' => '966501234567+'],
-                                    'service' => (object)['name' => 'خدمة الحراسة'],
-                                    'service_details_data' => [],
-                                    'generation_date' => \Carbon\Carbon::now(),
-                                    'base_price' => 150000,
-                                    'tax_amount' => 22500,
-                                    'tax_rate' => 15,
-                                    'total_price' => 172500,
-                                    'paid_amount' => $i == 1 ? 172500 : 0,
-                                    'total_workers' => 25 + ($i*10),
-                                    'total_supervisors' => 0,
-                                    'total_managers' => 0,
-                                    'total_users' => 0,
-                                    'work_days' => 21,
-                                    'workers_days' => 21,
-                                    'supervisors_days' => 0,
-                                    'managers_days' => 0,
-                                    'users_days' => 0,
-                                    'employees_count' => 0,
-                                    'work_days_count' => 0,
-                                    'payment_status' => $i == 1 ? 'paid' : ($i == 2 ? 'pending' : 'late'),
-                                    'price_difference' => $i % 2 == 0 ? 10000 : 0,
-                                    'issue_delay_days' => 0,
-                                    'late_days' => $i == 3 ? 5 : 0,
-                                    'credit_notes_count' => 0
-                                ]);
-                            }
-                        }
-                    @endphp
-                    @foreach($items as $invoice)
+                    @forelse($invoices as $invoice)
                     <tr>
                         <td>
                             <div class="d-flex flex-column gap-1">
@@ -492,7 +454,19 @@
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="15" class="text-center py-5">
+                            <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 150px;">
+                                <div class="mb-3" style="width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-file-earmark-text fs-2 text-muted"></i>
+                                </div>
+                                <h6 class="text-muted mb-1">لا يوجد فواتير</h6>
+                                <p class="text-muted small mb-0">لم يتم إنشاء أي فواتير بعد</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

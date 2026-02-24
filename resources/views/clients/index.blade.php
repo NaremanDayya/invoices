@@ -225,22 +225,14 @@
 
     <!-- Search & Filter Bar -->
     <div class="bg-white rounded-xl border border-gray-100 p-3 mb-4">
-        <form method="GET" action="{{ route('clients.index') }}" class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3">
             <div class="search-wrapper flex-grow-1">
                 <i class="bi bi-search"></i>
-                <input type="text" name="search" value="{{ request('search') }}"
-                       class="form-control" placeholder="البحث عن عميل بالاسم، البريد، أو الهاتف..."
-                       style="font-size: 0.9rem;">
+                <input type="text" id="clientLiveSearch" value="{{ request('search') }}"
+                       class="form-control" placeholder="البحث عن عميل بالاسم، البريد، الهاتف، أو العنوان..."
+                       style="font-size: 0.9rem;" autocomplete="off">
             </div>
-            <button type="submit" class="btn btn-primary rounded-xl px-4">
-                <i class="bi bi-search me-1"></i>بحث
-            </button>
-            @if(request('search'))
-                <a href="{{ route('clients.index') }}" class="btn btn-outline-secondary rounded-xl">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            @endif
-        </form>
+        </div>
     </div>
 
     <!-- Clients Table -->
@@ -706,5 +698,22 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
 
             if (window.toastr) toastr.success('تم تصدير العملاء إلى Excel بنجاح');
         }
+
+        // Live Search for Clients Table
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('clientLiveSearch');
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim().toLowerCase();
+                const rows = document.querySelectorAll('.custom-table tbody tr');
+
+                rows.forEach(function(row) {
+                    if (row.querySelector('td[colspan]')) return; // skip empty-state row
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+            });
+        });
     </script>
 @endpush

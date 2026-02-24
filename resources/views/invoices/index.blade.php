@@ -88,8 +88,8 @@
         }
         .custom-table th {
             background: #f8fafc;
-            padding: 18px 15px;
-            font-size: 0.85rem;
+            padding: 10px 6px;
+            font-size: 0.75rem;
             font-weight: 700;
             color: #4a5568;
             border-bottom: 1px solid #edf2f7;
@@ -97,9 +97,9 @@
             white-space: nowrap;
         }
         .custom-table td {
-            padding: 18px 15px;
+            padding: 10px 6px;
             vertical-align: middle;
-            font-size: 0.9rem;
+            font-size: 0.78rem;
             color: #2d3748;
             border-bottom: 1px solid #f7fafc;
             white-space: nowrap;
@@ -108,19 +108,21 @@
             color: #10a37f;
             font-weight: 700;
             font-family: 'Outfit', sans-serif;
+            font-size: 0.78rem;
         }
         .customer-info .name {
             font-weight: 700;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
+            font-size: 0.78rem;
         }
         .customer-info .phone {
-            font-size: 0.75rem;
+            font-size: 0.68rem;
             color: #a0aec0;
         }
         .emp-count {
-            width: 35px;
-            height: 35px;
+            width: 26px;
+            height: 26px;
             background: #e6fffa;
             color: #319795;
             border-radius: 50%;
@@ -128,16 +130,16 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.72rem;
         }
         .status-badge {
-            padding: 6px 12px;
+            padding: 4px 8px;
             border-radius: 20px;
             font-weight: 600;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
         .status-badge.paid { background: #def7ec; color: #03543f; }
         .status-badge.pending { background: #fef3c7; color: #92400e; }
@@ -145,15 +147,16 @@
         .status-badge.cancelled { background: #f3f4f6; color: #4b5563; }
 
         .btn-action {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             color: #718096;
             transition: all 0.2s;
             border: 1px solid #edf2f7;
+            font-size: 0.72rem;
         }
         .btn-action:hover {
             background: var(--primary-accent);
@@ -292,7 +295,7 @@
                             <div class="d-flex flex-column gap-1">
                                 <span class="inv-number">{{ $invoice->number }}</span>
                                 @if($invoice->type === 'salary_invoice')
-                                    <span class="badge bg-purple-100 text-purple-800" style="background: #f3e8ff; color: #7c3aed; font-size: 0.7rem; width: fit-content;">
+                                    <span class="badge bg-purple-100 text-purple-800" style="background: #f3e8ff; color: #7c3aed; font-size: 0.62rem; width: fit-content;">
                                         <i class="bi bi-cash-stack"></i> فاتورة رواتب
                                     </span>
                                 @endif
@@ -301,7 +304,7 @@
                         <td>
                             <div class="customer-info d-flex align-items-center gap-2">
                                 @if($invoice->client && $invoice->client->logo)
-                                    <img src="{{ asset('storage/' . $invoice->client->logo) }}" alt="{{ $invoice->client->name }}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                    <img src="{{ asset('storage/' . $invoice->client->logo) }}" alt="{{ $invoice->client->name }}" class="rounded-circle" style="width: 24px; height: 24px; object-fit: cover;">
                                 @endif
                                 <div>
                                     <span class="name">{{ $invoice->client->name ?? '—' }}</span>
@@ -327,11 +330,11 @@
                                             $cleanName = trim(str_replace('عدد', '', $detail['name']));
                                         @endphp
 
-                                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 2px 8px; text-align: center; min-width: 55px;">
-                                            <div style="font-size: 0.7rem; color: #6c757d; line-height: 1.2; white-space: nowrap;">
+                                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 3px; padding: 1px 5px; text-align: center; min-width: 40px;">
+                                            <div style="font-size: 0.6rem; color: #6c757d; line-height: 1.2; white-space: nowrap;">
                                                 {{ $cleanName }}
                                             </div>
-                                            <div style="font-size: 0.85rem; font-weight: 500; line-height: 1.3;">
+                                            <div style="font-size: 0.72rem; font-weight: 500; line-height: 1.3;">
                                                 {{ $detail['value'] ?? ($detail['count'] ?? '—') }}
                                             </div>
                                         </div>

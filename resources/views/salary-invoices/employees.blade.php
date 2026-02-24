@@ -454,16 +454,18 @@
                                 </td>
                                 <td class="text-center">
                                     @php
-                                        $responsePeriod = null;
+                                        $responseTotalMinutes = null;
                                         if ($invoice->approved_at && $employee->last_payment_date) {
                                             $approvalDate = \Carbon\Carbon::parse($invoice->approved_at);
                                             $lastPayDate = \Carbon\Carbon::parse($employee->last_payment_date);
-                                            $responsePeriod = $approvalDate->diffInDays($lastPayDate);
+                                            $responseTotalMinutes = $approvalDate->diffInMinutes($lastPayDate);
                                         }
+                                        $responseHours = $responseTotalMinutes !== null ? intdiv($responseTotalMinutes, 60) : null;
+                                        $responseMinutes = $responseTotalMinutes !== null ? $responseTotalMinutes % 60 : null;
                                     @endphp
-                                    @if($responsePeriod !== null)
-                                        <span class="badge {{ $responsePeriod > 30 ? 'bg-danger' : ($responsePeriod > 14 ? 'bg-warning text-dark' : 'bg-success') }}" title="الفرق بين تاريخ اعتماد الفاتورة وآخر دفعة للموظف">
-                                            <i class="bi bi-clock me-1"></i>{{ $responsePeriod }} يوم
+                                    @if($responseTotalMinutes !== null)
+                                        <span class="badge {{ $responseHours > 720 ? 'bg-danger' : ($responseHours > 336 ? 'bg-warning text-dark' : 'bg-success') }}" title="الفرق بين تاريخ اعتماد الفاتورة وآخر دفعة للموظف">
+                                            <i class="bi bi-clock me-1"></i>{{ $responseHours }} س {{ $responseMinutes }} د
                                         </span>
                                     @else
                                         <span class="text-muted">-</span>

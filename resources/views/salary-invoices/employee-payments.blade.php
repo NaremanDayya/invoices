@@ -132,11 +132,18 @@
                                     <th class="px-4 py-3">طريقة الدفع</th>
                                     <th class="px-4 py-3">تم بواسطة</th>
                                     <th class="px-4 py-3">ملاحظات</th>
+                                    <th class="px-4 py-3 text-center">الحالة / الإجراء</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($employee->payments as $payment)
-                                <tr>
+                                @php
+                                    $latestStatus = $payment->latestStatus;
+                                    $isReturned   = $latestStatus && $latestStatus->status === 'returned';
+                                    $isCancelled  = $latestStatus && $latestStatus->status === 'cancelled';
+                                    $isInactive   = $isReturned || $isCancelled;
+                                @endphp
+                                <tr class="{{ $isInactive ? 'table-danger opacity-75' : '' }}">
                                     <td class="px-4 py-3">
                                         <i class="bi bi-calendar3 me-1 text-muted"></i>
                                         {{ $payment->payment_date->format('Y-m-d') }}
@@ -151,7 +158,9 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
-                                        <strong class="text-success fs-5">{{ number_format($payment->payment_amount, 0) }} ر.س</strong>
+                                        <strong class="{{ $isInactive ? 'text-danger text-decoration-line-through' : 'text-success' }} fs-5">
+                                            {{ number_format($payment->payment_amount, 0) }} ر.س
+                                        </strong>
                                     </td>
                                     <td class="px-4 py-3" data-payment-mode="{{ $payment->payment_mode }}">
                                         @if($payment->payment_mode === 'wps')
@@ -175,6 +184,29 @@
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($isReturned)
+                                            <span class="badge bg-danger" title="{{ $latestStatus->reason }}">
+                                                <i class="bi bi-arrow-return-right me-1"></i>مُرجَع
+                                            </span>
+                                            <br><small class="text-muted">{{ Str::limit($latestStatus->reason, 30) }}</small>
+                                        @elseif($isCancelled)
+                                            <span class="badge bg-secondary" title="{{ $latestStatus->reason }}">
+                                                <i class="bi bi-x-octagon me-1"></i>ملغي
+                                            </span>
+                                            <br><small class="text-muted">{{ Str::limit($latestStatus->reason, 30) }}</small>
+                                        @else
+                                            @if(auth()->user()->hasPermission('add_invoice_employee_payment'))
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger btn-return-payment"
+                                                    data-payment-id="{{ $payment->id }}"
+                                                    data-payment-amount="{{ number_format($payment->payment_amount, 0) }}"
+                                                    title="إرجاع / إلغاء الدفعة">
+                                                <i class="bi bi-arrow-return-right"></i>
+                                            </button>
+                                            @endif
+                                        @endif
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -184,7 +216,7 @@
                                     <td class="px-4 py-3">
                                         <strong class="text-success fs-5">{{ number_format($employee->payments->sum('payment_amount'), 0) }} ر.س</strong>
                                     </td>
-                                    <td colspan="3"></td>
+                                    <td colspan="4"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -276,6 +308,54 @@
         </div>
     </div>
 </div>
+<!-- Return Payment Modal -->
+<div class="modal fade" id="returnPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-arrow-return-right me-2"></i>
+                    إرجاع / إلغاء دفعة
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning border-0 mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    سيتم إضافة مبلغ <strong id="returnAmountDisplay"></strong> ر.س إلى رصيد الموظف.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">نوع الإجراء</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="returnStatus" id="statusReturned" value="returned" checked>
+                            <label class="form-check-label" for="statusReturned">
+                                <i class="bi bi-arrow-return-right text-danger me-1"></i>إرجاع
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="returnStatus" id="statusCancelled" value="cancelled">
+                            <label class="form-check-label" for="statusCancelled">
+                                <i class="bi bi-x-octagon text-secondary me-1"></i>إلغاء
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="returnReason" class="form-label fw-bold">سبب الإرجاع / الإلغاء <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="returnReason" rows="3" placeholder="أدخل سبب الإرجاع أو الإلغاء..."></textarea>
+                    <div class="invalid-feedback" id="returnReasonError">يرجى إدخال السبب</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger fw-bold" id="confirmReturnBtn">
+                    <i class="bi bi-check-circle me-2"></i>تأكيد
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -286,6 +366,9 @@
     .bg-blue-600 {
         background-color: #2563eb !important;
     }
+    .text-decoration-line-through {
+        text-decoration: line-through !important;
+    }
 </style>
 @endpush
 
@@ -295,7 +378,69 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <script>
+const returnRoute = '{{ route("salary-payments.return", ["payment" => "__ID__"]) }}';
+const csrfToken  = '{{ csrf_token() }}';
+let activePaymentId = null;
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Open return modal
+    document.querySelectorAll('.btn-return-payment').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            activePaymentId = this.dataset.paymentId;
+            document.getElementById('returnAmountDisplay').textContent = this.dataset.paymentAmount;
+            document.getElementById('returnReason').value = '';
+            document.getElementById('returnReason').classList.remove('is-invalid');
+            document.getElementById('statusReturned').checked = true;
+            new bootstrap.Modal(document.getElementById('returnPaymentModal')).show();
+        });
+    });
+
+    // Confirm return/cancel
+    document.getElementById('confirmReturnBtn').addEventListener('click', function() {
+        const reason = document.getElementById('returnReason').value.trim();
+        if (!reason) {
+            document.getElementById('returnReason').classList.add('is-invalid');
+            return;
+        }
+        document.getElementById('returnReason').classList.remove('is-invalid');
+
+        const status = document.querySelector('input[name="returnStatus"]:checked').value;
+        const url    = returnRoute.replace('__ID__', activePaymentId);
+        const btn    = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>جاري المعالجة...';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ reason, status }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            bootstrap.Modal.getInstance(document.getElementById('returnPaymentModal')).hide();
+            if (data.success) {
+                if (window.toastr) toastr.success(data.message);
+                else alert(data.message);
+                setTimeout(() => location.reload(), 800);
+            } else {
+                if (window.toastr) toastr.error(data.message);
+                else alert(data.message);
+            }
+        })
+        .catch(() => {
+            if (window.toastr) toastr.error('حدث خطأ في الاتصال');
+            else alert('حدث خطأ في الاتصال');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>تأكيد';
+        });
+    });
+
     const searchInput = document.getElementById('searchPayments');
     const filterType = document.getElementById('filterPaymentType');
     const filterMode = document.getElementById('filterPaymentMode');

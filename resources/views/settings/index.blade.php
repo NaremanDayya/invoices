@@ -117,6 +117,55 @@
         @endif
 
         <div class="settings-card">
+            <h5><i class="bi bi-clock-history me-2"></i>إعداد أيام التأخير المسموح بها في صرف الرواتب</h5>
+
+            <form id="salaryDelayForm" method="POST" action="{{ route('settings.update-salary-delay') }}">
+                @csrf
+                @method('PUT')
+
+                <div class="form-group">
+                    <label for="accepted_salary_delay_days" class="form-label">
+                        أيام التأخير المسموح بها بعد نهاية الشهر
+                    </label>
+                    <input
+                        type="number"
+                        class="form-control @error('accepted_salary_delay_days') is-invalid @enderror"
+                        id="accepted_salary_delay_days"
+                        name="accepted_salary_delay_days"
+                        value="{{ old('accepted_salary_delay_days', $acceptedSalaryDelayDays) }}"
+                        min="0"
+                        max="365"
+                        step="1"
+                        required>
+                    <small class="form-text">
+                        إذا كانت القيمة 3، يبدأ احتساب التأخير اعتباراً من اليوم الرابع من الشهر التالي وتستمر الزيادة حتى يُصرف الراتب كاملاً.
+                    </small>
+                    @error('accepted_salary_delay_days')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-save me-2"></i>حفظ التغييرات
+                    </button>
+                    <span id="delaySaveStatus" class="text-muted"></span>
+                </div>
+            </form>
+
+            <div class="info-box mt-4">
+                <h6><i class="bi bi-info-circle me-2"></i>كيفية حساب تأخير الرواتب</h6>
+                <ul>
+                    <li>في نهاية كل شهر تُحسب رواتب الموظفين ويبدأ العد</li>
+                    <li>يُسمح بعدد الأيام المحددة هنا قبل احتساب أي تأخير</li>
+                    <li>مثال: إذا كانت القيمة 3، فإن يوم التأخير الأول يُحتسب في اليوم الرابع من الشهر التالي</li>
+                    <li>يستمر عداد التأخير في الزيادة حتى يُصرف الراتب بالكامل</li>
+                    <li>القيمة 0 تعني أن أي تأخير عن نهاية الشهر يُحتسب فوراً</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="settings-card">
             <h5><i class="bi bi-shield-check me-2"></i>إعدادات نظام حماية الأجور (WPS)</h5>
             
             <form id="wpsSettingsForm" method="POST" action="{{ route('settings.update-wps') }}">
@@ -203,6 +252,40 @@
 
 @push('scripts')
 <script>
+document.getElementById('salaryDelayForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = this;
+    const formData = new FormData(form);
+    const saveStatus = document.getElementById('delaySaveStatus');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>جاري الحفظ...';
+    saveStatus.textContent = '';
+    try {
+        const response = await fetch(form.action, {
+            method: 'PUT',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ accepted_salary_delay_days: formData.get('accepted_salary_delay_days') })
+        });
+        const data = await response.json();
+        if (data.success) {
+            saveStatus.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i><span class="text-success">تم الحفظ بنجاح</span>';
+        } else {
+            saveStatus.innerHTML = '<i class="bi bi-x-circle text-danger me-1"></i><span class="text-danger">فشل الحفظ</span>';
+            alert(data.message || 'حدث خطأ');
+        }
+    } catch (error) {
+        saveStatus.innerHTML = '<i class="bi bi-x-circle text-danger me-1"></i><span class="text-danger">خطأ في الاتصال</span>';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-save me-2"></i>حفظ التغييرات';
+    }
+});
+
 document.getElementById('wpsSettingsForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     

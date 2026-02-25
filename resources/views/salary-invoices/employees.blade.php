@@ -365,23 +365,26 @@
                         <thead>
                         <tr>
                             @if($invoice->approval_status === 'approved')
-                                <th width="40">
-                                    <div class="form-check">
+                                <th class="text-center" width="40">
+                                    <div class="form-check d-flex justify-content-center">
                                         <input class="form-check-input" type="checkbox" id="selectAll">
                                     </div>
                                 </th>
                             @endif
-                            <th>#</th>
-                            <th>الموظف</th>
-                            <th>المشروع</th>
+                            <th class="text-center">#</th>
+                            <th class="text-center">الموظف</th>
+                            <th class="text-center">المشروع</th>
                             <th class="text-center">أيام العمل</th>
-                            <th class="text-end">الراتب</th>
-                            <th class="text-end">المكافآت</th>
-                            <th class="text-end">السلف</th>
-                            <th class="text-end">الخصومات</th>
-                            <th class="text-end">صافي الراتب</th>
-                            <th class="text-end">المدفوع</th>
-                            <th class="text-end">المتبقي</th>
+                            <th class="text-center">الراتب</th>
+                            <th class="text-center">المكافآت</th>
+                            <th class="text-center">السلف</th>
+                            <th class="text-center">الخصومات</th>
+                            <th class="text-center">صافي الراتب</th>
+                            <th class="text-center">المدفوع</th>
+                            <th class="text-center">المتبقي</th>
+                            <th class="text-center">رقم الآيبان</th>
+                            <th class="text-center">اسم البنك</th>
+                            <th class="text-center">صاحب الحساب</th>
                             <th class="text-center">النوع</th>
                             <th class="text-center">الحالة</th>
                             <th class="text-center">آخر دفعة</th>
@@ -393,8 +396,8 @@
                         @foreach($employees as $employee)
                             <tr>
                                 @if($invoice->approval_status === 'approved')
-                                    <td>
-                                        <div class="form-check">
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
                                             <input class="form-check-input employee-checkbox"
                                                    type="checkbox"
                                                    value="{{ $employee->id }}"
@@ -408,20 +411,29 @@
                                         </div>
                                     </td>
                                 @endif
-                                <td class="text-muted">{{ $employee->id }}</td>
-                                <td>
+                                <td class="text-center text-muted">{{ $employee->id }}</td>
+                                <td class="text-center">
                                     <div class="fw-bold">{{ $employee->employee_name }}</div>
                                 </td>
-                                <td>{{ $employee->project ?? '-' }}</td>
-                                <td class="text-center fw-bold">{{ $employee->work_days_count ?? $employee->work_days ?? '-' }}</td>
-                                <td class="text-end amount-neutral">{{ number_format($employee->basic_salary ?? 0, 2) }}</td>
-                                <td class="text-end amount-positive">{{ number_format($employee->bonuses ?? 0, 2) }}</td>
-                                <td class="text-end amount-negative">{{ number_format($employee->advance_deductions ?? 0, 2) }}</td>
-                                <td class="text-end amount-negative">{{ number_format(($employee->deductions ?? 0) + ($employee->monthly_deductions ?? 0), 2) }}</td>
-                                <td class="text-end amount-positive fw-bold">{{ number_format($employee->net_salary ?? $employee->total_salary ?? 0, 2) }}</td>
-                                <td class="text-end text-info fw-bold">{{ number_format($employee->total_paid ?? 0, 2) }}</td>
-                                <td class="text-end {{ $employee->remaining_amount > 0 ? 'amount-negative' : 'text-success' }} fw-bold">
-                                    {{ number_format($employee->remaining_amount ?? $employee->net_salary, 2) }}
+                                <td class="text-center">{{ $employee->project ?? '-' }}</td>
+                                <td class="text-center fw-bold">{{ (int)($employee->work_days_count ?? $employee->work_days ?? 0) }}</td>
+                                <td class="text-center amount-neutral">{{ number_format($employee->basic_salary ?? 0, 0) }}</td>
+                                <td class="text-center amount-positive">{{ number_format($employee->bonuses ?? 0, 0) }}</td>
+                                <td class="text-center amount-negative" style="color:#dc2626 !important; font-weight:600;">{{ number_format($employee->advance_deductions ?? 0, 0) }}</td>
+                                <td class="text-center amount-negative" style="color:#dc2626 !important; font-weight:600;">{{ number_format((is_array($employee->deductions) ? 0 : ($employee->deductions ?? 0)) + ($employee->monthly_deductions ?? 0), 0) }}</td>
+                                <td class="text-center amount-positive fw-bold">{{ number_format($employee->net_salary ?? $employee->total_salary ?? 0, 0) }}</td>
+                                <td class="text-center text-info fw-bold">{{ number_format($employee->total_paid ?? 0, 0) }}</td>
+                                <td class="text-center {{ ($employee->remaining_amount ?? 0) > 0 ? 'amount-negative' : 'text-success' }} fw-bold">
+                                    {{ number_format($employee->remaining_amount ?? $employee->net_salary, 0) }}
+                                </td>
+                                <td class="text-center" style="font-size:12px; direction:ltr;">
+                                    {{ $employee->iban ?? '-' }}
+                                </td>
+                                <td class="text-center" style="font-size:12px;">
+                                    {{ $employee->bank_name ?? '-' }}
+                                </td>
+                                <td class="text-center" style="font-size:12px;">
+                                    {{ $employee->account_holder_name ?? '-' }}
                                 </td>
                                 <td class="text-center">
                                     @if(($employee->salary_type ?? 'monthly') === 'wps')

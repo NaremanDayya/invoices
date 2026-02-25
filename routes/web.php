@@ -110,13 +110,19 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:add_invoice_employee_payment'])->group(function () {
         Route::post('/salary-invoices/{invoice}/process-payments', [\App\Http\Controllers\SalaryPaymentController::class, 'processPayments'])->name('salary-payments.process');
         Route::post('/salary-invoices/employees/{employee}/calculate-breakdown', [\App\Http\Controllers\SalaryPaymentController::class, 'calculatePaymentBreakdown'])->name('salary-payments.calculate-breakdown');
+        Route::post('/salary-invoices/payments/{payment}/return', [\App\Http\Controllers\SalaryPaymentController::class, 'returnPayment'])->name('salary-payments.return');
     });
 });
 
 // Settings Routes
-Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
-Route::put('/settings/wps-percentage', [\App\Http\Controllers\SettingsController::class, 'updateWpsPercentage'])->name('settings.update-wps');
-Route::get('/settings/wps-percentage', [\App\Http\Controllers\SettingsController::class, 'getWpsPercentage'])->name('settings.get-wps');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings/wps-percentage', [\App\Http\Controllers\SettingsController::class, 'updateWpsPercentage'])->name('settings.update-wps');
+    Route::get('/settings/wps-percentage', [\App\Http\Controllers\SettingsController::class, 'getWpsPercentage'])->name('settings.get-wps');
+    Route::put('/settings/salary-delay-days', [\App\Http\Controllers\SettingsController::class, 'updateSalaryDelayDays'])->name('settings.update-salary-delay');
+    Route::get('/employees/by-client/{client}', [\App\Http\Controllers\EmployeeController::class, 'getByClient'])->name('employees.by-client');
+    Route::get('/invoices/by-client/{client}', [\App\Http\Controllers\EmployeeController::class, 'getInvoicesByClient'])->name('invoices.by-client');
+});
 
 // Payment Additional Routes
 Route::post('/payments/{payment}/confirm', [PaymentsController::class, 'confirm'])->name('payments.confirm');

@@ -130,10 +130,16 @@ class SalaryInvoiceImportService
             // Calculate extra paid days (remaining days that can be used next month)
             $extraPaidDays = ($invoiceWorkDays > 0) ? max(0, $invoiceWorkDays - $totalEmployeeWorkDays) : 0;
 
+            // Recalculate tax on the net salaries total
+            $taxRate = $invoice->tax_rate ?? 0;
+            $taxAmount = ($totalNetSalaries * $taxRate) / 100;
+            $finalTotal = $totalNetSalaries + $taxAmount;
+
             $invoice->update([
                 'type' => 'salary_invoice',
-                'base_price' => $totalSalaries,
-                'total_price' => $totalNetSalaries,
+                'base_price' => $totalNetSalaries,
+                'tax_amount' => $taxAmount,
+                'total_price' => $finalTotal,
                 'employees_count' => count($employees),
                 'work_days_difference' => $extraPaidDays,
                 'revision_status' => 'pending',
@@ -299,6 +305,22 @@ class SalaryInvoiceImportService
         }
 
         return 'monthly';
+    }
+
+    public function recalculateInvoiceTotals(Invoice $invoice)
+    {
+        $employees = $invoice->invoiceEmployees;
+        $totalNetSalaries = $employees->sum('net_salary');
+        $taxRate = $invoice->tax_rate ?? 0;
+        $taxAmount = ($totalNetSalaries * $taxRate) / 100;
+        $finalTotal = $totalNetSalaries + $taxAmount;
+
+        $invoice->update([
+            'base_price'      => $totalNetSalaries,
+            'tax_amount'      => $taxAmount,
+            'total_price'     => $finalTotal,
+            'employees_count' => $employees->count(),
+        ]);
     }
 
     public function updateEmployeePaymentMethod($employeeId, $paymentMethod, $wpsAmount = null)

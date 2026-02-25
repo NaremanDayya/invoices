@@ -61,4 +61,24 @@ class InvoiceEmployeePayment extends Model
     {
         return $this->payment_mode === 'monthly';
     }
+
+    public function paymentStatuses()
+    {
+        return $this->hasMany(PaymentStatus::class, 'invoice_employee_payment_id');
+    }
+
+    public function latestStatus()
+    {
+        return $this->hasOne(PaymentStatus::class, 'invoice_employee_payment_id')->latestOfMany();
+    }
+
+    public function isReturned()
+    {
+        return $this->latestStatus?->status === 'returned';
+    }
+
+    public function isCancelledPayment()
+    {
+        return $this->latestStatus?->status === 'cancelled';
+    }
 }

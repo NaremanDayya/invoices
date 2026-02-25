@@ -21,11 +21,19 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         $invoiceId = $request->get('invoice_id');
-        $search = $request->get('search', '');
-        $filter = $request->get('filter', 'all');
+        $clientId  = $request->get('client_id');
+        $search    = $request->get('search', '');
+        $filter    = $request->get('filter', 'all');
 
         // Build query for invoice employees
         $query = InvoiceEmployee::with(['invoice.client', 'employee']);
+
+        // Apply client filter (via invoice)
+        if ($clientId) {
+            $query->whereHas('invoice', function ($q) use ($clientId) {
+                $q->where('client_id', $clientId);
+            });
+        }
 
         // Apply invoice filter
         if ($invoiceId) {
@@ -67,29 +75,32 @@ class EmployeeController extends Controller
 
         $employees = $allEmployees;
 
-        // Get all invoices for dropdown (salary invoices only)
-        $invoices = Invoice::where('type', 'salary_invoice')
-            ->orderBy('generation_date', 'desc')
-            ->get();
+        // Get invoices for dropdown — filtered by client if selected
+        $invoicesQuery = Invoice::where('type', 'salary_invoice')
+            ->orderBy('generation_date', 'desc');
+        if ($clientId) {
+            $invoicesQuery->where('client_id', $clientId);
+        }
+        $invoices = $invoicesQuery->get();
 
         // Calculate stats
         $allInvoiceEmployees = InvoiceEmployee::all();
         $stats = [
-            'total' => $allInvoiceEmployees->count(),
-            'paid' => $allInvoiceEmployees->where('payment_status', 'paid')->count(),
-            'partially_paid' => $allInvoiceEmployees->where('payment_status', 'partially_paid')->count(),
-            'unpaid' => $allInvoiceEmployees->where('payment_status', 'unpaid')->count(),
-            'wps' => $allInvoiceEmployees->where('employee.file_type', 'حماية أجور')->count(),
-            'monthly' => $allInvoiceEmployees->where('employee.file_type', 'رواتب شهرية')->count(),
-            'total_salaries' => $allInvoiceEmployees->sum('total_salary'),
-            'total_paid' => $allInvoiceEmployees->sum('total_paid'),
+            'total'           => $allInvoiceEmployees->count(),
+            'paid'            => $allInvoiceEmployees->where('payment_status', 'paid')->count(),
+            'partially_paid'  => $allInvoiceEmployees->where('payment_status', 'partially_paid')->count(),
+            'unpaid'          => $allInvoiceEmployees->where('payment_status', 'unpaid')->count(),
+            'wps'             => $allInvoiceEmployees->where('salary_type', 'wps')->count(),
+            'monthly'         => $allInvoiceEmployees->where('salary_type', 'monthly')->count(),
+            'total_salaries'  => $allInvoiceEmployees->sum('total_salary'),
+            'total_paid'      => $allInvoiceEmployees->sum('total_paid'),
             'total_remaining' => $allInvoiceEmployees->sum('remaining_amount'),
         ];
 
-        $clients = Client::pluck('name', 'id');
+        $clients = Client::orderBy('name')->get(['id', 'name']);
         $selectedInvoice = $invoiceId ? Invoice::find($invoiceId) : null;
 
-        return view('Employees.index', compact('employees', 'clients', 'invoices', 'stats', 'search', 'filter', 'selectedInvoice'));
+        return view('Employees.index', compact('employees', 'clients', 'invoices', 'stats', 'search', 'filter', 'selectedInvoice', 'clientId'));
     }
 
     public function store(Request $request)
@@ -274,6 +285,40 @@ class EmployeeController extends Controller
                 return [
                     'id' => $invoice->id,
                     'text' => $invoice->invoice_number
+                ];
+            });
+
+        return response()->json($invoices);
+    }
+
+    public function getByClient($clientId)
+    {
+        $employees = \App\Models\InvoiceEmployee::with('invoice')
+            ->whereHas('invoice', function ($q) use ($clientId) {
+                $q->where('client_id', $clientId)
+                  ->where('type', 'salary_invoice');
+            })
+            ->get()
+            ->map(function ($emp) {
+                return [
+                    'id'   => $emp->id,
+                    'text' => $emp->employee_name . ' (#' . $emp->id . ')',
+                ];
+            });
+
+        return response()->json($employees);
+    }
+
+    public function getInvoicesByClient($clientId)
+    {
+        $invoices = Invoice::where('client_id', $clientId)
+            ->where('type', 'salary_invoice')
+            ->orderBy('generation_date', 'desc')
+            ->get()
+            ->map(function ($inv) {
+                return [
+                    'id'   => $inv->id,
+                    'text' => 'فاتورة #' . $inv->number . ' — ' . optional($inv->generation_date)->format('Y-m-d'),
                 ];
             });
 

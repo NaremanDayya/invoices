@@ -199,15 +199,26 @@
     <!-- Search and Invoice Filter -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('employees.index') }}">
+            <form method="GET" action="{{ route('employees.index') }}" id="filterForm">
                 <div class="row g-3">
                     <div class="col-md-4">
+                        <label class="form-label fw-bold">تصفية حسب العميل</label>
+                        <select class="form-select select2-client" name="client_id" id="clientFilter">
+                            <option value="">كل العملاء</option>
+                            @foreach($clients as $client)
+                                <option value="{{ $client->id }}" {{ (string)($clientId ?? '') === (string)$client->id ? 'selected' : '' }}>
+                                    {{ $client->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label fw-bold">اختر فاتورة</label>
-                        <select class="form-select" name="invoice_id" onchange="this.form.submit()">
+                        <select class="form-select select2-invoice" name="invoice_id" id="invoiceFilter">
                             <option value="">كل الفواتير</option>
                             @foreach($invoices as $inv)
                                 <option value="{{ $inv->id }}" {{ request('invoice_id') == $inv->id ? 'selected' : '' }}>
-                                    فاتورة #{{ $inv->number }} - {{ $inv->generation_date }} - {{ $inv->client->name ?? 'بدون عميل' }}
+                                    فاتورة #{{ $inv->number }} — {{ optional($inv->generation_date)->format('Y-m-d') }} — {{ $inv->client->name ?? 'بدون عميل' }}
                                 </option>
                             @endforeach
                         </select>
@@ -220,14 +231,13 @@
                                value="{{ $search ?? '' }}"
                                placeholder="ابحث بالاسم، المشروع، أو رقم الفاتورة">
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">&nbsp;</label>
+                    <div class="col-md-12">
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary flex-fill">
+                            <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-search me-2"></i>بحث
                             </button>
                             <a href="{{ route('employees.index') }}" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i>
+                                <i class="bi bi-x-circle me-1"></i>إعادة تعيين
                             </a>
                         </div>
                     </div>
@@ -393,8 +403,8 @@
                                 <label for="client_id" class="form-label required-field">اسم العميل</label>
                                 <select class="form-select" id="client_id" name="client_id" required>
                                     <option value="">اختر العميل</option>
-                                    @foreach($clients as $id => $name)
-                                        <option value="{{ $id }}">{{ $name }}</option>
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -402,8 +412,8 @@
                                 <label for="invoice_id" class="form-label required-field">الفاتورة</label> <!-- تغيير الاسم -->
                                 <select class="form-select" id="invoice_id" name="invoice_id" required> <!-- تغيير الاسم -->
                                     <option value="">اختر الفاتورة</option>
-                                    @foreach($invoices as $id => $number)
-                                        <option value="{{ $id }}">{{ $number }}</option> <!-- استخدام الـ ID -->
+                                    @foreach($invoices as $inv)
+                                        <option value="{{ $inv->id }}">فاتورة #{{ $inv->number }} — {{ optional($inv->generation_date)->format('Y-m-d') }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -747,7 +757,46 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Select2
+            // Initialize Select2 for client filter
+            $('.select2-client').select2({
+                width: '100%',
+                placeholder: 'اختر عميلاً...',
+                allowClear: true,
+                language: { noResults: function() { return 'لا يوجد نتائج'; } }
+            });
+
+            // Initialize Select2 for invoice filter
+            $('.select2-invoice').select2({
+                width: '100%',
+                placeholder: 'اختر فاتورة...',
+                allowClear: true,
+                language: { noResults: function() { return 'لا يوجد فواتير'; } }
+            });
+
+            // When client changes — reload invoices via AJAX and auto-submit
+            $('#clientFilter').on('change', function() {
+                const clientId = $(this).val();
+                const $invoiceSelect = $('#invoiceFilter');
+
+                $invoiceSelect.empty().append('<option value="">كل الفواتير</option>');
+                $invoiceSelect.trigger('change');
+
+                if (!clientId) {
+                    $('#filterForm').submit();
+                    return;
+                }
+
+                $.getJSON('/invoices/by-client/' + clientId, function(invoices) {
+                    invoices.forEach(function(inv) {
+                        $invoiceSelect.append('<option value="' + inv.id + '">' + inv.text + '</option>');
+                    });
+                    $invoiceSelect.trigger('change');
+                }).always(function() {
+                    $('#filterForm').submit();
+                });
+            });
+
+            // Initialize Select2 (legacy - for modal dropdowns)
             $('.select2').select2({
                 width: '100%',
                 placeholder: 'اختر من القائمة',

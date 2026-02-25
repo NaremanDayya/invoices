@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\InvoiceEmployee;
+use App\Models\InvoiceEmployeePayment;
+use App\Models\PaymentStatus;
 use App\Services\ChatActivityLogger;
 use App\Services\SalaryPaymentService;
 use Illuminate\Http\Request;
@@ -175,9 +177,59 @@ class SalaryPaymentController extends Controller
         }
 
         $employee->load(['payments' => function($query) {
-            $query->with('createdBy')->orderBy('payment_date', 'desc');
+            $query->with(['createdBy', 'latestStatus'])->orderBy('payment_date', 'desc');
         }, 'invoice.client']);
 
         return view('salary-invoices.employee-payments', compact('invoice', 'employee'));
+    }
+
+    public function returnPayment(Request $request, InvoiceEmployeePayment $payment)
+    {
+        $validated = $request->validate([
+            'reason' => 'required|string|max:1000',
+            'status' => 'required|in:returned,cancelled',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $employee = $payment->invoiceEmployee;
+
+            if (!$employee) {
+                return response()->json(['success' => false, 'message' => 'الموظف غير موجود'], 404);
+            }
+
+            $existingStatus = PaymentStatus::where('invoice_employee_payment_id', $payment->id)
+                ->whereIn('status', ['returned', 'cancelled'])
+                ->first();
+
+            if ($existingStatus) {
+                return response()->json(['success' => false, 'message' => 'هذه الدفعة تم إرجاعها أو إلغاؤها مسبقاً'], 422);
+            }
+
+            PaymentStatus::create([
+                'invoice_employee_payment_id' => $payment->id,
+                'invoice_employee_id'         => $employee->id,
+                'status'                      => $validated['status'],
+                'reason'                      => $validated['reason'],
+                'created_by'                  => auth()->id(),
+            ]);
+
+            $employee->total_paid     = max(0, $employee->total_paid - $payment->payment_amount);
+            $employee->remaining_amount = $employee->total_salary - $employee->total_paid;
+            $employee->updatePaymentStatus();
+            $employee->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => $validated['status'] === 'returned' ? 'تم إرجاع الدفعة وإضافة المبلغ للرصيد' : 'تم إلغاء الدفعة وإضافة المبلغ للرصيد',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'حدث خطأ: ' . $e->getMessage()], 500);
+        }
     }
 }

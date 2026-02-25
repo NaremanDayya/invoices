@@ -495,9 +495,33 @@
                 return;
             }
 
-            const companyLogo = '{{ asset("assets/img/logo.png") }}';
+            const companyLogoSrc = '{{ asset("assets/img/logo.png") }}';
             const today = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
             const todayShort = new Date().toISOString().split('T')[0];
+
+            // Convert logo to white version via canvas (avoids CORS taint in html2canvas)
+            function getWhiteLogoDataUrl(src, callback) {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    // Draw original image
+                    ctx.drawImage(img, 0, 0);
+                    // Overlay white using source-in to make all opaque pixels white
+                    ctx.globalCompositeOperation = 'source-in';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    callback(canvas.toDataURL('image/png'));
+                };
+                img.onerror = function() { callback(''); };
+                img.src = src + '?v=' + Date.now();
+            }
+
+            getWhiteLogoDataUrl(companyLogoSrc, function(whiteLogoDataUrl) {
+            const companyLogo = whiteLogoDataUrl || companyLogoSrc;
 
             const stats = {
                 total: {{ $clients->total() ?? 0 }},
@@ -591,7 +615,7 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
     <p>نظام إدارة الفواتير — قائمة شاملة بجميع العملاء</p>
   </div>
   <div class="logo-box">
-    <img src="${companyLogo}" style="height:42px;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);" onerror="this.style.display='none'">
+    ${companyLogo ? `<img src="${companyLogo}" style="height:42px;">` : ''}
   </div>
 </div>
 
@@ -637,6 +661,7 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
                 document.body.removeChild(container);
                 if (window.toastr) toastr.success('تم تصدير العملاء إلى PDF بنجاح');
             });
+            }); // end getWhiteLogoDataUrl
         }
         function exportClientsToExcel() {
             if (typeof XLSX === 'undefined') {

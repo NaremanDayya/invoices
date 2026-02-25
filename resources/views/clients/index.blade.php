@@ -242,7 +242,7 @@
                 <thead>
                     <tr>
                         <th>العميل</th>
-                        <th>العنوان</th>
+                        <th>العنوان الوطني</th>
                         <th>البريد الإلكتروني</th>
                         <th>الهاتف</th>
                         <th>الرقم الضريبي</th>
@@ -517,17 +517,11 @@
                 // Extract client name and location from the data structure
                 const clientCell = cells[0];
                 let clientName = '-';
-                let clientLocation = '-';
                 let clientLogoSrc = '';
 
                 if (clientCell) {
                     const clientNameEl = clientCell.querySelector('.client-name');
                     clientName = clientNameEl?.innerText.trim() || '-';
-
-                    const addressEl = clientCell.querySelector('small');
-                    if (addressEl) {
-                        clientLocation = addressEl.innerText.trim() || '-';
-                    }
 
                     // Extract logo src if present
                     const logoImg = clientCell.querySelector('img.client-avatar');
@@ -536,10 +530,11 @@
                     }
                 }
 
-                const email = cells[1]?.innerText.trim() || '-';
-                const phone = cells[2]?.innerText.trim() || '-';
-                const taxNumber = cells[3]?.querySelector('code')?.innerText.trim() || cells[3]?.innerText.trim() || '-';
-                const invoicesCount = cells[4]?.innerText.trim() || '0';
+                const clientLocation = cells[1]?.innerText.trim() || '-';
+                const email = cells[2]?.innerText.trim() || '-';
+                const phone = cells[3]?.innerText.trim() || '-';
+                const taxNumber = cells[4]?.querySelector('code')?.innerText.trim() || cells[4]?.innerText.trim() || '-';
+                const invoicesCount = cells[5]?.innerText.trim() || '0';
 
                 const logoHtml = clientLogoSrc
                     ? `<img src="${clientLogoSrc}" style="width:28px;height:28px;border-radius:6px;object-fit:cover;margin-left:8px;vertical-align:middle;" onerror="this.style.display='none'">`
@@ -583,7 +578,8 @@ table { width:100%; border-collapse:collapse; font-size:10px; }
 thead th { background:#1e4a46; color:#fff; padding:9px 8px; font-weight:600; white-space:nowrap; font-size:10px; }
 tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
 .logo-white {
-    filter: brightness(0) invert(1);
+    filter: brightness(0) invert(1) !important;
+    -webkit-filter: brightness(0) invert(1) !important;
 }
 .pdf-footer { margin-top:16px; padding:12px 20px; background:#f8fafc; border-radius:8px; display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:10px; }
 </style>
@@ -595,7 +591,7 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
     <p>نظام إدارة الفواتير — قائمة شاملة بجميع العملاء</p>
   </div>
   <div class="logo-box">
-    <img src="${companyLogo}" style="height:42px;" class="logo-white" onerror="this.style.display='none'">
+    <img src="${companyLogo}" style="height:42px;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);" onerror="this.style.display='none'">
   </div>
 </div>
 
@@ -610,7 +606,7 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
   <thead>
     <tr>
       <th style="text-align:center;">اسم العميل</th>
-      <th style="text-align:center;">العنوان</th>
+      <th style="text-align:center;">العنوان الوطني</th>
       <th style="text-align:center;">البريد الإلكتروني</th>
       <th style="text-align:center;">الهاتف</th>
       <th style="text-align:center;">الرقم الضريبي</th>

@@ -264,9 +264,6 @@
                                     @endif
                                     <div>
                                         <a href="{{ route('clients.show', $client) }}" class="client-name d-block">{{ $client->name }}</a>
-                                        @if($client->address)
-                                            <small class="text-muted">{{ Str::limit($client->address, 40) }}</small>
-                                        @endif
                                     </div>
                                 </div>
                             </td>

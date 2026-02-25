@@ -582,6 +582,9 @@ body { font-family:'Tahoma','Arial',sans-serif; direction:rtl; background:#fff; 
 table { width:100%; border-collapse:collapse; font-size:10px; }
 thead th { background:#1e4a46; color:#fff; padding:9px 8px; font-weight:600; white-space:nowrap; font-size:10px; }
 tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+.logo-white {
+    filter: brightness(0) invert(1);
+}
 .pdf-footer { margin-top:16px; padding:12px 20px; background:#f8fafc; border-radius:8px; display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:10px; }
 </style>
 </head>
@@ -592,7 +595,7 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
     <p>نظام إدارة الفواتير — قائمة شاملة بجميع العملاء</p>
   </div>
   <div class="logo-box">
-    <img src="${companyLogo}" style="height:42px;" onerror="this.style.display='none'">
+    <img src="${companyLogo}" style="height:42px;" class="logo-white" onerror="this.style.display='none'">
   </div>
 </div>
 

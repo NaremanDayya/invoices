@@ -123,7 +123,9 @@
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
             border: 1px solid #edf2f7;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: visible;
+            max-width: 100%;
         }
         .table {
             margin-bottom: 0;
@@ -217,10 +219,10 @@
                         <span class="badge bg-light text-dark px-3 py-2">إجمالي</span>
                     </div>
                     <div class="stat-label">عدد الموظفين</div>
-                    <div class="stat-value text-primary">{{ $summary['total_employees'] }}</div>
+                    <div class="stat-value text-primary" id="card-total-employees">{{ $summary['total_employees'] }}</div>
                     <div class="mt-2 text-muted small">
-                        <span class="text-success me-2"><i class="bi bi-check-circle-fill"></i> {{ $summary['paid_employees'] }} مدفوع</span>
-                        <span class="text-warning"><i class="bi bi-hourglass-split"></i> {{ $summary['partially_paid_employees'] }} جزئي</span>
+                        <span class="text-success me-2"><i class="bi bi-check-circle-fill"></i> <span id="card-paid-employees">{{ $summary['paid_employees'] }}</span> مدفوع</span>
+                        <span class="text-warning"><i class="bi bi-hourglass-split"></i> <span id="card-partial-employees">{{ $summary['partially_paid_employees'] }}</span> جزئي</span>
                     </div>
                 </div>
             </div>
@@ -233,7 +235,7 @@
                         <span class="badge bg-light text-dark px-3 py-2">إجمالي</span>
                     </div>
                     <div class="stat-label">إجمالي الرواتب</div>
-                    <div class="stat-value text-success">{{ number_format($summary['total_salaries'], 0) }} <small class="fs-6">ر.س</small></div>
+                    <div class="stat-value text-success" id="card-total-salaries">{{ number_format($summary['total_salaries'], 0) }} <small class="fs-6">ر.س</small></div>
                     <div class="mt-2 text-muted small">صافي الرواتب</div>
                 </div>
             </div>
@@ -246,8 +248,8 @@
                         <span class="badge bg-light text-dark px-3 py-2">مدفوع</span>
                     </div>
                     <div class="stat-label">المبلغ المدفوع</div>
-                    <div class="stat-value text-warning">{{ number_format($summary['total_paid'], 0) }} <small class="fs-6">ر.س</small></div>
-                    <div class="mt-2 text-muted small">{{ $summary['paid_employees'] }} موظف مدفوع بالكامل</div>
+                    <div class="stat-value text-warning" id="card-total-paid">{{ number_format($summary['total_paid'], 0) }} <small class="fs-6">ر.س</small></div>
+                    <div class="mt-2 text-muted small"><span id="card-paid-label">{{ $summary['paid_employees'] }}</span> موظف مدفوع بالكامل</div>
                 </div>
             </div>
             <div class="col-6 col-lg-3">
@@ -259,8 +261,8 @@
                         <span class="badge bg-light text-dark px-3 py-2">متبقي</span>
                     </div>
                     <div class="stat-label">المبلغ المتبقي</div>
-                    <div class="stat-value text-danger">{{ number_format($summary['total_remaining'], 0) }} <small class="fs-6">ر.س</small></div>
-                    <div class="mt-2 text-muted small">{{ $summary['unpaid_employees'] }} موظف غير مدفوع</div>
+                    <div class="stat-value text-danger" id="card-total-remaining">{{ number_format($summary['total_remaining'], 0) }} <small class="fs-6">ر.س</small></div>
+                    <div class="mt-2 text-muted small"><span id="card-unpaid-label">{{ $summary['unpaid_employees'] }}</span> موظف غير مدفوع</div>
                 </div>
             </div>
         </div>
@@ -269,19 +271,19 @@
         <div class="financial-bar">
             <div class="fin-item">
                 <div class="fin-label">إجمالي الرواتب</div>
-                <div class="fin-value gold">{{ number_format($summary['total_salaries'], 0) }} ر.س</div>
+                <div class="fin-value gold" id="bar-total-salaries">{{ number_format($summary['total_salaries'], 0) }} ر.س</div>
             </div>
             <div style="width: 1px; height: 40px; background: rgba(255,255,255,0.2);"></div>
             <div class="fin-item">
                 <div class="fin-label">المبلغ المدفوع</div>
-                <div class="fin-value green">{{ number_format($summary['total_paid'], 0) }} ر.س</div>
-                <small class="opacity-75">{{ $summary['total_employees'] > 0 ? round(($summary['total_paid'] / $summary['total_salaries']) * 100, 1) : 0 }}%</small>
+                <div class="fin-value green" id="bar-total-paid">{{ number_format($summary['total_paid'], 0) }} ر.س</div>
+                <small class="opacity-75" id="bar-paid-pct">{{ $summary['total_employees'] > 0 ? round(($summary['total_paid'] / max($summary['total_salaries'],1)) * 100, 1) : 0 }}%</small>
             </div>
             <div style="width: 1px; height: 40px; background: rgba(255,255,255,0.2);"></div>
             <div class="fin-item">
                 <div class="fin-label">المبلغ المتبقي</div>
-                <div class="fin-value red">{{ number_format($summary['total_remaining'], 0) }} ر.س</div>
-                <small class="opacity-75">{{ $summary['total_employees'] > 0 ? round(($summary['total_remaining'] / $summary['total_salaries']) * 100, 1) : 0 }}%</small>
+                <div class="fin-value red" id="bar-total-remaining">{{ number_format($summary['total_remaining'], 0) }} ر.س</div>
+                <small class="opacity-75" id="bar-remaining-pct">{{ $summary['total_employees'] > 0 ? round(($summary['total_remaining'] / max($summary['total_salaries'],1)) * 100, 1) : 0 }}%</small>
             </div>
         </div>
 
@@ -394,7 +396,11 @@
                         </thead>
                         <tbody>
                         @foreach($employees as $employee)
-                            <tr>
+                            <tr data-payment-status="{{ $employee->payment_status }}"
+                                data-salary-type="{{ $employee->salary_type ?? 'monthly' }}"
+                                data-net-salary="{{ $employee->net_salary ?? $employee->total_salary ?? 0 }}"
+                                data-total-paid="{{ $employee->total_paid ?? 0 }}"
+                                data-remaining="{{ $employee->remaining_amount ?? 0 }}">
                                 @if($invoice->approval_status === 'approved')
                                     <td class="text-center">
                                         <div class="form-check d-flex justify-content-center">
@@ -646,7 +652,56 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadWpsSettings();
             initializeCheckboxes();
+            recalculateCards();
         });
+
+        // ============================================
+        // Recalculate summary cards from visible rows
+        // ============================================
+        function recalculateCards() {
+            const rows = document.querySelectorAll('tbody tr[data-payment-status]');
+            if (!rows.length) return;
+
+            let total = 0, paid = 0, partial = 0, unpaid = 0;
+            let totalSalaries = 0, totalPaid = 0, totalRemaining = 0;
+
+            rows.forEach(function(row) {
+                const status = row.dataset.paymentStatus;
+                const salary    = parseFloat(row.dataset.netSalary   || 0);
+                const paidAmt   = parseFloat(row.dataset.totalPaid   || 0);
+                const remaining = parseFloat(row.dataset.remaining   || 0);
+
+                total++;
+                totalSalaries  += salary;
+                totalPaid      += paidAmt;
+                totalRemaining += remaining;
+
+                if (status === 'paid')             paid++;
+                else if (status === 'partially_paid') partial++;
+                else                               unpaid++;
+            });
+
+            const fmt = n => new Intl.NumberFormat('ar-SA').format(Math.round(n));
+            const paidPct      = totalSalaries > 0 ? (totalPaid      / totalSalaries * 100).toFixed(1) : 0;
+            const remainingPct = totalSalaries > 0 ? (totalRemaining / totalSalaries * 100).toFixed(1) : 0;
+
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+
+            set('card-total-employees', total);
+            set('card-paid-employees',  paid);
+            set('card-partial-employees', partial);
+            set('card-total-salaries',  fmt(totalSalaries) + ' <small class="fs-6">ر.س</small>');
+            set('card-total-paid',      fmt(totalPaid)     + ' <small class="fs-6">ر.س</small>');
+            set('card-paid-label',      paid);
+            set('card-total-remaining', fmt(totalRemaining) + ' <small class="fs-6">ر.س</small>');
+            set('card-unpaid-label',    unpaid);
+
+            set('bar-total-salaries', fmt(totalSalaries) + ' ر.س');
+            set('bar-total-paid',     fmt(totalPaid)     + ' ر.س');
+            set('bar-total-remaining',fmt(totalRemaining)+ ' ر.س');
+            set('bar-paid-pct',       paidPct      + '%');
+            set('bar-remaining-pct',  remainingPct + '%');
+        }
 
         // ============================================
         // WPS Settings

@@ -263,7 +263,7 @@
                         {{ number_format($employee->remaining_amount ?? ($employee->total_salary - $employee->total_paid), 0) }} ر.س
                     </strong>
                 </div>
-                <div class="alert alert-{{ $employee->payment_status === 'paid' ? 'success' : ($employee->payment_status === 'partially_paid' ? 'warning' : 'danger') }} border-0 mb-0">
+                <div class="alert alert-{{ $employee->payment_status === 'paid' ? 'success' : ($employee->payment_status === 'partially_paid' ? 'warning' : 'danger') }} border-0 mb-3">
                     <strong>حالة الدفع:</strong>
                     @if($employee->payment_status === 'paid')
                         <span class="badge bg-success">مدفوع بالكامل</span>
@@ -271,6 +271,27 @@
                         <span class="badge bg-warning text-dark">مدفوع جزئياً</span>
                     @else
                         <span class="badge bg-danger">غير مدفوع</span>
+                    @endif
+                </div>
+
+                {{-- Late Days Status --}}
+                <div class="border rounded-3 p-3 {{ $isLate ? 'border-danger bg-danger bg-opacity-10' : 'border-success bg-success bg-opacity-10' }}">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-{{ $isLate ? 'alarm-fill text-danger' : 'check-circle-fill text-success' }} fs-5"></i>
+                        <strong class="{{ $isLate ? 'text-danger' : 'text-success' }}">
+                            {{ $isLate ? 'متأخر في الصرف' : 'في الوقت المحدد' }}
+                        </strong>
+                    </div>
+                    @if($isLate)
+                        <div class="fs-4 fw-bold text-danger">{{ $lateDays }} يوم</div>
+                        <small class="text-muted">
+                            تجاوز الحد المسموح ({{ $acceptedDelayDays }} يوم) منذ تاريخ الفاتورة
+                            {{ \Carbon\Carbon::parse($invoice->generation_date)->format('Y-m-d') }}
+                        </small>
+                    @else
+                        <small class="text-muted">
+                            ضمن الحد المسموح ({{ $acceptedDelayDays }} يوم) من تاريخ الفاتورة
+                        </small>
                     @endif
                 </div>
             </div>

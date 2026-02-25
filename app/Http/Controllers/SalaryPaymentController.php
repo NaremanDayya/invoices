@@ -180,7 +180,29 @@ class SalaryPaymentController extends Controller
             $query->with(['createdBy', 'latestStatus'])->orderBy('payment_date', 'desc');
         }, 'invoice.client']);
 
-        return view('salary-invoices.employee-payments', compact('invoice', 'employee'));
+        // Calculate late days: days since invoice generation_date, minus the accepted delay
+        $acceptedDelayDays = (int) \App\Models\Setting::get('accepted_salary_delay_days', 0);
+        $generationDate    = $invoice->generation_date
+            ? \Carbon\Carbon::parse($invoice->generation_date)->startOfDay()
+            : null;
+
+        $lateDays = 0;
+        $isLate   = false;
+        if ($generationDate) {
+            $deadline = $generationDate->copy()->addDays($acceptedDelayDays);
+            if ($employee->payment_status !== 'paid') {
+                $lateDays = max(0, $deadline->diffInDays(now(), false));
+                $isLate   = $lateDays > 0;
+            } elseif ($employee->last_payment_date) {
+                $lastPay  = \Carbon\Carbon::parse($employee->last_payment_date)->startOfDay();
+                $lateDays = max(0, $deadline->diffInDays($lastPay, false));
+                $isLate   = $lateDays > 0;
+            }
+        }
+
+        return view('salary-invoices.employee-payments', compact(
+            'invoice', 'employee', 'lateDays', 'isLate', 'acceptedDelayDays'
+        ));
     }
 
     public function returnPayment(Request $request, InvoiceEmployeePayment $payment)

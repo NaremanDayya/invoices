@@ -203,7 +203,7 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label fw-bold">تصفية حسب العميل</label>
-                        <select class="form-select select2-client" name="client_id" id="clientFilter">
+                        <select class="form-select no-select2" name="client_id" id="clientFilter">
                             <option value="">كل العملاء</option>
                             @foreach($clients as $client)
                                 <option value="{{ $client->id }}" {{ (string)($clientId ?? '') === (string)$client->id ? 'selected' : '' }}>
@@ -214,7 +214,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">اختر فاتورة</label>
-                        <select class="form-select select2-invoice" name="invoice_id" id="invoiceFilter">
+                        <select class="form-select no-select2" name="invoice_id" id="invoiceFilter">
                             <option value="">كل الفواتير</option>
                             @foreach($invoices as $inv)
                                 <option value="{{ $inv->id }}" {{ request('invoice_id') == $inv->id ? 'selected' : '' }}>
@@ -338,10 +338,15 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-1">
+                                    <a href="{{ route('salary-invoices.employees.payments', [$employee->invoice_id, $employee->id]) }}"
+                                       class="btn btn-sm btn-info"
+                                       title="سجل دفعات الموظف">
+                                        <i class="bi bi-clock-history"></i>
+                                    </a>
                                     <a href="{{ route('salary-invoices.employees.index', $employee->invoice_id) }}"
-                                       class="btn btn-sm btn-primary"
-                                       title="عرض تفاصيل الفاتورة">
-                                        <i class="bi bi-eye"></i>
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="عرض الفاتورة">
+                                        <i class="bi bi-file-text"></i>
                                     </a>
                                 </div>
                             </td>
@@ -754,54 +759,50 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
             if (window.toastr) toastr.success('تم تصدير الموظفين إلى Excel بنجاح');
         }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for client filter
-            $('.select2-client').select2({
+            // Initialize Select2 on filter dropdowns with RTL + bootstrap theme
+            $('#clientFilter').select2({
+                theme: 'bootstrap-5',
+                dir: 'rtl',
                 width: '100%',
-                placeholder: 'اختر عميلاً...',
+                placeholder: 'كل العملاء',
                 allowClear: true,
-                language: { noResults: function() { return 'لا يوجد نتائج'; } }
+                language: { noResults: function() { return 'لا توجد نتائج'; } }
             });
 
-            // Initialize Select2 for invoice filter
-            $('.select2-invoice').select2({
+            $('#invoiceFilter').select2({
+                theme: 'bootstrap-5',
+                dir: 'rtl',
                 width: '100%',
-                placeholder: 'اختر فاتورة...',
+                placeholder: 'كل الفواتير',
                 allowClear: true,
-                language: { noResults: function() { return 'لا يوجد فواتير'; } }
+                language: { noResults: function() { return 'لا توجد فواتير'; } }
             });
 
-            // When client changes — reload invoices via AJAX and auto-submit
+            // When client changes — reload invoice dropdown then submit
             $('#clientFilter').on('change', function() {
                 const clientId = $(this).val();
-                const $invoiceSelect = $('#invoiceFilter');
+                const $inv = $('#invoiceFilter');
 
-                $invoiceSelect.empty().append('<option value="">كل الفواتير</option>');
-                $invoiceSelect.trigger('change');
+                $inv.empty().append('<option value="">كل الفواتير</option>');
+                $inv.trigger('change.select2');
 
                 if (!clientId) {
                     $('#filterForm').submit();
                     return;
                 }
 
-                $.getJSON('/invoices/by-client/' + clientId, function(invoices) {
+                $.getJSON('{{ route("invoices.by-client", ["client" => "__ID__"]) }}'.replace('__ID__', clientId), function(invoices) {
                     invoices.forEach(function(inv) {
-                        $invoiceSelect.append('<option value="' + inv.id + '">' + inv.text + '</option>');
+                        $inv.append(new Option(inv.text, inv.id, false, false));
                     });
-                    $invoiceSelect.trigger('change');
+                    $inv.trigger('change.select2');
                 }).always(function() {
                     $('#filterForm').submit();
                 });
             });
 
-            // Initialize Select2 (legacy - for modal dropdowns)
-            $('.select2').select2({
-                width: '100%',
-                placeholder: 'اختر من القائمة',
-                allowClear: true
-            });
 
             // Open Modal
             $('#addEmployee').on('click', function() {

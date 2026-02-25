@@ -250,12 +250,30 @@
 
         const clientName   = '{{ $client->name }}';
         const clientLogo   = '{{ $client->logo ? asset("storage/" . $client->logo) : "" }}';
-        const companyLogo  = '{{ asset("assets/img/logo.png") }}';
+        const companyLogoSrc = '{{ asset("assets/img/logo.png") }}';
         const month        = '{{ $month }}';
         const periodStart  = '{{ \Carbon\Carbon::parse($period["start"])->locale("ar")->translatedFormat("d F Y") }}';
         const periodEnd    = '{{ \Carbon\Carbon::parse($period["end"])->locale("ar")->translatedFormat("d F Y") }}';
         const today        = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
         const todayShort   = new Date().toISOString().split('T')[0];
+
+        function getWhiteLogoDataUrl(src, callback) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                ctx.globalCompositeOperation = 'source-in';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                callback(canvas.toDataURL('image/png'));
+            };
+            img.onerror = function() { callback(''); };
+            img.src = src + '?v=' + Date.now();
+        }
 
         const summary = {
             total_invoices:  {{ $summary['total_invoices'] }},
@@ -263,6 +281,9 @@
             total_paid:      {{ $summary['total_paid'] }},
             total_remaining: {{ $summary['total_remaining'] }}
         };
+
+        getWhiteLogoDataUrl(companyLogoSrc, function(whiteLogoDataUrl) {
+        const companyLogo = whiteLogoDataUrl || companyLogoSrc;
 
         const clientLogoHtml = clientLogo
             ? `<img src="${clientLogo}" style="height:50px;width:auto;object-fit:contain;border-radius:8px;" onerror="this.style.display='none'" />`
@@ -344,7 +365,7 @@ tbody td { padding:8px 10px; border-bottom:1px solid #e2e8f0; vertical-align:mid
   <div class="logos">
     ${clientLogoHtml}
     <div class="divider"></div>
-    <img src="${companyLogo}" style="height:42px;" onerror="this.style.display='none'">
+    ${companyLogo ? `<img src="${companyLogo}" style="height:42px;">` : ''}
   </div>
 </div>
 
@@ -404,6 +425,7 @@ tbody td { padding:8px 10px; border-bottom:1px solid #e2e8f0; vertical-align:mid
             document.body.removeChild(container);
             alert('حدث خطأ أثناء تصدير PDF');
         });
+        }); // end getWhiteLogoDataUrl
     }
 
     function exportMonthlyReportExcel() {

@@ -2052,9 +2052,30 @@
                 return;
             }
 
-            const companyLogo = '{{ asset("assets/img/logo.png") }}';
+            const companyLogoSrc = '{{ asset("assets/img/logo.png") }}';
             const today = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
             const todayShort = new Date().toISOString().split('T')[0];
+
+            function getWhiteLogoDataUrl(src, callback) {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    ctx.globalCompositeOperation = 'source-in';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    callback(canvas.toDataURL('image/png'));
+                };
+                img.onerror = function() { callback(''); };
+                img.src = src + '?v=' + Date.now();
+            }
+
+            getWhiteLogoDataUrl(companyLogoSrc, function(whiteLogoDataUrl) {
+            const companyLogo = whiteLogoDataUrl || companyLogoSrc;
 
             const stats = {
                 paid: {{ $stats['paid'] ?? 0 }},
@@ -2139,7 +2160,7 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
     <p>نظام إدارة الفواتير — تقرير شامل لجميع الفواتير</p>
   </div>
   <div class="logo-box">
-    <img src="${companyLogo}" style="height:42px;" onerror="this.style.display='none'">
+    ${companyLogo ? `<img src="${companyLogo}" style="height:42px;">` : ''}
   </div>
 </div>
 
@@ -2190,6 +2211,7 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
                 document.body.removeChild(container);
                 if (window.toastr) toastr.success('تم تصدير الفواتير إلى PDF بنجاح');
             });
+            }); // end getWhiteLogoDataUrl
         }
 
         // Export to Excel Function

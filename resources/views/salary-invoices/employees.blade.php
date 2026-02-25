@@ -1436,7 +1436,7 @@ window._exportSalaryPDF = function exportSalaryPDF() {
     const invoiceDate     = '{{ $invoice->generation_date ?? now()->format("Y-m-d") }}';
     const clientName      = '{{ $invoice->client->name ?? "" }}';
     const clientLogo      = '{{ $invoice->client->logo ? asset("storage/" . $invoice->client->logo) : "" }}';
-    const companyLogo     = '{{ asset("assets/img/logo.png") }}';
+    const companyLogoSrc  = '{{ asset("assets/img/logo.png") }}';
     const totalEmployees  = '{{ $summary["total_employees"] }}';
     const totalSalaries   = '{{ number_format($summary["total_salaries"], 2) }}';
     const totalPaid       = '{{ number_format($summary["total_paid"], 2) }}';
@@ -1449,6 +1449,27 @@ window._exportSalaryPDF = function exportSalaryPDF() {
     const approvalStatus  = '{{ $invoice->approval_status }}';
     const revisionStatus  = '{{ $invoice->revision_status }}';
     const today           = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    function getWhiteLogoDataUrl(src, callback) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            ctx.globalCompositeOperation = 'source-in';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            callback(canvas.toDataURL('image/png'));
+        };
+        img.onerror = function() { callback(''); };
+        img.src = src + '?v=' + Date.now();
+    }
+
+    getWhiteLogoDataUrl(companyLogoSrc, function(whiteLogoDataUrl) {
+    const companyLogo = whiteLogoDataUrl || companyLogoSrc;
 
     let tableRows = '';
     document.querySelectorAll('table tbody tr').forEach((row, i) => {
@@ -1575,7 +1596,7 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
   <div class="logos">
     ${clientLogoHtml}
     <div class="divider"></div>
-    <img src="${companyLogo}" style="height:38px;" onerror="this.style.display='none'">
+    ${companyLogo ? `<img src="${companyLogo}" style="height:38px;">` : ''}
   </div>
 </div>
 
@@ -1644,5 +1665,6 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
     }).from(container).save().then(() => {
         document.body.removeChild(container);
     });
+    }); // end getWhiteLogoDataUrl
 };
 </script>

@@ -19,9 +19,9 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-gradient-primary text-white p-4">
-                <h5 class="mb-0 fw-bold">
-                    <i class="bi bi-person-fill me-2"></i>
+            <div class="card-header bg-light p-4">
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="bi bi-person-fill me-2 text-primary"></i>
                     معلومات الموظف
                 </h5>
             </div>
@@ -132,6 +132,7 @@
                                     <th class="px-4 py-3">طريقة الدفع</th>
                                     <th class="px-4 py-3">تم بواسطة</th>
                                     <th class="px-4 py-3">ملاحظات</th>
+                                    <th class="px-4 py-3 text-center">التأخر</th>
                                     <th class="px-4 py-3 text-center">الحالة / الإجراء</th>
                                 </tr>
                             </thead>
@@ -142,6 +143,17 @@
                                     $isReturned   = $latestStatus && $latestStatus->status === 'returned';
                                     $isCancelled  = $latestStatus && $latestStatus->status === 'cancelled';
                                     $isInactive   = $isReturned || $isCancelled;
+
+                                    // Late days per payment: days from deadline to payment_date
+                                    $deadline = $invoice->generation_date
+                                        ? \Carbon\Carbon::parse($invoice->generation_date)->startOfDay()->addDays($acceptedDelayDays)
+                                        : null;
+                                    $paymentDay = $payment->payment_date
+                                        ? \Carbon\Carbon::parse($payment->payment_date)->startOfDay()
+                                        : null;
+                                    $paymentLateDays = ($deadline && $paymentDay)
+                                        ? max(0, $deadline->diffInDays($paymentDay, false))
+                                        : null;
                                 @endphp
                                 <tr class="{{ $isInactive ? 'table-danger opacity-75' : '' }}">
                                     <td class="px-4 py-3">
@@ -185,6 +197,19 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-center">
+                                        @if($paymentLateDays === null)
+                                            <span class="text-muted">-</span>
+                                        @elseif($paymentLateDays > 0)
+                                            <span class="badge bg-danger rounded-pill px-2">
+                                                <i class="bi bi-alarm-fill me-1"></i>{{ $paymentLateDays }} يوم
+                                            </span>
+                                        @else
+                                            <span class="badge bg-success rounded-pill px-2">
+                                                <i class="bi bi-check-circle-fill me-1"></i>في الوقت
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
                                         @if($isReturned)
                                             <span class="badge bg-danger" title="{{ $latestStatus->reason }}">
                                                 <i class="bi bi-arrow-return-right me-1"></i>مُرجَع
@@ -216,7 +241,7 @@
                                     <td class="px-4 py-3">
                                         <strong class="text-success fs-5">{{ number_format($employee->payments->sum('payment_amount'), 0) }} ر.س</strong>
                                     </td>
-                                    <td colspan="4"></td>
+                                    <td colspan="5"></td>
                                 </tr>
                             </tfoot>
                         </table>

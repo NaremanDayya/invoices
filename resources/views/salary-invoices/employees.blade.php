@@ -170,6 +170,11 @@
         .amount-negative { color: #dc2626; font-weight: 600; }
         .amount-neutral { color: #2563eb; font-weight: 600; }
 
+        /* Salary Pay Status Badges */
+        .badge-pay-full    { background: #d1fae5; color: #065f46; }
+        .badge-pay-partial { background: #fed7aa; color: #92400e; }
+        .badge-pay-pended  { background: #e2e8f0; color: #475569; }
+
         /* Search Box */
         .search-wrapper {
             background: #f8fafc;
@@ -319,20 +324,27 @@
                         </select>
                     </div>
                     <div class="col-md-3 text-md-end">
-                        @if($invoice->approval_status === 'approved' && auth()->user()->hasPermission('add_invoice_employee_payment'))
-                            <button type="button" class="btn btn-success" id="processBatchBtn"
-                                    data-bs-toggle="modal" data-bs-target="#batchPaymentModal" disabled>
-                                <i class="bi bi-cash-coin me-2"></i>
-                                معالجة الدفعات (<span id="selectedCount">0</span>)
-                            </button>
-                        @endif
+                        <div class="d-flex gap-2 justify-content-end flex-wrap">
+                            @if($invoice->approval_status === 'approved' && auth()->user()->hasPermission('add_invoice_employee_payment'))
+                                <button type="button" class="btn btn-success" id="processBatchBtn"
+                                        data-bs-toggle="modal" data-bs-target="#batchPaymentModal" disabled>
+                                    <i class="bi bi-cash-coin me-2"></i>
+                                    معالجة الدفعات (<span id="selectedCount">0</span>)
+                                </button>
+                                <button type="button" class="btn btn-primary" id="salaryPayStatusBtn"
+                                        data-bs-toggle="modal" data-bs-target="#salaryPayStatusModal" disabled>
+                                    <i class="bi bi-tag-fill me-2"></i>
+                                    حالة الصرف (<span id="statusSelectedCount2">0</span>)
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
-                <!-- Filter Tabs -->
+                <!-- Payment Status Filter Tabs -->
                 <div class="filter-tabs mt-4">
                     <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id, 'filter'=>'all', 'search'=>$search]) }}"
-                       class="btn {{ $filter==='all' ? 'btn-primary' : 'btn-outline-primary' }}">
+                       class="btn {{ $filter==='all' && empty($salaryStatus) ? 'btn-primary' : 'btn-outline-primary' }}">
                         <i class="bi bi-list-ul me-1"></i> الكل ({{ $summary['total_employees'] }})
                     </a>
                     <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id, 'filter'=>'unpaid', 'search'=>$search]) }}"
@@ -354,6 +366,27 @@
                     <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id, 'filter'=>'monthly', 'search'=>$search]) }}"
                        class="btn {{ $filter==='monthly' ? 'btn-secondary' : 'btn-outline-secondary' }}">
                         <i class="bi bi-calendar-month me-1"></i> شهري ({{ $summary['monthly_employees'] }})
+                    </a>
+                </div>
+
+                <!-- Salary Pay Status Filter Tabs -->
+                <div class="filter-tabs mt-2" style="background:#f0fdf4;">
+                    <small class="text-muted me-2 fw-semibold"><i class="bi bi-tag me-1"></i>حالة الصرف:</small>
+                    <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id, 'filter'=>$filter, 'search'=>$search]) }}"
+                       class="btn btn-sm {{ empty($salaryStatus) ? 'btn-dark' : 'btn-outline-dark' }}">
+                        الكل
+                    </a>
+                    <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id, 'filter'=>$filter, 'salary_status'=>'full', 'search'=>$search]) }}"
+                       class="btn btn-sm {{ $salaryStatus==='full' ? 'btn-success' : 'btn-outline-success' }}">
+                        ✅ مدفوع بالكامل ({{ $summary['salary_full_paid'] }})
+                    </a>
+                    <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id, 'filter'=>$filter, 'salary_status'=>'partial', 'search'=>$search]) }}"
+                       class="btn btn-sm {{ $salaryStatus==='partial' ? 'btn-warning' : 'btn-outline-warning' }}">
+                        🔶 جزئي ({{ $summary['salary_partial_paid'] }})
+                    </a>
+                    <a href="{{ route('salary-invoices.employees.index', ['invoice'=>$invoice->id, 'filter'=>$filter, 'salary_status'=>'pended', 'search'=>$search]) }}"
+                       class="btn btn-sm {{ $salaryStatus==='pended' ? 'btn-secondary' : 'btn-outline-secondary' }}">
+                        ⏸️ معلق ({{ $summary['salary_pended'] }})
                     </a>
                 </div>
             </div>
@@ -389,6 +422,7 @@
                             <th class="text-center">صاحب الحساب</th>
                             <th class="text-center">النوع</th>
                             <th class="text-center">الحالة</th>
+                            <th class="text-center">حالة الصرف</th>
                             <th class="text-center">آخر دفعة</th>
                             <th class="text-center">فترة الاستجابة</th>
                             <th class="text-center"></th>
@@ -467,6 +501,23 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td class="text-center">
+                                    @if($employee->salary_pay_status === 'full_paid')
+                                        <span class="badge-custom badge-pay-full">
+                                            <i class="bi bi-patch-check-fill me-1"></i>مدفوع بالكامل
+                                        </span>
+                                    @elseif($employee->salary_pay_status === 'partial_paid')
+                                        <span class="badge-custom badge-pay-partial">
+                                            <i class="bi bi-dash-circle-fill me-1"></i>جزئي
+                                        </span>
+                                    @elseif($employee->salary_pay_status === 'pended')
+                                        <span class="badge-custom badge-pay-pended">
+                                            <i class="bi bi-pause-circle-fill me-1"></i>معلق
+                                        </span>
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
+                                </td>
                                 <td class="text-center text-muted small">
                                     {{ $employee->last_payment_date ? \Carbon\Carbon::parse($employee->last_payment_date)->format('Y-m-d') : '-' }}
                                 </td>
@@ -530,6 +581,7 @@
 
     @include('partials.modals.salary-payment')
     @include('partials.modals.batch-payment')
+    @include('partials.modals.salary-pay-status')
     @include('partials.modals.revision-modal')
 
     {{-- Revision History Offcanvas --}}
@@ -744,9 +796,106 @@
             const count = document.querySelectorAll('.employee-checkbox:checked').length;
             document.getElementById('selectedCount').textContent = count;
             const batchBtn = document.getElementById('processBatchBtn');
-            if (batchBtn) {
-                batchBtn.disabled = count === 0;
+            if (batchBtn) batchBtn.disabled = count === 0;
+
+            // Sync salary pay status button
+            const statusBtn = document.getElementById('salaryPayStatusBtn');
+            const statusCount2 = document.getElementById('statusSelectedCount2');
+            const statusCount = document.getElementById('statusSelectedCount');
+            if (statusBtn) statusBtn.disabled = count === 0;
+            if (statusCount2) statusCount2.textContent = count;
+            if (statusCount)  statusCount.textContent  = count;
+
+            // Sync confirm button
+            const confirmBtn = document.getElementById('confirmSalaryStatusBtn');
+            const confirmCount = document.getElementById('statusConfirmCount');
+            if (confirmCount) confirmCount.textContent = count;
+        }
+
+        // ============================================
+        // Salary Pay Status Modal
+        // ============================================
+        (function() {
+            const radios = document.querySelectorAll('input[name="salary_pay_status"]');
+            const confirmBtn = document.getElementById('confirmSalaryStatusBtn');
+            const previewAlert = document.getElementById('statusPreviewAlert');
+
+            radios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (confirmBtn) confirmBtn.disabled = false;
+                    if (previewAlert) previewAlert.classList.remove('d-none');
+                });
+            });
+
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    const selectedStatus = document.querySelector('input[name="salary_pay_status"]:checked');
+                    if (!selectedStatus) {
+                        alert('يرجى اختيار حالة الصرف');
+                        return;
+                    }
+
+                    const checkedBoxes = document.querySelectorAll('.employee-checkbox:checked');
+                    const employeeIds  = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+
+                    if (employeeIds.length === 0) {
+                        alert('يرجى تحديد موظف واحد على الأقل');
+                        return;
+                    }
+
+                    confirmBtn.disabled = true;
+                    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm ms-2"></span>جاري التحديث...';
+
+                    fetch('{{ route("salary-payments.update-pay-status", $invoice->id) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            employee_ids: employeeIds,
+                            salary_pay_status: selectedStatus.value
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(function(data) {
+                        if (data.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('salaryPayStatusModal')).hide();
+                            showToast('success', data.message || 'تم التحديث بنجاح');
+                            setTimeout(() => window.location.reload(), 1200);
+                        } else {
+                            showToast('danger', data.message || 'حدث خطأ أثناء التحديث');
+                            confirmBtn.disabled = false;
+                            confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>تأكيد التحديث <span class="ms-1">(<span id="statusConfirmCount">' + employeeIds.length + '</span> موظف)</span>';
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error(err);
+                        showToast('danger', 'حدث خطأ في الاتصال');
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>تأكيد التحديث';
+                    });
+                });
             }
+
+            // Reset modal state on close
+            document.getElementById('salaryPayStatusModal')?.addEventListener('hidden.bs.modal', function() {
+                radios.forEach(r => r.checked = false);
+                if (confirmBtn) {
+                    confirmBtn.disabled = true;
+                    confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>تأكيد التحديث <span class="ms-1">(<span id="statusConfirmCount">0</span> موظف)</span>';
+                }
+                if (previewAlert) previewAlert.classList.add('d-none');
+            });
+        })();
+
+        function showToast(type, message) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} position-fixed shadow-lg`;
+            toast.style.cssText = 'top:20px;left:50%;transform:translateX(-50%);z-index:9999;min-width:300px;text-align:center;';
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
         }
 
         // ============================================

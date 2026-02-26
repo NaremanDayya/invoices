@@ -37,6 +37,7 @@ class InvoiceEmployee extends Pivot
         'monthly_amount',
         'wps_percentage_applied',
         'payment_status',
+        'salary_pay_status',
         'payment_date',
         'paid_amount',
         'total_salary',
@@ -46,6 +47,24 @@ class InvoiceEmployee extends Pivot
         'last_payment_date',
         'notes'
     ];
+
+    const SALARY_PAY_STATUS_FULL_PAID  = 'full_paid';
+    const SALARY_PAY_STATUS_PARTIAL    = 'partial_paid';
+    const SALARY_PAY_STATUS_PENDED     = 'pended';
+
+    public static function salaryPayStatusLabels(): array
+    {
+        return [
+            self::SALARY_PAY_STATUS_FULL_PAID => 'مدفوع بالكامل',
+            self::SALARY_PAY_STATUS_PARTIAL   => 'مدفوع جزئياً',
+            self::SALARY_PAY_STATUS_PENDED    => 'معلق',
+        ];
+    }
+
+    public function getSalaryPayStatusLabelAttribute(): string
+    {
+        return self::salaryPayStatusLabels()[$this->salary_pay_status] ?? '-';
+    }
 
     protected $casts = [
         'basic_salary' => 'decimal:2',

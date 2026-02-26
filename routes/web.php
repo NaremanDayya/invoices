@@ -111,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/salary-invoices/{invoice}/process-payments', [\App\Http\Controllers\SalaryPaymentController::class, 'processPayments'])->name('salary-payments.process');
         Route::post('/salary-invoices/employees/{employee}/calculate-breakdown', [\App\Http\Controllers\SalaryPaymentController::class, 'calculatePaymentBreakdown'])->name('salary-payments.calculate-breakdown');
         Route::post('/salary-invoices/payments/{payment}/return', [\App\Http\Controllers\SalaryPaymentController::class, 'returnPayment'])->name('salary-payments.return');
+        Route::post('/salary-invoices/{invoice}/salary-pay-status', [\App\Http\Controllers\SalaryPaymentController::class, 'updateSalaryPayStatus'])->name('salary-payments.update-pay-status');
     });
 });
 

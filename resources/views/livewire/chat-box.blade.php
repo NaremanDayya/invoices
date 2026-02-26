@@ -44,6 +44,16 @@
                         <div class="message-content">
                             @if($message->message_type === 'system')
                                 {!! nl2br(e($message->message)) !!}
+                                @if(!empty($message->metadata['redirect_url']))
+                                    <div class="mt-2">
+                                        <a href="{{ $message->metadata['redirect_url'] }}"
+                                           class="btn btn-sm btn-outline-light border-white fw-semibold"
+                                           style="font-size:12px; border-radius:8px;">
+                                            <i class="bi bi-box-arrow-up-left me-1"></i>
+                                            {{ $message->metadata['redirect_label'] ?? 'عرض التفاصيل' }}
+                                        </a>
+                                    </div>
+                                @endif
                             @else
                                 {{ $message->message }}
                             @endif

@@ -112,9 +112,10 @@ class SalaryInvoiceController extends Controller
             abort(404, 'هذه الفاتورة ليست فاتورة رواتب');
         }
 
-        $filter = request('filter', 'all');
-        $search = request('search', '');
-        $employees = $invoice->invoiceEmployees;
+        $filter        = request('filter', 'all');
+        $salaryStatus  = request('salary_status', '');
+        $search        = request('search', '');
+        $employees     = $invoice->invoiceEmployees;
 
         // Apply search filter
         if (!empty($search)) {
@@ -125,7 +126,7 @@ class SalaryInvoiceController extends Controller
             });
         }
 
-        // Apply status/type filter
+        // Apply payment status/type filter
         if ($filter !== 'all') {
             $employees = $employees->filter(function($emp) use ($filter) {
                 switch($filter) {
@@ -145,16 +146,32 @@ class SalaryInvoiceController extends Controller
             });
         }
 
+        // Apply salary_pay_status filter
+        if (!empty($salaryStatus)) {
+            $salaryStatusMap = [
+                'full'    => 'full_paid',
+                'partial' => 'partial_paid',
+                'pended'  => 'pended',
+            ];
+            $dbStatus  = $salaryStatusMap[$salaryStatus] ?? $salaryStatus;
+            $employees = $employees->filter(fn($emp) => $emp->salary_pay_status === $dbStatus);
+        }
+
+        $allEmployees = $invoice->invoiceEmployees;
+
         $summary = [
-            'total_employees' => $invoice->invoiceEmployees->count(),
-            'paid_employees' => $invoice->invoiceEmployees->where('payment_status', 'paid')->count(),
-            'partially_paid_employees' => $invoice->invoiceEmployees->where('payment_status', 'partially_paid')->count(),
-            'unpaid_employees' => $invoice->invoiceEmployees->where('payment_status', 'unpaid')->count(),
-            'wps_employees' => $invoice->invoiceEmployees->where('salary_type', 'wps')->count(),
-            'monthly_employees' => $invoice->invoiceEmployees->where('salary_type', 'monthly')->count(),
-            'total_salaries' => $invoice->invoiceEmployees->sum('total_salary'),
-            'total_paid' => $invoice->invoiceEmployees->sum('total_paid'),
-            'total_remaining' => $invoice->invoiceEmployees->sum('remaining_amount')
+            'total_employees'          => $allEmployees->count(),
+            'paid_employees'           => $allEmployees->where('payment_status', 'paid')->count(),
+            'partially_paid_employees' => $allEmployees->where('payment_status', 'partially_paid')->count(),
+            'unpaid_employees'         => $allEmployees->where('payment_status', 'unpaid')->count(),
+            'wps_employees'            => $allEmployees->where('salary_type', 'wps')->count(),
+            'monthly_employees'        => $allEmployees->where('salary_type', 'monthly')->count(),
+            'total_salaries'           => $allEmployees->sum('total_salary'),
+            'total_paid'               => $allEmployees->sum('total_paid'),
+            'total_remaining'          => $allEmployees->sum('remaining_amount'),
+            'salary_full_paid'         => $allEmployees->where('salary_pay_status', 'full_paid')->count(),
+            'salary_partial_paid'      => $allEmployees->where('salary_pay_status', 'partial_paid')->count(),
+            'salary_pended'            => $allEmployees->where('salary_pay_status', 'pended')->count(),
         ];
 
         // Get all salary invoices for filtering dropdown
@@ -162,7 +179,9 @@ class SalaryInvoiceController extends Controller
             ->orderBy('generation_date', 'desc')
             ->get();
 
-        return view('salary-invoices.employees', compact('invoice', 'employees', 'summary', 'filter', 'search', 'allSalaryInvoices'));
+        return view('salary-invoices.employees', compact(
+            'invoice', 'employees', 'summary', 'filter', 'salaryStatus', 'search', 'allSalaryInvoices'
+        ));
     }
 
     public function getEmployees($invoiceId)

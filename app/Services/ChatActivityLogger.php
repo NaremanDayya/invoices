@@ -332,6 +332,50 @@ class ChatActivityLogger
     }
 
     /**
+     * Log salary pay status update (full_paid / partial_paid / pended)
+     */
+    public function logSalaryPayStatus(Invoice $invoice, string $status, int $count, int $previouslyPended = 0): ?Message
+    {
+        $conversation = $this->getOrCreateInvoiceConversation($invoice);
+
+        $user     = Auth::user();
+        $userName = $user ? $user->name : 'النظام';
+
+        $statusMap = [
+            'full_paid'    => ['icon' => '✅', 'label' => 'مدفوع بالكامل',  'filter' => 'full'],
+            'partial_paid' => ['icon' => '🔶', 'label' => 'مدفوع جزئياً',  'filter' => 'partial'],
+            'pended'       => ['icon' => '⏸️', 'label' => 'معلق (On Hold)', 'filter' => 'pended'],
+        ];
+
+        $info       = $statusMap[$status] ?? ['icon' => 'ℹ️', 'label' => $status, 'filter' => $status];
+        $filterUrl  = route('salary-invoices.employees.index', ['invoice' => $invoice->id, 'salary_status' => $info['filter']]);
+
+        $pendedNote = '';
+        if ($previouslyPended > 0 && in_array($status, ['full_paid', 'partial_paid'])) {
+            $pendedNote = "\n\n⚠️ **ملاحظة:** تم تحويل {$previouslyPended} موظف كانت حالتهم معلقة إلى {$info['label']}.";
+        }
+
+        $message = "{$info['icon']} **تم تحديث حالة صرف الرواتب**\n\n" .
+                   "رقم الفاتورة: {$invoice->number}\n" .
+                   "العميل: {$invoice->client->name}\n" .
+                   "الحالة الجديدة: {$info['label']}\n" .
+                   "عدد الموظفين: {$count}" .
+                   $pendedNote .
+                   "\n\n👤 بواسطة: {$userName}";
+
+        return $this->createSystemMessage($conversation, $invoice, $message, 'salary_pay_status_updated', [
+            'invoice_id'         => $invoice->id,
+            'invoice_number'     => $invoice->number,
+            'salary_pay_status'  => $status,
+            'employees_count'    => $count,
+            'previously_pended'  => $previouslyPended,
+            'redirect_url'       => $filterUrl,
+            'redirect_label'     => "عرض الموظفين ({$info['label']})",
+            'action'             => 'salary_pay_status_updated',
+        ]);
+    }
+
+    /**
      * Log bulk employee payments
      */
     public function logBulkEmployeePayments(Invoice $invoice, int $count, float $totalAmount): ?Message

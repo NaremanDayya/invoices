@@ -205,6 +205,78 @@ class SalaryPaymentController extends Controller
         ));
     }
 
+    public function updateSalaryPayStatus(Request $request, Invoice $invoice)
+    {
+        $validator = Validator::make($request->all(), [
+            'employee_ids'    => 'required|array|min:1',
+            'employee_ids.*'  => 'required|integer|exists:invoice_employees,id',
+            'salary_pay_status' => 'required|in:full_paid,partial_paid,pended',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'خطأ في البيانات المدخلة',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $newStatus    = $request->input('salary_pay_status');
+            $employeeIds  = $request->input('employee_ids');
+
+            $employees = InvoiceEmployee::whereIn('id', $employeeIds)
+                ->where('invoice_id', $invoice->id)
+                ->get();
+
+            if ($employees->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لم يتم العثور على موظفين مرتبطين بهذه الفاتورة'
+                ], 404);
+            }
+
+            // Track previously pended employees that are being changed to paid
+            $previouslyPended = $employees->filter(fn($e) => $e->salary_pay_status === 'pended')->count();
+
+            foreach ($employees as $employee) {
+                $employee->salary_pay_status = $newStatus;
+                $employee->save();
+            }
+
+            // Log to chat — pass context about previously-pended transition
+            $this->chatLogger->logSalaryPayStatus(
+                $invoice,
+                $newStatus,
+                $employees->count(),
+                $previouslyPended
+            );
+
+            DB::commit();
+
+            $labels = [
+                'full_paid'    => 'مدفوع بالكامل',
+                'partial_paid' => 'مدفوع جزئياً',
+                'pended'       => 'معلق',
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث حالة صرف الراتب إلى: ' . ($labels[$newStatus] ?? $newStatus),
+                'updated_count' => $employees->count(),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء التحديث: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function returnPayment(Request $request, InvoiceEmployeePayment $payment)
     {
         $validated = $request->validate([

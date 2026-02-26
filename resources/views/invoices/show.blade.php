@@ -297,7 +297,121 @@
             </div>
         </div>
 
-        {{-- ── 2. Workforce Details ── --}}
+        {{-- ── 2. Service Details ── --}}
+        @php
+            $svcDetails = collect($invoice->service_details_data ?? [])
+                ->filter(fn($d) => !empty($d['name']) || !empty($d['count']) || !empty($d['value']));
+        @endphp
+        @if($svcDetails->isNotEmpty() || ($invoice->service && $invoice->service->description))
+        <div class="inv-section">
+            <div class="inv-section-header">
+                <h6>
+                    <span class="icon-circle" style="background:#fdf4ff;color:#a21caf;">
+                        <i class="bi bi-layers-fill"></i>
+                    </span>
+                    تفاصيل الخدمة
+                </h6>
+                @if($invoice->service)
+                <span class="sb sb-approved" style="background:#fdf4ff;color:#a21caf;">
+                    <i class="bi bi-briefcase-fill"></i>{{ $invoice->service->name }}
+                </span>
+                @endif
+            </div>
+            <div class="inv-section-body">
+                @if($invoice->service && $invoice->service->description)
+                <div class="mb-3 p-3 rounded-3" style="background:#fdf4ff;border:1px solid #f0abfc;">
+                    <div style="font-size:.8rem;color:#a21caf;font-weight:600;margin-bottom:4px;">
+                        <i class="bi bi-info-circle me-1"></i>وصف الخدمة
+                    </div>
+                    <div style="font-size:.875rem;color:#374151;">{{ $invoice->service->description }}</div>
+                </div>
+                @endif
+
+                @if($svcDetails->isNotEmpty())
+                <div class="table-responsive">
+                    <table class="wf-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align:right;">البند</th>
+                                <th>العدد</th>
+                                <th>الأيام</th>
+                                <th>إجمالي الأيام</th>
+                                <th>القيمة / الملاحظة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($svcDetails as $detailId => $detail)
+                            @php
+                                $dCount    = (int)($detail['count'] ?? 0);
+                                $dDays     = (int)($detail['days']  ?? 0);
+                                $dHasWd    = !empty($detail['has_work_days']) && $detail['has_work_days'] == 1;
+                                $dManDays  = $dHasWd ? ($dCount * $dDays) : null;
+                                $dName     = $detail['name'] ?? ('بند #' . $detailId);
+                                $dValue    = $detail['value'] ?? null;
+                                /* Try to resolve name from service details relation */
+                                $sdModel   = $invoice->service?->serviceDetails->firstWhere('id', $detailId);
+                                if ($sdModel) $dName = $sdModel->name;
+                            @endphp
+                            <tr>
+                                <td style="text-align:right;">
+                                    <span class="wf-role-badge" style="background:#fdf4ff;color:#a21caf;">
+                                        <i class="bi bi-chevron-left"></i>{{ $dName }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if($dCount > 0)
+                                        <strong>{{ $dCount }}</strong>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($dHasWd && $dDays > 0)
+                                        {{ $dDays }} يوم
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($dManDays !== null && $dManDays > 0)
+                                        <strong style="color:#a21caf;">{{ $dManDays }} يوم</strong>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td style="font-size:.82rem;color:#475569;">
+                                    {{ $dValue ?: '—' }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        @php
+                            $totalSvcCount   = $svcDetails->sum(fn($d) => (int)($d['count'] ?? 0));
+                            $totalSvcManDays = $svcDetails->sum(function($d) {
+                                return (!empty($d['has_work_days']) && $d['has_work_days'] == 1)
+                                    ? (int)($d['count'] ?? 0) * (int)($d['days'] ?? 0)
+                                    : 0;
+                            });
+                        @endphp
+                        @if($totalSvcCount > 0 || $totalSvcManDays > 0)
+                        <tfoot>
+                            <tr>
+                                <td style="text-align:right;color:#475569;font-size:.85rem;">الإجمالي</td>
+                                <td style="color:#a21caf;">{{ $totalSvcCount ?: '—' }}</td>
+                                <td>—</td>
+                                <td style="color:#a21caf;">{{ $totalSvcManDays > 0 ? $totalSvcManDays . ' يوم' : '—' }}</td>
+                                <td>—</td>
+                            </tr>
+                        </tfoot>
+                        @endif
+                    </table>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        {{-- ── 3. Workforce Details ── --}}
         @if(!$invoice->isSalaryInvoice() && $totalWfCount > 0)
         <div class="inv-section">
             <div class="inv-section-header">

@@ -123,9 +123,13 @@
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
             border: 1px solid #edf2f7;
+            overflow: auto;
+            width: 100%;
+            position: relative;
+        }
+        .table-responsive {
             overflow-x: auto;
-            overflow-y: visible;
-            max-width: 100%;
+            -webkit-overflow-scrolling: touch;
         }
         .table {
             margin-bottom: 0;

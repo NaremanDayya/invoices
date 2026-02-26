@@ -95,7 +95,7 @@
             font-family: 'Tajawal', sans-serif;
             background-color: var(--body-bg);
             margin: 0;
-            overflow-x: hidden;
+            overflow-x: clip;
             display: flex;
         }
 
@@ -248,15 +248,19 @@
         /* Main Content Wrapper */
         #content-wrapper {
             flex: 1;
+            min-width: 0;
+            width: calc(100vw - 260px);
             margin-right: 260px; /* Responsive to sidebar width */
             transition: all var(--transition-speed);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         #content-wrapper.expanded {
             margin-right: 80px;
+            width: calc(100vw - 80px);
         }
 
         /* Top Bar */

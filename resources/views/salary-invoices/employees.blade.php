@@ -123,13 +123,11 @@
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
             border: 1px solid #edf2f7;
-            overflow: auto;
+            overflow: visible;
             width: 100%;
-            position: relative;
         }
         .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow: visible !important;
         }
         .table {
             margin-bottom: 0;
@@ -139,15 +137,17 @@
             color: #1e4a46;
             font-weight: 600;
             font-size: 12px;
-            padding: 15px 12px;
+            padding: 10px 8px;
             border-bottom: 2px solid #e2e8f0;
-            white-space: nowrap;
+            white-space: normal;
+            word-break: break-word;
         }
         .table tbody td {
-            padding: 12px;
-            font-size: 13px;
+            padding: 8px;
+            font-size: 12px;
             vertical-align: middle;
             border-bottom: 1px solid #edf2f7;
+            word-break: break-word;
         }
         .table tbody tr:hover {
             background-color: #f0fdf4;

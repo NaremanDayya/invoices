@@ -1080,6 +1080,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
@@ -1320,7 +1321,7 @@
         }
 
         // Submit Batch Payments
-        document.getElementById('submitBatchPaymentBtn')?.addEventListener('click', async function() {
+        document.getElementById('confirmBatchPaymentBtn')?.addEventListener('click', async function() {
             const payments = [];
             let hasErrors = false;
 
@@ -1404,6 +1405,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({ payments })
@@ -1482,6 +1484,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({

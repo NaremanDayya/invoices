@@ -539,9 +539,12 @@ class SalaryInvoiceController extends Controller
 
     public function approve(Request $request, $invoiceId)
     {
-        $request->validate([
-            'notes' => 'nullable|string|max:1000'
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'notes' => 'nullable|string|max:1000',
         ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'خطأ في البيانات', 'errors' => $validator->errors()], 422);
+        }
 
         try {
             $invoice = Invoice::findOrFail($invoiceId);
@@ -588,9 +591,12 @@ class SalaryInvoiceController extends Controller
 
     public function reject(Request $request, $invoiceId)
     {
-        $request->validate([
-            'notes' => 'required|string|max:1000'
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'notes' => 'required|string|max:1000',
         ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'يرجى إدخال سبب الرفض', 'errors' => $validator->errors()], 422);
+        }
 
         try {
             $invoice = Invoice::findOrFail($invoiceId);
@@ -629,10 +635,18 @@ class SalaryInvoiceController extends Controller
     }
     public function review(Request $request, $invoiceId)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'revision_status' => 'required|in:revision_approved,revision_rejected',
-            'revision_notes' => 'required_if:revision_status,revision_rejected|string|max:1000'
+            'revision_notes'  => 'required_if:revision_status,revision_rejected|nullable|string|max:1000',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'خطأ في البيانات المدخلة',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
 
         try {
             DB::beginTransaction();
@@ -646,8 +660,8 @@ class SalaryInvoiceController extends Controller
                 ], 422);
             }
 
-            // Check if revision is already done
-            if ($invoice->revision_status !== 'pending') {
+            // Check if revision is already done (null or 'pending' both mean not yet reviewed)
+            if (!in_array($invoice->revision_status, [null, 'pending'], true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'تمت مراجعة هذه الفاتورة بالفعل'

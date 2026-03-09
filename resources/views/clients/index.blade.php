@@ -323,6 +323,11 @@
                                        title="التقرير الشهري">
                                         <i class="bi bi-file-earmark-bar-graph text-info"></i>
                                     </a>
+                                    <button class="btn-action"
+                                            onclick="openFinancialUpdateModal({{ $client->id }}, 'client')"
+                                            title="تحديث مالي">
+                                        <i class="bi bi-cash-coin text-success"></i>
+                                    </button>
                                     @if(auth()->user()->hasPermission('add_clients'))
                                     <button class="btn-action"
                                             data-bs-toggle="modal"
@@ -749,5 +754,30 @@ tbody td { padding:8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; 
                 });
             });
         });
+
+        // Open Financial Update Modal
+        function openFinancialUpdateModal(clientId, type) {
+            const modal = document.getElementById('financialUpdateModal');
+            if (!modal) return;
+            
+            // Set client_id in the form
+            const clientInput = modal.querySelector('[name="client_id"]');
+            if (clientInput) {
+                clientInput.value = clientId;
+            }
+            
+            // Clear other fields
+            const invoiceInput = modal.querySelector('[name="invoice_id"]');
+            const paymentInput = modal.querySelector('[name="payment_id"]');
+            if (invoiceInput) invoiceInput.value = '';
+            if (paymentInput) paymentInput.value = '';
+            
+            // Show modal
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        }
     </script>
 @endpush
+
+<!-- Financial Update Modal -->
+<x-financial-update-modal />

@@ -162,6 +162,19 @@
 @endpush
 @section('page_actions')
     <div class="d-flex gap-2">
+        <x-column-selector 
+            tableId="clients-table" 
+            :columns="[
+                'client' => 'العميل',
+                'address' => 'العنوان الوطني',
+                'email' => 'البريد الإلكتروني',
+                'phone' => 'الهاتف',
+                'tax_number' => 'الرقم الضريبي',
+                'invoices' => 'الفواتير',
+                'actions' => 'الإجراءات'
+            ]" 
+            storageKey="clients_columns" 
+        />
         <button class="btn btn-outline-success rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2"
                 onclick="exportClientsToPDF()">
             <i class="bi bi-file-pdf"></i>
@@ -238,16 +251,16 @@
     <!-- Clients Table -->
     <div class="table-card">
         <div class="table-responsive">
-            <table class="custom-table">
+            <table class="custom-table" id="clients-table">
                 <thead>
                     <tr>
-                        <th>العميل</th>
-                        <th>العنوان الوطني</th>
-                        <th>البريد الإلكتروني</th>
-                        <th>الهاتف</th>
-                        <th>الرقم الضريبي</th>
-                        <th class="text-center">الفواتير</th>
-                        <th class="text-center">الإجراءات</th>
+                        <th data-column="client">العميل</th>
+                        <th data-column="address">العنوان الوطني</th>
+                        <th data-column="email">البريد الإلكتروني</th>
+                        <th data-column="phone">الهاتف</th>
+                        <th data-column="tax_number">الرقم الضريبي</th>
+                        <th class="text-center" data-column="invoices">الفواتير</th>
+                        <th class="text-center" data-column="actions">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>

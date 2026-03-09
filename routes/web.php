@@ -192,4 +192,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
 });
 
+// Financial Updates Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/financial-updates', [\App\Http\Controllers\FinancialUpdateController::class, 'index'])->name('financial-updates.index');
+    Route::post('/api/financial-updates', [\App\Http\Controllers\FinancialUpdateController::class, 'store'])->name('financial-updates.store');
+    Route::put('/api/financial-updates/{financialUpdate}', [\App\Http\Controllers\FinancialUpdateController::class, 'update'])->name('financial-updates.update');
+    Route::delete('/api/financial-updates/{financialUpdate}', [\App\Http\Controllers\FinancialUpdateController::class, 'destroy'])->name('financial-updates.destroy');
+    Route::get('/api/financial-updates/invoice/{invoice}', [\App\Http\Controllers\FinancialUpdateController::class, 'getByInvoice'])->name('financial-updates.by-invoice');
+    Route::get('/api/financial-updates/payment/{payment}', [\App\Http\Controllers\FinancialUpdateController::class, 'getByPayment'])->name('financial-updates.by-payment');
+});
+
 require __DIR__.'/auth.php';

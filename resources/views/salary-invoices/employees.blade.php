@@ -329,6 +329,33 @@
                     </div>
                     <div class="col-md-3 text-md-end">
                         <div class="d-flex gap-2 justify-content-end flex-wrap">
+                            <x-column-selector 
+                                tableId="employees-table" 
+                                :columns="[
+                                    'id' => '#',
+                                    'employee' => 'الموظف',
+                                    'project' => 'المشروع',
+                                    'work_days' => 'أيام العمل',
+                                    'salary' => 'الراتب',
+                                    'bonuses' => 'المكافآت',
+                                    'advances' => 'السلف',
+                                    'deductions' => 'الخصومات',
+                                    'net_salary' => 'صافي الراتب',
+                                    'paid' => 'المدفوع',
+                                    'remaining' => 'المتبقي',
+                                    'iban' => 'رقم الآيبان',
+                                    'bank' => 'اسم البنك',
+                                    'account_holder' => 'صاحب الحساب',
+                                    'type' => 'النوع',
+                                    'status' => 'الحالة',
+                                    'pay_status' => 'حالة الصرف',
+                                    'last_payment' => 'آخر دفعة',
+                                    'late_days' => 'أيام التأخير',
+                                    'response_time' => 'فترة الاستجابة',
+                                    'actions' => 'الإجراءات'
+                                ]" 
+                                storageKey="employees_columns" 
+                            />
                             @if($invoice->approval_status === 'approved' && auth()->user()->hasPermission('add_invoice_employee_payment'))
                                 <button type="button" class="btn btn-success" id="processBatchBtn"
                                         data-bs-toggle="modal" data-bs-target="#batchPaymentModal" disabled>
@@ -400,7 +427,7 @@
         <div class="table-container">
             @if($employees->count() > 0)
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table" id="employees-table">
                         <thead>
                         <tr>
                             @if($invoice->approval_status === 'approved')
@@ -410,26 +437,27 @@
                                     </div>
                                 </th>
                             @endif
-                            <th class="text-center">#</th>
-                            <th class="text-center">الموظف</th>
-                            <th class="text-center">المشروع</th>
-                            <th class="text-center">أيام العمل</th>
-                            <th class="text-center">الراتب</th>
-                            <th class="text-center">المكافآت</th>
-                            <th class="text-center">السلف</th>
-                            <th class="text-center">الخصومات</th>
-                            <th class="text-center">صافي الراتب</th>
-                            <th class="text-center">المدفوع</th>
-                            <th class="text-center">المتبقي</th>
-                            <th class="text-center">رقم الآيبان</th>
-                            <th class="text-center">اسم البنك</th>
-                            <th class="text-center">صاحب الحساب</th>
-                            <th class="text-center">النوع</th>
-                            <th class="text-center">الحالة</th>
-                            <th class="text-center">حالة الصرف</th>
-                            <th class="text-center">آخر دفعة</th>
-                            <th class="text-center">فترة الاستجابة</th>
-                            <th class="text-center"></th>
+                            <th class="text-center" data-column="id">#</th>
+                            <th class="text-center" data-column="employee">الموظف</th>
+                            <th class="text-center" data-column="project">المشروع</th>
+                            <th class="text-center" data-column="work_days">أيام العمل</th>
+                            <th class="text-center" data-column="salary">الراتب</th>
+                            <th class="text-center" data-column="bonuses">المكافآت</th>
+                            <th class="text-center" data-column="advances">السلف</th>
+                            <th class="text-center" data-column="deductions">الخصومات</th>
+                            <th class="text-center" data-column="net_salary">صافي الراتب</th>
+                            <th class="text-center" data-column="paid">المدفوع</th>
+                            <th class="text-center" data-column="remaining">المتبقي</th>
+                            <th class="text-center" data-column="iban">رقم الآيبان</th>
+                            <th class="text-center" data-column="bank">اسم البنك</th>
+                            <th class="text-center" data-column="account_holder">صاحب الحساب</th>
+                            <th class="text-center" data-column="type">النوع</th>
+                            <th class="text-center" data-column="status">الحالة</th>
+                            <th class="text-center" data-column="pay_status">حالة الصرف</th>
+                            <th class="text-center" data-column="last_payment">آخر دفعة</th>
+                            <th class="text-center" data-column="late_days">أيام التأخير</th>
+                            <th class="text-center" data-column="response_time">فترة الاستجابة</th>
+                            <th class="text-center" data-column="actions"></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -524,6 +552,35 @@
                                 </td>
                                 <td class="text-center text-muted small">
                                     {{ $employee->last_payment_date ? \Carbon\Carbon::parse($employee->last_payment_date)->format('Y-m-d') : '-' }}
+                                </td>
+                                <td class="text-center">
+                                    @php
+                                        $lateDays = 0;
+                                        if ($invoice->generation_date && $employee->last_payment_date) {
+                                            $genDate = \Carbon\Carbon::parse($invoice->generation_date);
+                                            $payDate = \Carbon\Carbon::parse($employee->last_payment_date);
+                                            $acceptedDelayDays = (int) \App\Models\Setting::get('accepted_salary_delay_days', 0);
+                                            $deadline = $genDate->copy()->addDays($acceptedDelayDays);
+                                            if ($payDate->gt($deadline)) {
+                                                $lateDays = $deadline->diffInDays($payDate);
+                                            }
+                                        } elseif ($invoice->generation_date && !$employee->last_payment_date && $employee->payment_status !== 'paid') {
+                                            $genDate = \Carbon\Carbon::parse($invoice->generation_date);
+                                            $acceptedDelayDays = (int) \App\Models\Setting::get('accepted_salary_delay_days', 0);
+                                            $deadline = $genDate->copy()->addDays($acceptedDelayDays);
+                                            $now = \Carbon\Carbon::now();
+                                            if ($now->gt($deadline)) {
+                                                $lateDays = $deadline->diffInDays($now);
+                                            }
+                                        }
+                                    @endphp
+                                    @if($lateDays > 0)
+                                        <span class="badge bg-danger text-white" title="أيام التأخير في الدفع">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $lateDays }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     @php

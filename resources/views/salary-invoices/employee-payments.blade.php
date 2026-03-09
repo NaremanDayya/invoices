@@ -239,7 +239,7 @@
                                 <tr>
                                     <td colspan="2" class="px-4 py-3 text-end"><strong>إجمالي المدفوع:</strong></td>
                                     <td class="px-4 py-3">
-                                        <strong class="text-success fs-5">{{ number_format($employee->payments->sum('payment_amount'), 0) }} ر.س</strong>
+                                        <strong class="text-success fs-5">{{ number_format($employee->total_paid ?? 0, 0) }} ر.س</strong>
                                     </td>
                                     <td colspan="5"></td>
                                 </tr>
@@ -491,23 +491,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterType = document.getElementById('filterPaymentType');
     const filterMode = document.getElementById('filterPaymentMode');
     const tableRows = document.querySelectorAll('tbody tr');
-    
+
     function filterTable() {
         const searchTerm = searchInput.value.toLowerCase();
         const typeFilter = filterType.value;
         const modeFilter = filterMode.value;
-        
+
         let visibleCount = 0;
-        
+
         tableRows.forEach(row => {
             const text = row.textContent.toLowerCase();
             const paymentType = row.querySelector('[data-payment-type]')?.dataset.paymentType || '';
             const paymentMode = row.querySelector('[data-payment-mode]')?.dataset.paymentMode || '';
-            
+
             const matchesSearch = text.includes(searchTerm);
             const matchesType = !typeFilter || paymentType === typeFilter;
             const matchesMode = !modeFilter || paymentMode === modeFilter;
-            
+
             if (matchesSearch && matchesType && matchesMode) {
                 row.style.display = '';
                 visibleCount++;
@@ -515,24 +515,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.style.display = 'none';
             }
         });
-        
+
         // Update total if needed
         updateVisibleTotal();
     }
-    
+
     function updateVisibleTotal() {
         const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
         const total = visibleRows.reduce((sum, row) => {
             const amountText = row.cells[2]?.textContent.replace(/[^\d.]/g, '') || '0';
             return sum + parseFloat(amountText);
         }, 0);
-        
+
         const totalCell = document.querySelector('tfoot td:nth-child(2) strong');
         if (totalCell && visibleRows.length < tableRows.length) {
             totalCell.textContent = `${number_format(total, 0)} ر.س (${visibleRows.length} من ${tableRows.length})`;
         }
     }
-    
+
     if (searchInput) searchInput.addEventListener('input', filterTable);
     if (filterType) filterType.addEventListener('change', filterTable);
     if (filterMode) filterMode.addEventListener('change', filterTable);
@@ -547,20 +547,20 @@ function exportToExcel() {
 function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
-    
+
     // Add Arabic font support (you may need to add custom font)
     doc.setFont('helvetica');
     doc.setFontSize(16);
     doc.text('Payment History Report', 105, 15, { align: 'center' });
-    
+
     doc.setFontSize(12);
     doc.text('Employee: {{ $employee->employee_name }}', 14, 25);
     doc.text('Invoice: {{ $invoice->number }}', 14, 32);
     doc.text('Date: {{ date("Y-m-d") }}', 14, 39);
-    
+
     const tableData = [];
     const rows = document.querySelectorAll('tbody tr');
-    
+
     rows.forEach(row => {
         if (row.style.display !== 'none') {
             const cells = row.querySelectorAll('td');
@@ -574,7 +574,7 @@ function exportToPDF() {
             ]);
         }
     });
-    
+
     doc.autoTable({
         head: [['Date', 'Type', 'Amount', 'Mode', 'Processed By', 'Notes']],
         body: tableData,
@@ -582,7 +582,7 @@ function exportToPDF() {
         styles: { font: 'helvetica', fontSize: 9 },
         headStyles: { fillColor: [52, 152, 219] }
     });
-    
+
     doc.save('payment_history_{{ $employee->employee_name }}_{{ date("Y-m-d") }}.pdf');
 }
 

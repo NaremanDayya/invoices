@@ -128,6 +128,21 @@
 
 @section('page_actions')
     <div class="d-flex gap-2">
+        <x-column-selector 
+            tableId="payments-table" 
+            :columns="[
+                'number' => 'رقم الدفعة',
+                'client' => 'العميل',
+                'invoice' => 'رقم الفاتورة',
+                'payment_date' => 'تاريخ الدفع',
+                'amount' => 'المبلغ',
+                'payment_method' => 'طريقة الدفع',
+                'status' => 'الحالة',
+                'reference' => 'رقم المرجع',
+                'actions' => 'الإجراءات'
+            ]" 
+            storageKey="payments_columns" 
+        />
         <div class="dropdown">
             <button class="btn btn-outline-success rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2 dropdown-toggle" 
                     type="button" id="exportDropdownPayments" data-bs-toggle="dropdown" aria-expanded="false">
@@ -222,15 +237,15 @@
             <table class="custom-table" id="payments-table">
                 <thead>
                     <tr>
-                        <th>رقم الدفعة</th>
-                        <th>العميل</th>
-                        <th>رقم الفاتورة</th>
-                        <th>تاريخ الدفع</th>
-                        <th>المبلغ</th>
-                        <th>طريقة الدفع</th>
-                        <th>الحالة</th>
-                        <th class="text-center">رقم المرجع</th>
-                        <th class="text-center">الإجراءات</th>
+                        <th data-column="number">رقم الدفعة</th>
+                        <th data-column="client">العميل</th>
+                        <th data-column="invoice">رقم الفاتورة</th>
+                        <th data-column="payment_date">تاريخ الدفع</th>
+                        <th data-column="amount">المبلغ</th>
+                        <th data-column="payment_method">طريقة الدفع</th>
+                        <th data-column="status">الحالة</th>
+                        <th class="text-center" data-column="reference">رقم المرجع</th>
+                        <th class="text-center" data-column="actions">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>

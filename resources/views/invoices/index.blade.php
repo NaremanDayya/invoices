@@ -171,6 +171,27 @@
     $user = \Illuminate\Support\Facades\Auth::user();
     @endphp
     <div class="d-flex gap-2">
+        <x-column-selector 
+            tableId="invoices-table" 
+            :columns="[
+                'number' => 'رقم الفاتورة',
+                'client' => 'العميل',
+                'service' => 'الخدمة',
+                'service_details' => 'تفاصيل الخدمة',
+                'generation_date' => 'تاريخ الإصدار',
+                'base_price' => 'المبلغ',
+                'tax_amount' => 'الضريبة',
+                'total_price' => 'الإجمالي',
+                'employees_count' => 'عدد الموظفين',
+                'work_days' => 'أيام العمل',
+                'issue_delay' => 'تأخير الإصدار',
+                'payment_delay' => 'تأخير الدفع',
+                'credit_notes' => 'إشعارات دائنة',
+                'status' => 'الحالة',
+                'actions' => 'الإجراءات'
+            ]" 
+            storageKey="invoices_columns" 
+        />
         <div class="dropdown">
             <button class="btn btn-outline-success rounded-xl px-4 py-2 fw-bold d-flex align-items-center gap-2 dropdown-toggle"
                     type="button" id="exportDropdownInvoices" data-bs-toggle="dropdown" aria-expanded="false">
@@ -268,24 +289,24 @@
     <!-- Invoices Table -->
     <div class="table-card">
         <div class="table-responsive">
-            <table class="custom-table">
+            <table class="custom-table" id="invoices-table">
                 <thead>
                     <tr>
-                        <th>رقم الفاتورة</th>
-                        <th>العميل</th>
-                        <th>الخدمة</th>
-                        <th>تفاصيل الخدمة</th>
-                        <th>تاريخ الإصدار</th>
-                        <th>المبلغ</th>
-                        <th>الضريبة</th>
-                        <th>الإجمالي</th>
-                        <th class="text-center">عدد الموظفين</th>
-                        <th class="text-center">أيام العمل</th>
-                        <th class="text-center">تأخير الإصدار</th>
-                        <th class="text-center">تأخير الدفع</th>
-                        <th class="text-center">إشعارات دائنة</th>
-                        <th>الحالة</th>
-                        <th class="text-center">الإجراءات</th>
+                        <th data-column="number">رقم الفاتورة</th>
+                        <th data-column="client">العميل</th>
+                        <th data-column="service">الخدمة</th>
+                        <th data-column="service_details">تفاصيل الخدمة</th>
+                        <th data-column="generation_date">تاريخ الإصدار</th>
+                        <th data-column="base_price">المبلغ</th>
+                        <th data-column="tax_amount">الضريبة</th>
+                        <th data-column="total_price">الإجمالي</th>
+                        <th class="text-center" data-column="employees_count">عدد الموظفين</th>
+                        <th class="text-center" data-column="work_days">أيام العمل</th>
+                        <th class="text-center" data-column="issue_delay">تأخير الإصدار</th>
+                        <th class="text-center" data-column="payment_delay">تأخير الدفع</th>
+                        <th class="text-center" data-column="credit_notes">إشعارات دائنة</th>
+                        <th data-column="status">الحالة</th>
+                        <th class="text-center" data-column="actions">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -378,25 +399,23 @@
                         <td class="text-center">
                             @php
                                 $paymentDelayDays = 0;
-                                if ($invoice->client && $invoice->client->default_payment_day) {
-                                    $gracePeriod = $invoice->client->grace_period_days ?? 0;
-                                    $genDate = $invoice->generation_date ? \Carbon\Carbon::parse($invoice->generation_date) : null;
-                                    if ($genDate) {
-                                        $expectedPayDay = $invoice->client->default_payment_day;
-                                        $expectedPayDate = $genDate->copy()->day($expectedPayDay)->addDays($gracePeriod);
-                                        if ($expectedPayDate->lt($genDate)) {
-                                            $expectedPayDate->addMonth();
-                                        }
-                                        $actualPayDate = $invoice->payment_date ? \Carbon\Carbon::parse($invoice->payment_date) : \Carbon\Carbon::now();
-                                        if ($actualPayDate->gt($expectedPayDate)) {
-                                            $paymentDelayDays = $expectedPayDate->diffInDays($actualPayDate);
-                                        }
+                                if ($invoice->due_date && $invoice->payment_date) {
+                                    $dueDate = \Carbon\Carbon::parse($invoice->due_date);
+                                    $paymentDate = \Carbon\Carbon::parse($invoice->payment_date);
+                                    if ($paymentDate->gt($dueDate)) {
+                                        $paymentDelayDays = $dueDate->diffInDays($paymentDate);
+                                    }
+                                } elseif ($invoice->due_date && !$invoice->payment_date && $invoice->payment_status !== 'paid') {
+                                    $dueDate = \Carbon\Carbon::parse($invoice->due_date);
+                                    $now = \Carbon\Carbon::now();
+                                    if ($now->gt($dueDate)) {
+                                        $paymentDelayDays = $dueDate->diffInDays($now);
                                     }
                                 }
                             @endphp
                             @if($paymentDelayDays > 0)
-                                <span class="badge bg-warning text-dark rounded-pill px-3" title="تأخير الدفع: مقارنة بيوم الدفع المتوقع + أيام السماح ({{ $invoice->client->grace_period_days ?? 0 }} يوم)">
-                                    <i class="bi bi-cash-coin me-1"></i>{{ $paymentDelayDays }} يوم
+                                <span class="badge bg-danger text-white rounded-pill px-3" title="أيام التأخير في الدفع">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $paymentDelayDays }}
                                 </span>
                             @else
                                 <span class="text-muted small">—</span>

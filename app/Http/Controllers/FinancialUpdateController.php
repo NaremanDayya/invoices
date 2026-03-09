@@ -15,18 +15,32 @@ class FinancialUpdateController extends Controller
     {
         $query = FinancialUpdate::with(['invoice', 'payment', 'client', 'creator']);
 
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('update_type', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by type
         if ($request->filled('type')) {
             $query->where('update_type', $request->type);
         }
 
-        if ($request->filled('invoice_id')) {
-            $query->where('invoice_id', $request->invoice_id);
-        }
-
+        // Filter by client
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);
         }
 
+        // Filter by invoice
+        if ($request->filled('invoice_id')) {
+            $query->where('invoice_id', $request->invoice_id);
+        }
+
+        // Filter by date range
         if ($request->filled('start_date')) {
             $query->where('update_date', '>=', $request->start_date);
         }

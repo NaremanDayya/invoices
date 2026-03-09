@@ -6,31 +6,51 @@
         <i class="bi bi-layout-three-columns"></i>
         <span>الأعمدة</span>
     </button>
-    <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="columnSelector{{ $tableId }}" style="min-width: 280px;">
-        <h6 class="dropdown-header px-0 mb-2">اختر الأعمدة المراد عرضها</h6>
-        <div class="column-selector-list" style="max-height: 400px; overflow-y: auto;">
+    <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="columnSelector{{ $tableId }}" style="min-width: 320px;" onclick="event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-bold">اختيار الأعمدة للعرض</h6>
+            <button type="button" class="btn-close" data-bs-toggle="dropdown" aria-label="Close"></button>
+        </div>
+        
+        <div class="search-box mb-3" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px;">
+            <i class="bi bi-search text-muted"></i>
+            <input type="text" id="columnSearch_{{ $tableId }}" placeholder="بحث عن عمود..." style="border: none; background: transparent; outline: none; width: 100%; font-size: 0.85rem;">
+        </div>
+        
+        <div class="column-selector-list" style="max-height: 350px; overflow-y: auto;">
             @foreach($columns as $key => $label)
-            <div class="form-check mb-2">
-                <input class="form-check-input column-toggle" 
+            <div class="form-check mb-2 column-item" data-label="{{ $label }}">
+                <input class="form-check-input column-toggle-temp" 
                        type="checkbox" 
                        value="{{ $key }}" 
                        id="col_{{ $tableId }}_{{ $key }}"
                        data-table="{{ $tableId }}"
                        data-storage="{{ $storageKey }}"
                        checked>
-                <label class="form-check-label" for="col_{{ $tableId }}_{{ $key }}">
+                <label class="form-check-label" for="col_{{ $tableId }}_{{ $key }}" style="cursor: pointer;">
                     {{ $label }}
                 </label>
             </div>
             @endforeach
         </div>
-        <div class="dropdown-divider my-2"></div>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-outline-primary flex-fill" onclick="selectAllColumns_{{ $tableId }}()">
+        
+        <div class="dropdown-divider my-3"></div>
+        
+        <div class="d-flex gap-2 mb-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="selectAllColumnstemp_{{ $tableId }}()">
                 <i class="bi bi-check-all me-1"></i>تحديد الكل
             </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="deselectAllColumns_{{ $tableId }}()">
-                <i class="bi bi-x-lg me-1"></i>إلغاء الكل
+            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="resetColumns_{{ $tableId }}()">
+                <i class="bi bi-arrow-clockwise me-1"></i>إعادة تعيين
+            </button>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-light flex-fill" data-bs-toggle="dropdown">
+                إلغاء
+            </button>
+            <button type="button" class="btn btn-sm btn-primary flex-fill" onclick="applyColumnSelection_{{ $tableId }}()">
+                <i class="bi bi-check-lg me-1"></i>تطبيق
             </button>
         </div>
     </div>
@@ -43,17 +63,31 @@
     const tableId = '{{ $tableId }}';
     
     document.addEventListener('DOMContentLoaded', function() {
-        // Load saved column preferences
+        // Load saved column preferences on page load
         loadColumnPreferences(tableId, storageKey);
         
-        // Listen for column toggle changes
-        document.querySelectorAll(`#columnSelector${tableId}`).forEach(dropdown => {
-            dropdown.closest('.dropdown-menu').querySelectorAll('.column-toggle').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    toggleColumn(tableId, this.value, this.checked, storageKey);
+        // Setup column search
+        const searchInput = document.getElementById(`columnSearch_${tableId}`);
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                const items = document.querySelectorAll(`#columnSelector${tableId}`).item(0)
+                    ?.closest('.dropdown').querySelectorAll('.column-item');
+                
+                items?.forEach(item => {
+                    const label = item.getAttribute('data-label').toLowerCase();
+                    item.style.display = label.includes(query) ? '' : 'none';
                 });
             });
-        });
+        }
+        
+        // When dropdown opens, sync temp checkboxes with saved state
+        const dropdownElement = document.querySelector(`#columnSelector${tableId}`);
+        if (dropdownElement) {
+            dropdownElement.addEventListener('shown.bs.dropdown', function() {
+                syncTempCheckboxes(tableId, storageKey);
+            });
+        }
     });
 
     function loadColumnPreferences(tableId, storageKey) {
@@ -61,18 +95,27 @@
         if (saved) {
             const columns = JSON.parse(saved);
             
-            // Apply saved preferences
+            // Apply saved preferences to actual table
             Object.keys(columns).forEach(colKey => {
-                const checkbox = document.getElementById(`col_${tableId}_${colKey}`);
-                if (checkbox) {
-                    checkbox.checked = columns[colKey];
-                    toggleColumn(tableId, colKey, columns[colKey], storageKey, false);
-                }
+                toggleColumn(tableId, colKey, columns[colKey]);
             });
         }
     }
+    
+    function syncTempCheckboxes(tableId, storageKey) {
+        const saved = localStorage.getItem(storageKey);
+        const columns = saved ? JSON.parse(saved) : {};
+        
+        const dropdown = document.querySelector(`#columnSelector${tableId}`);
+        if (!dropdown) return;
+        
+        dropdown.closest('.dropdown').querySelectorAll('.column-toggle-temp').forEach(checkbox => {
+            // If saved preference exists, use it; otherwise default to checked
+            checkbox.checked = columns[checkbox.value] !== undefined ? columns[checkbox.value] : true;
+        });
+    }
 
-    function toggleColumn(tableId, columnKey, show, storageKey, save = true) {
+    function toggleColumn(tableId, columnKey, show) {
         const table = document.getElementById(tableId);
         if (!table) return;
         
@@ -95,42 +138,45 @@
                 cells[index].style.display = show ? '' : 'none';
             }
         });
-        
-        // Save to localStorage
-        if (save) {
-            saveColumnPreferences(tableId, storageKey);
-        }
     }
 
-    function saveColumnPreferences(tableId, storageKey) {
+    // Apply button - saves and applies the selection
+    window[`applyColumnSelection_${tableId}`] = function() {
+        const dropdown = document.querySelector(`#columnSelector${tableId}`);
+        if (!dropdown) return;
+        
         const preferences = {};
-        const dropdown = document.querySelector(`#columnSelector${tableId}`);
-        if (!dropdown) return;
-        
-        dropdown.closest('.dropdown').querySelectorAll('.column-toggle').forEach(checkbox => {
+        dropdown.closest('.dropdown').querySelectorAll('.column-toggle-temp').forEach(checkbox => {
             preferences[checkbox.value] = checkbox.checked;
+            toggleColumn(tableId, checkbox.value, checkbox.checked);
         });
+        
         localStorage.setItem(storageKey, JSON.stringify(preferences));
-    }
+        
+        // Close dropdown
+        const bsDropdown = bootstrap.Dropdown.getInstance(dropdown);
+        if (bsDropdown) {
+            bsDropdown.hide();
+        }
+    };
 
-    // Make functions globally available
-    window[`selectAllColumns_${tableId}`] = function() {
+    // Select all columns
+    window[`selectAllColumnstemp_${tableId}`] = function() {
         const dropdown = document.querySelector(`#columnSelector${tableId}`);
         if (!dropdown) return;
         
-        dropdown.closest('.dropdown').querySelectorAll('.column-toggle').forEach(checkbox => {
+        dropdown.closest('.dropdown').querySelectorAll('.column-toggle-temp').forEach(checkbox => {
             checkbox.checked = true;
-            toggleColumn(tableId, checkbox.value, true, storageKey);
         });
     };
 
-    window[`deselectAllColumns_${tableId}`] = function() {
+    // Reset to default (all checked)
+    window[`resetColumns_${tableId}`] = function() {
         const dropdown = document.querySelector(`#columnSelector${tableId}`);
         if (!dropdown) return;
         
-        dropdown.closest('.dropdown').querySelectorAll('.column-toggle').forEach(checkbox => {
-            checkbox.checked = false;
-            toggleColumn(tableId, checkbox.value, false, storageKey);
+        dropdown.closest('.dropdown').querySelectorAll('.column-toggle-temp').forEach(checkbox => {
+            checkbox.checked = true;
         });
     };
 

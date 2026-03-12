@@ -369,13 +369,13 @@
                         <td>
                             <div class="small">{{ isset($invoice->generation_date) ? $invoice->generation_date->format('Y-m-d') : '—' }}</div>
                         </td>
-                        <td>{{ number_format($invoice->base_price, 0) }} ر.س</td>
-                        <td>{{ number_format($invoice->tax_amount, 0) }} ر.س</td>
-                        <td class="fw-bold">{{ number_format($invoice->total_price, 0) }} ر.س</td>
+                        <td>{{ number_format(\App\Helpers\NumberHelper::toInteger($invoice->base_price), 0) }} ر.س</td>
+                        <td>{{ number_format(\App\Helpers\NumberHelper::toInteger($invoice->tax_amount), 0) }} ر.س</td>
+                        <td class="fw-bold">{{ number_format(\App\Helpers\NumberHelper::toInteger($invoice->total_price), 0) }} ر.س</td>
                         <td class="text-center">
-                            <span class="emp-count">{{ $invoice->total_workers ?? 0 }}</span>
+                            <span class="emp-count">{{ \App\Helpers\NumberHelper::toInteger($invoice->total_workers ?? 0) }}</span>
                         </td>
-                        <td class="text-center">{{ $invoice->work_days ?? 0 }} يوم</td>
+                        <td class="text-center">{{ \App\Helpers\NumberHelper::toInteger($invoice->work_days ?? 0) }} يوم</td>
                         <td class="text-center">
                             @php
                                 $issueDelayDays = 0;
@@ -390,7 +390,7 @@
                             @endphp
                             @if($issueDelayDays > 0)
                                 <span class="badge bg-danger text-white rounded-pill px-3" title="تأخير الإصدار: الفرق بين تاريخ إصدار الفاتورة ويوم الإصدار المتوقع للعميل">
-                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $issueDelayDays }} يوم
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ \App\Helpers\NumberHelper::toInteger($issueDelayDays) }} يوم
                                 </span>
                             @else
                                 <span class="text-muted small">—</span>
@@ -415,7 +415,7 @@
                             @endphp
                             @if($paymentDelayDays > 0)
                                 <span class="badge bg-danger text-white rounded-pill px-3" title="أيام التأخير في الدفع">
-                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $paymentDelayDays }}
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ \App\Helpers\NumberHelper::toInteger($paymentDelayDays) }}
                                 </span>
                             @else
                                 <span class="text-muted small">—</span>
@@ -425,12 +425,12 @@
                             @if(isset($invoice->credit_notes_count) && $invoice->credit_notes_count > 0)
                                 <a href="{{ route('invoices.credit-notes.index', $invoice->id) }}" class="badge rounded-pill bg-warning text-dark px-2 text-decoration-none" style="cursor: pointer;" title="عرض الإشعارات الدائنة">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    {{ $invoice->credit_notes_count }}
+                                    {{ \App\Helpers\NumberHelper::toInteger($invoice->credit_notes_count) }}
                                 </a>
                             @elseif(isset($invoice->price_difference) && $invoice->price_difference > 0)
                                 <span class="badge rounded-pill bg-warning text-dark px-2">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    {{ number_format($invoice->price_difference, 0) }}
+                                    {{ number_format(\App\Helpers\NumberHelper::toInteger($invoice->price_difference), 0) }}
                                 </span>
                             @else
                                 <span class="text-muted small">—</span>
@@ -2071,6 +2071,10 @@
                 return;
             }
 
+            // Get column visibility settings
+            const columnConfig = window.getColumnConfig_invoices_columns ? window.getColumnConfig_invoices_columns() : null;
+            const isVisible = (col) => !columnConfig || columnConfig[col] !== false;
+
             const companyLogoSrc = '{{ asset("assets/img/logo.png") }}';
             const today = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
             const todayShort = new Date().toISOString().split('T')[0];
@@ -2104,49 +2108,111 @@
                 total: {{ $invoices->total() ?? 0 }}
             };
 
-            // Build table rows from visible table
+            // Build table rows from visible table - only include visible columns
             let tableRows = '';
             document.querySelectorAll('.custom-table tbody tr').forEach((row, i) => {
                 const cells = row.querySelectorAll('td');
                 if (!cells.length) return;
 
                 const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-                // Extract invoice number cleanly (avoid salary badge text)
-                const invNumberEl = cells[0]?.querySelector('.inv-number');
-                const invNumber = invNumberEl ? invNumberEl.innerText.trim() : (cells[0]?.innerText.trim().split('\n')[0] || '-');
-                const isSalary = cells[0]?.querySelector('.badge') !== null;
-                const clientName = cells[1]?.querySelector('.name')?.innerText.trim() || cells[1]?.innerText.trim() || '-';
-                const serviceName = cells[2]?.innerText.trim().replace(/\s+/g, ' ') || '-';
-                const issueDate = cells[4]?.innerText.trim() || '-';
-                const basePrice = cells[5]?.innerText.trim() || '-';
-                const taxAmount = cells[6]?.innerText.trim() || '-';
-                const totalPrice = cells[7]?.innerText.trim() || '-';
-                const empCount = cells[8]?.innerText.trim() || '-';
-                const workDays = cells[9]?.innerText.trim() || '-';
-                // Status is at index 13 (after: inv#, client, service, details, date, base, tax, total, emp, days, delay, credit, response, status, actions)
-                const statusText = cells[13]?.innerText.trim().split('\n')[0].trim() || '-';
-
-                let statusBg = '#e2e8f0', statusColor = '#334155';
-                if (statusText.includes('مدفوعة')) { statusBg='#d1fae5'; statusColor='#065f46'; }
-                else if (statusText.includes('معلقة')) { statusBg='#fef3c7'; statusColor='#92400e'; }
-                else if (statusText.includes('متأخرة')) { statusBg='#fee2e2'; statusColor='#991b1b'; }
-                else if (statusText.includes('ملغاة')) { statusBg='#f3f4f6'; statusColor='#4b5563'; }
-
                 const td = 'padding:7px 8px;border-bottom:1px solid #e2e8f0;font-size:10px;vertical-align:middle;';
-                const salaryTag = isSalary ? `<span style="background:#f3e8ff;color:#7c3aed;font-size:8px;padding:1px 5px;border-radius:6px;margin-right:4px;">رواتب</span>` : '';
-                tableRows += `
-                <tr style="background:${bg};">
-                    <td style="${td}text-align:center;color:#10a37f;font-weight:700;">${invNumber}${salaryTag}</td>
-                    <td style="${td}font-weight:600;color:#1e293b;">${clientName}</td>
-                    <td style="${td}color:#475569;">${serviceName}</td>
-                    <td style="${td}text-align:center;color:#64748b;">${issueDate}</td>
-                    <td style="${td}text-align:right;color:#2563eb;">${basePrice}</td>
-                    <td style="${td}text-align:right;color:#d97706;">${taxAmount}</td>
-                    <td style="${td}text-align:right;font-weight:700;color:#059669;">${totalPrice}</td>
-                    <td style="${td}text-align:center;"><span style="background:#e6fffa;color:#319795;padding:2px 7px;border-radius:50%;font-weight:700;font-size:9px;">${empCount}</span></td>
-                    <td style="${td}text-align:center;color:#64748b;">${workDays}</td>
-                    <td style="${td}text-align:center;"><span style="background:${statusBg};color:${statusColor};padding:3px 10px;border-radius:12px;font-size:9px;font-weight:600;">${statusText}</span></td>
-                </tr>`;
+                
+                let rowHtml = `<tr style="background:${bg};">`;
+                
+                // Invoice Number
+                if (isVisible('number')) {
+                    const invNumberEl = cells[0]?.querySelector('.inv-number');
+                    const invNumber = invNumberEl ? invNumberEl.innerText.trim() : (cells[0]?.innerText.trim().split('\n')[0] || '-');
+                    const isSalary = cells[0]?.querySelector('.badge') !== null;
+                    const salaryTag = isSalary ? `<span style="background:#f3e8ff;color:#7c3aed;font-size:8px;padding:1px 5px;border-radius:6px;margin-right:4px;">رواتب</span>` : '';
+                    rowHtml += `<td style="${td}text-align:center;color:#10a37f;font-weight:700;">${invNumber}${salaryTag}</td>`;
+                }
+                
+                // Client
+                if (isVisible('client')) {
+                    const clientName = cells[1]?.querySelector('.name')?.innerText.trim() || cells[1]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}font-weight:600;color:#1e293b;">${clientName}</td>`;
+                }
+                
+                // Service
+                if (isVisible('service')) {
+                    const serviceName = cells[2]?.innerText.trim().replace(/\s+/g, ' ') || '-';
+                    rowHtml += `<td style="${td}color:#475569;">${serviceName}</td>`;
+                }
+                
+                // Service Details
+                if (isVisible('service_details')) {
+                    const serviceDetails = cells[3]?.innerText.trim().replace(/\s+/g, ' ') || '-';
+                    rowHtml += `<td style="${td}color:#64748b;font-size:9px;">${serviceDetails}</td>`;
+                }
+                
+                // Generation Date
+                if (isVisible('generation_date')) {
+                    const issueDate = cells[4]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:center;color:#64748b;">${issueDate}</td>`;
+                }
+                
+                // Base Price
+                if (isVisible('base_price')) {
+                    const basePrice = cells[5]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:right;color:#2563eb;">${basePrice}</td>`;
+                }
+                
+                // Tax Amount
+                if (isVisible('tax_amount')) {
+                    const taxAmount = cells[6]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:right;color:#d97706;">${taxAmount}</td>`;
+                }
+                
+                // Total Price
+                if (isVisible('total_price')) {
+                    const totalPrice = cells[7]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:right;font-weight:700;color:#059669;">${totalPrice}</td>`;
+                }
+                
+                // Employees Count
+                if (isVisible('employees_count')) {
+                    const empCount = cells[8]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:center;"><span style="background:#e6fffa;color:#319795;padding:2px 7px;border-radius:50%;font-weight:700;font-size:9px;">${empCount}</span></td>`;
+                }
+                
+                // Work Days
+                if (isVisible('work_days')) {
+                    const workDays = cells[9]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:center;color:#64748b;">${workDays}</td>`;
+                }
+                
+                // Issue Delay
+                if (isVisible('issue_delay')) {
+                    const issueDelay = cells[10]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:center;color:#dc2626;font-size:9px;">${issueDelay}</td>`;
+                }
+                
+                // Payment Delay
+                if (isVisible('payment_delay')) {
+                    const paymentDelay = cells[11]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:center;color:#dc2626;font-size:9px;">${paymentDelay}</td>`;
+                }
+                
+                // Credit Notes
+                if (isVisible('credit_notes')) {
+                    const creditNotes = cells[12]?.innerText.trim() || '-';
+                    rowHtml += `<td style="${td}text-align:center;color:#d97706;font-size:9px;">${creditNotes}</td>`;
+                }
+                
+                // Status
+                if (isVisible('status')) {
+                    const statusText = cells[13]?.innerText.trim().split('\n')[0].trim() || '-';
+                    let statusBg = '#e2e8f0', statusColor = '#334155';
+                    if (statusText.includes('مدفوعة')) { statusBg='#d1fae5'; statusColor='#065f46'; }
+                    else if (statusText.includes('معلقة')) { statusBg='#fef3c7'; statusColor='#92400e'; }
+                    else if (statusText.includes('متأخرة')) { statusBg='#fee2e2'; statusColor='#991b1b'; }
+                    else if (statusText.includes('ملغاة')) { statusBg='#f3f4f6'; statusColor='#4b5563'; }
+                    rowHtml += `<td style="${td}text-align:center;"><span style="background:${statusBg};color:${statusColor};padding:3px 10px;border-radius:12px;font-size:9px;font-weight:600;">${statusText}</span></td>`;
+                }
+                
+                rowHtml += `</tr>`;
+                tableRows += rowHtml;
             });
 
             const html = `<!DOCTYPE html>
@@ -2194,16 +2260,20 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
 <table>
   <thead>
     <tr>
-      <th style="text-align:center;">رقم الفاتورة</th>
-      <th style="text-align:right;">العميل</th>
-      <th style="text-align:right;">الخدمة</th>
-      <th style="text-align:center;">تاريخ الإصدار</th>
-      <th style="text-align:right;">المبلغ الأساسي</th>
-      <th style="text-align:right;">الضريبة</th>
-      <th style="text-align:right;">الإجمالي</th>
-      <th style="text-align:center;">الموظفين</th>
-      <th style="text-align:center;">أيام العمل</th>
-      <th style="text-align:center;">الحالة</th>
+      ${isVisible('number') ? '<th style="text-align:center;">رقم الفاتورة</th>' : ''}
+      ${isVisible('client') ? '<th style="text-align:right;">العميل</th>' : ''}
+      ${isVisible('service') ? '<th style="text-align:right;">الخدمة</th>' : ''}
+      ${isVisible('service_details') ? '<th style="text-align:right;">تفاصيل الخدمة</th>' : ''}
+      ${isVisible('generation_date') ? '<th style="text-align:center;">تاريخ الإصدار</th>' : ''}
+      ${isVisible('base_price') ? '<th style="text-align:right;">المبلغ الأساسي</th>' : ''}
+      ${isVisible('tax_amount') ? '<th style="text-align:right;">الضريبة</th>' : ''}
+      ${isVisible('total_price') ? '<th style="text-align:right;">الإجمالي</th>' : ''}
+      ${isVisible('employees_count') ? '<th style="text-align:center;">الموظفين</th>' : ''}
+      ${isVisible('work_days') ? '<th style="text-align:center;">أيام العمل</th>' : ''}
+      ${isVisible('issue_delay') ? '<th style="text-align:center;">تأخير الإصدار</th>' : ''}
+      ${isVisible('payment_delay') ? '<th style="text-align:center;">تأخير الدفع</th>' : ''}
+      ${isVisible('credit_notes') ? '<th style="text-align:center;">إشعارات دائنة</th>' : ''}
+      ${isVisible('status') ? '<th style="text-align:center;">الحالة</th>' : ''}
     </tr>
   </thead>
   <tbody>${tableRows}</tbody>
@@ -2240,39 +2310,57 @@ tbody td { padding:7px 8px; border-bottom:1px solid #e2e8f0; vertical-align:midd
                 return;
             }
 
+            // Get column visibility settings
+            const columnConfig = window.getColumnConfig_invoices_columns ? window.getColumnConfig_invoices_columns() : null;
+            const isVisible = (col) => !columnConfig || columnConfig[col] !== false;
+
             const todayShort = new Date().toISOString().split('T')[0];
 
             // Clone the visible table
             const originalTable = document.querySelector('.custom-table');
             const clonedTable = originalTable.cloneNode(true);
 
-            // Remove last header (actions)
+            // Remove hidden columns from headers
             clonedTable.querySelectorAll('thead tr').forEach(row => {
-                const cells = row.querySelectorAll('th');
-                if (cells.length) cells[cells.length - 1].remove();
+                const cells = Array.from(row.querySelectorAll('th'));
+                cells.forEach((cell, index) => {
+                    const columnKey = cell.getAttribute('data-column');
+                    // Remove actions column or hidden columns
+                    if (columnKey === 'actions' || (columnKey && !isVisible(columnKey))) {
+                        cell.remove();
+                    }
+                });
             });
 
-            // Clean body rows
+            // Clean body rows and remove hidden columns
             clonedTable.querySelectorAll('tbody tr').forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (!cells.length) return;
-
-                // Flatten invoice number cell (remove badge)
-                const invNum = cells[0]?.querySelector('.inv-number');
-                if (invNum) {
-                    const isSal = cells[0].querySelector('.badge') !== null;
-                    cells[0].innerHTML = invNum.innerText.trim() + (isSal ? ' (رواتب)' : '');
-                }
-
-                // Flatten client cell
-                const nameEl = cells[1]?.querySelector('.name');
-                if (nameEl) cells[1].innerHTML = nameEl.innerText.trim();
-
-                // Flatten service details cell — keep plain text only
-                if (cells[3]) cells[3].innerText = cells[3].innerText.trim().replace(/\s+/g, ' ');
-
-                // Remove last cell (actions)
-                cells[cells.length - 1].remove();
+                const cells = Array.from(row.querySelectorAll('td'));
+                const headers = Array.from(originalTable.querySelectorAll('thead th'));
+                
+                cells.forEach((cell, index) => {
+                    const columnKey = headers[index]?.getAttribute('data-column');
+                    
+                    // Remove if it's actions or hidden column
+                    if (columnKey === 'actions' || (columnKey && !isVisible(columnKey))) {
+                        cell.remove();
+                        return;
+                    }
+                    
+                    // Clean up cell content
+                    if (index === 0 && isVisible('number')) {
+                        const invNum = cell.querySelector('.inv-number');
+                        if (invNum) {
+                            const isSal = cell.querySelector('.badge') !== null;
+                            cell.innerHTML = invNum.innerText.trim() + (isSal ? ' (رواتب)' : '');
+                        }
+                    } else if (index === 1 && isVisible('client')) {
+                        const nameEl = cell.querySelector('.name');
+                        if (nameEl) cell.innerHTML = nameEl.innerText.trim();
+                    } else {
+                        // Clean other cells
+                        cell.innerText = cell.innerText.trim().replace(/\s+/g, ' ');
+                    }
+                });
             });
 
             const wb = XLSX.utils.book_new();

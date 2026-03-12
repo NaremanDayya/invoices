@@ -188,6 +188,21 @@
         const columns = JSON.parse(saved);
         return Object.keys(columns).filter(key => columns[key]);
     };
+
+    // Check if a specific column is visible
+    window[`isColumnVisible_${storageKey}`] = function(columnKey) {
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) return true; // Default to visible
+        
+        const columns = JSON.parse(saved);
+        return columns[columnKey] !== false;
+    };
+
+    // Get column configuration for exports
+    window[`getColumnConfig_${storageKey}`] = function() {
+        const saved = localStorage.getItem(storageKey);
+        return saved ? JSON.parse(saved) : null;
+    };
 })();
 </script>
 @endpush

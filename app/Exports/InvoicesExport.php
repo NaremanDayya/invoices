@@ -8,14 +8,45 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use App\Helpers\NumberHelper;
 
 class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
 {
     protected $invoices;
+    protected $visibleColumns;
 
-    public function __construct($invoices)
+    public function __construct($invoices, $visibleColumns = null)
     {
         $this->invoices = $invoices;
+        $this->visibleColumns = $visibleColumns ?? $this->getDefaultColumns();
+    }
+
+    protected function getDefaultColumns()
+    {
+        return [
+            'number' => 'رقم الفاتورة',
+            'client' => 'العميل',
+            'service' => 'الخدمة',
+            'generation_date' => 'تاريخ الإصدار',
+            'due_date' => 'تاريخ الاستحقاق',
+            'employees_count' => 'إجمالي العمالة',
+            'work_days' => 'أيام العمل',
+            'base_price' => 'المبلغ الأساسي',
+            'tax_amount' => 'الضريبة',
+            'total_price' => 'المبلغ الإجمالي',
+            'paid_amount' => 'المبلغ المدفوع',
+            'remaining_amount' => 'المبلغ المتبقي',
+            'payment_status' => 'حالة السداد',
+            'invoice_status' => 'حالة الفاتورة',
+        ];
+    }
+
+    protected function isColumnVisible($key)
+    {
+        if (is_array($this->visibleColumns)) {
+            return in_array($key, $this->visibleColumns);
+        }
+        return true;
     }
 
     public function collection()
@@ -25,22 +56,16 @@ class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function headings(): array
     {
-        return [
-            'رقم الفاتورة',
-            'العميل',
-            'الخدمة',
-            'تاريخ الإصدار',
-            'تاريخ الاستحقاق',
-            'إجمالي العمالة',
-            'أيام العمل',
-            'المبلغ الأساسي',
-            'الضريبة',
-            'المبلغ الإجمالي',
-            'المبلغ المدفوع',
-            'المبلغ المتبقي',
-            'حالة السداد',
-            'حالة الفاتورة',
-        ];
+        $allHeadings = $this->getDefaultColumns();
+        $headings = [];
+
+        foreach ($allHeadings as $key => $label) {
+            if ($this->isColumnVisible($key)) {
+                $headings[] = $label;
+            }
+        }
+
+        return $headings;
     }
 
     public function map($invoice): array
@@ -51,24 +76,34 @@ class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithS
             'overdue' => 'متأخرة',
             'late' => 'متأخرة (متابعة)',
             'cancelled' => 'ملغاة',
+            'partially_paid' => 'مدفوعة جزئياً',
         ];
 
-        return [
-            $invoice->number,
-            $invoice->client->name ?? '',
-            $invoice->service->name ?? '',
-            $invoice->generation_date,
-            $invoice->last_generation_date,
-            ($invoice->total_workers ?? 0) + ($invoice->total_supervisors ?? 0) + ($invoice->total_managers ?? 0) + ($invoice->total_users ?? 0),
-            $invoice->work_days ?? 0,
-            number_format($invoice->base_price, 0),
-            number_format($invoice->tax_amount, 0),
-            number_format($invoice->total_price, 0),
-            number_format($invoice->paid_amount, 0),
-            number_format($invoice->remaining_amount, 0),
-            $statusMap[$invoice->payment_status] ?? $invoice->payment_status,
-            $invoice->invoice_status ?? '',
+        $allData = [
+            'number' => $invoice->number,
+            'client' => $invoice->client->name ?? '',
+            'service' => $invoice->service->name ?? '',
+            'generation_date' => $invoice->generation_date,
+            'due_date' => $invoice->last_generation_date,
+            'employees_count' => NumberHelper::toInteger(($invoice->total_workers ?? 0) + ($invoice->total_supervisors ?? 0) + ($invoice->total_managers ?? 0) + ($invoice->total_users ?? 0)),
+            'work_days' => NumberHelper::toInteger($invoice->work_days ?? 0),
+            'base_price' => number_format(NumberHelper::toInteger($invoice->base_price), 0),
+            'tax_amount' => number_format(NumberHelper::toInteger($invoice->tax_amount), 0),
+            'total_price' => number_format(NumberHelper::toInteger($invoice->total_price), 0),
+            'paid_amount' => number_format(NumberHelper::toInteger($invoice->paid_amount), 0),
+            'remaining_amount' => number_format(NumberHelper::toInteger($invoice->remaining_amount), 0),
+            'payment_status' => $statusMap[$invoice->payment_status] ?? $invoice->payment_status,
+            'invoice_status' => $invoice->invoice_status ?? '',
         ];
+
+        $row = [];
+        foreach ($allData as $key => $value) {
+            if ($this->isColumnVisible($key)) {
+                $row[] = $value;
+            }
+        }
+
+        return $row;
     }
 
     public function styles(Worksheet $sheet)

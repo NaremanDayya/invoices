@@ -50,8 +50,9 @@ class FinancialUpdateController extends Controller
         }
 
         $updates = $query->orderBy('update_date', 'desc')->paginate(20);
+        $clients = Client::orderBy('name')->get();
 
-        return view('financial-updates.index', compact('updates'));
+        return view('financial-updates.index', compact('updates', 'clients'));
     }
 
     public function store(Request $request)

@@ -187,7 +187,7 @@
     @endif
 
     <!-- Financial Update Modal -->
-    <x-financial-update-modal />
+    <x-financial-update-modal :clients="$clients" />
 @endsection
 
 @push('scripts')

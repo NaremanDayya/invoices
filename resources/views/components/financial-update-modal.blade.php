@@ -1,4 +1,4 @@
-@props(['invoiceId' => null, 'paymentId' => null, 'clientId' => null])
+@props(['invoiceId' => null, 'paymentId' => null, 'clientId' => null, 'clients' => []])
 
 <div class="modal fade" id="financialUpdateModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -40,6 +40,29 @@
                             <input type="date" name="update_date" class="form-control rounded-xl" value="{{ date('Y-m-d') }}" required>
                         </div>
 
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">
+                                <i class="bi bi-person me-1"></i>العميل
+                            </label>
+                            <select name="client_id" class="form-select rounded-xl">
+                                <option value="">اختر العميل (اختياري)</option>
+                                @foreach($clients as $client)
+                                    <option value="{{ $client->id }}" {{ $clientId == $client->id ? 'selected' : '' }}>
+                                        {{ $client->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">
+                                <i class="bi bi-file-text me-1"></i>الفاتورة
+                            </label>
+                            <select name="invoice_id" class="form-select rounded-xl">
+                                <option value="">اختر الفاتورة (اختياري)</option>
+                            </select>
+                        </div>
+
                         <div class="col-12">
                             <label class="form-label fw-bold small text-muted">
                                 <i class="bi bi-pencil me-1"></i>عنوان التحديث <span class="text-danger">*</span>
@@ -71,9 +94,8 @@
                             </select>
                         </div>
 
-                        <input type="hidden" name="invoice_id" value="{{ $invoiceId }}">
-                        <input type="hidden" name="payment_id" value="{{ $paymentId }}">
-                        <input type="hidden" name="client_id" value="{{ $clientId }}">
+                        <input type="hidden" name="invoice_id_hidden" value="{{ $invoiceId }}">
+                        <input type="hidden" name="payment_id_hidden" value="{{ $paymentId }}">
                     </div>
 
                     <div id="updateAlert" class="alert d-none mt-3"></div>
@@ -110,6 +132,37 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('financialUpdateForm');
     const modal = document.getElementById('financialUpdateModal');
+    const clientSelect = document.querySelector('#financialUpdateModal select[name="client_id"]');
+    const invoiceSelect = document.querySelector('#financialUpdateModal select[name="invoice_id"]');
+    
+    if (clientSelect && invoiceSelect) {
+        clientSelect.addEventListener('change', function() {
+            const clientId = this.value;
+            
+            invoiceSelect.innerHTML = '<option value="">اختر الفاتورة (اختياري)</option>';
+            
+            if (clientId) {
+                fetch(`/api/clients/${clientId}/invoices`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.invoices) {
+                        result.invoices.forEach(invoice => {
+                            const option = document.createElement('option');
+                            option.value = invoice.id;
+                            option.textContent = `${invoice.number} - ${invoice.total} ر.س`;
+                            invoiceSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading invoices:', error));
+            }
+        });
+    }
     
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -135,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     setTimeout(() => {
                         bootstrap.Modal.getInstance(modal).hide();
-                        loadFinancialUpdates();
+                        window.location.reload();
                     }, 1500);
                 } else {
                     showAlert('danger', result.message || 'حدث خطأ أثناء الحفظ');

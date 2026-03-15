@@ -6,19 +6,92 @@
 
 @push('styles')
 <style>
-    .update-card {
-        border-left: 4px solid var(--primary);
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-mini-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid #edf2f7;
         transition: all 0.3s;
     }
-    .update-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        transform: translateX(-5px);
+    .stat-mini-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
     }
-    .update-type-badge {
-        padding: 6px 12px;
+    .stat-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    .stat-info h3 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 0;
+        color: #1a202c;
+    }
+    .stat-info p {
+        font-size: 0.85rem;
+        color: #718096;
+        margin: 0;
+        font-weight: 500;
+    }
+    .table-card {
+        background: white;
         border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
+        border: 1px solid #edf2f7;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+    .custom-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+    .custom-table th {
+        background: #f8fafc;
+        padding: 18px 15px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #4a5568;
+        border-bottom: 1px solid #edf2f7;
+        text-align: right;
+    }
+    .custom-table td {
+        padding: 18px 15px;
+        vertical-align: middle;
+        font-size: 0.9rem;
+        color: #2d3748;
+        border-bottom: 1px solid #f7fafc;
+    }
+    .custom-table tbody tr:hover {
+        background: #f8fafc;
+    }
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        border: 1px solid #e2e8f0;
+        background: white;
+    }
+    .btn-action:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+        transform: translateY(-2px);
     }
 </style>
 @endpush
@@ -34,6 +107,46 @@
 @endsection
 
 @section('content')
+    <!-- Stats Section -->
+    <div class="stats-grid">
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $updates->total() }}</h3>
+                <p>إجمالي التحديثات</p>
+            </div>
+            <div class="stat-icon-box" style="background: #e6fffa; color: #319795;">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+        </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $updates->where('update_type', 'payment_received')->count() }}</h3>
+                <p>دفعات مستلمة</p>
+            </div>
+            <div class="stat-icon-box" style="background: #d1fae5; color: #059669;">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+        </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ number_format($updates->sum('amount'), 0) }}</h3>
+                <p>إجمالي المبالغ (ر.س)</p>
+            </div>
+            <div class="stat-icon-box" style="background: #dbeafe; color: #2563eb;">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+        </div>
+        <div class="stat-mini-card">
+            <div class="stat-info">
+                <h3>{{ $updates->where('status', 'active')->count() }}</h3>
+                <p>تحديثات نشطة</p>
+            </div>
+            <div class="stat-icon-box" style="background: #fef3c7; color: #d97706;">
+                <i class="bi bi-star-fill"></i>
+            </div>
+        </div>
+    </div>
+
     <!-- Filters -->
     <form method="GET" action="{{ route('financial-updates.index') }}" id="filterForm">
         <div class="bg-white rounded-xl border border-gray-100 p-3 mb-4 d-flex align-items-center gap-3">
@@ -181,7 +294,10 @@
 
     <!-- Pagination -->
     @if($updates->hasPages())
-        <div class="d-flex justify-content-center mt-4">
+        <div class="px-4 py-3 border-top d-flex justify-content-between align-items-center" style="background: #f8fafc;">
+            <div class="text-muted small">
+                عرض {{ $updates->firstItem() ?? 0 }} إلى {{ $updates->lastItem() ?? 0 }} من {{ $updates->total() ?? 0 }} تحديث
+            </div>
             {{ $updates->links() }}
         </div>
     @endif
